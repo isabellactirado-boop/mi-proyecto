@@ -529,7 +529,7 @@ WHERE i.estado = 'activa'
 GROUP BY i.id_inscripcion, e.nombre_completo, c.nombre_curso, g.nombre_grupo;
 
 -- Vista: desempeño por estudiante (promedio de simulacros)
-CREATE OR REPLACE VIEW vista_desempeño_estudiante AS
+CREATE OR REPLACE VIEW vista_desempeno_estudiante AS
 SELECT
     i.id_inscripcion,
     e.nombre_completo AS estudiante,
