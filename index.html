@@ -1,0 +1,48 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Pre-ICFES - Panel de Estudiantes</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        .card { background: #eef6fb; border-left: 5px solid #3498db; padding: 15px; margin: 20px 0; border-radius: 4px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { background-color: #3498db; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        button:hover { background-color: #2980b9; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 Sistema Pre-ICFES - Módulo Frontend</h1>
+        <p>Interfaz visual de gestión de estudiantes</p>
+        
+        <div class="card">
+            <h3>Registrar Nuevo Estudiante</h3>
+            <form>
+                <div class="form-group">
+                    <label>Nombre Completo:</label>
+                    <input type="text" placeholder="Ej. Juan Pérez">
+                </div>
+                <div class="form-group">
+                    <label>Correo Electrónico:</label>
+                    <input type="email" placeholder="estudiante@correo.com">
+                </div>
+                <div class="form-group">
+                    <label>Curso / Grado:</label>
+                    <select>
+                        <option>Grado 11 - Mañana</option>
+                        <option>Grado 11 - Tarde</option>
+                        <option>Pre-ICFES Intensivo</option>
+                    </select>
+                </div>
+                <button type="button" onclick="alert('Estudiante registrado exitosamente en la interfaz')">Guardar Estudiante</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
