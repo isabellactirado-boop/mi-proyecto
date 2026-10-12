@@ -7,7 +7,7 @@ export default function Home() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch("http://localhost:8000/")
+        fetch((process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000") + "/")
       .then((res) => res.json())
       .then((data) => setDatos(data))
       .catch(() => setError("No pude conectar con el backend"));
