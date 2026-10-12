@@ -3,45 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Pre-ICFES - Panel de Estudiantes</title>
+    <title>PRE-ICMA - Iniciar Sesión</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
-        .card { background: #eef6fb; border-left: 5px solid #3498db; padding: 15px; margin: 20px 0; border-radius: 4px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        button { background-color: #3498db; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; }
-        button:hover { background-color: #2980b9; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 100%; max-width: 400px; text-align: center; }
+        .login-card h2 { color: #1e3c72; margin-bottom: 8px; font-size: 26px; }
+        .login-card p { color: #666; margin-bottom: 25px; font-size: 14px; }
+        .form-group { text-align: left; margin-bottom: 20px; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 6px; color: #333; font-size: 14px; }
+        .form-group input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; transition: 0.3s; }
+        .form-group input:focus { border-color: #2a5298; outline: none; box-shadow: 0 0 5px rgba(42, 82, 152, 0.3); }
+        .btn-login { width: 100%; background: #2a5298; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-login:hover { background: #1e3c72; }
+        .forgot-pass { display: block; margin-top: 15px; color: #2a5298; font-size: 13px; text-decoration: none; }
+        .forgot-pass:hover { text-decoration: underline; }
+        .footer-text { margin-top: 25px; font-size: 13px; color: #777; border-top: 1px solid #eee; padding-top: 15px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🎓 Sistema Pre-ICFES - Módulo Frontend</h1>
-        <p>Interfaz visual de gestión de estudiantes</p>
-        
-        <div class="card">
-            <h3>Registrar Nuevo Estudiante</h3>
-            <form>
-                <div class="form-group">
-                    <label>Nombre Completo:</label>
-                    <input type="text" placeholder="Ej. Juan Pérez">
-                </div>
-                <div class="form-group">
-                    <label>Correo Electrónico:</label>
-                    <input type="email" placeholder="estudiante@correo.com">
-                </div>
-                <div class="form-group">
-                    <label>Curso / Grado:</label>
-                    <select>
-                        <option>Grado 11 - Mañana</option>
-                        <option>Grado 11 - Tarde</option>
-                        <option>Pre-ICFES Intensivo</option>
-                    </select>
-                </div>
-                <button type="button" onclick="alert('Estudiante registrado exitosamente en la interfaz')">Guardar Estudiante</button>
-            </form>
+    <div class="login-card">
+        <h2>🎓 Plataforma PRE-ICMA</h2>
+        <p>Ingresa tus credenciales para acceder</p>
+        <form>
+            <div class="form-group">
+                <label>Correo Electrónico</label>
+                <input type="email" placeholder="estudiante@correo.com" required>
+            </div>
+            <div class="form-group">
+                <label>Contraseña</label>
+                <input type="password" placeholder="••••••••" required>
+            </div>
+            <button type="button" class="btn-login" onclick="alert('Iniciando sesión en PRE-ICMA...')">Iniciar Sesión</button>
+            <a href="#" class="forgot-pass">¿Olvidaste tu contraseña?</a>
+        </form>
+        <div class="footer-text">
+            ¿No tienes cuenta? <a href="#" style="color:#2a5298; font-weight:bold;">Regístrate aquí</a>
         </div>
     </div>
 </body>
