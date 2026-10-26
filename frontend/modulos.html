@@ -1,0 +1,207 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRE-ICMA - Módulos del Sistema</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+        body { background-color: #f4f6f9; color: #333; display: flex; min-height: 100vh; }
+        
+        .sidebar { width: 260px; background: #1e3c72; color: white; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; }
+        .sidebar-header { text-align: center; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-header img { max-width: 80px; border-radius: 8px; margin-bottom: 10px; }
+        .sidebar-header h3 { font-size: 18px; }
+        
+        .menu { list-style: none; margin-top: 25px; }
+        .menu li { margin-bottom: 12px; display: none; } /* Ocultos por defecto */
+        .menu li.visible { display: block; } /* Solo visible el del rol activo */
+        .menu a { color: #d0dbe8; text-decoration: none; font-size: 14px; display: block; padding: 10px 15px; border-radius: 6px; cursor: pointer; transition: 0.3s; background: #2a5298; color: white; font-weight: bold; }
+        
+        .btn-logout { background: #d9534f; color: white; text-align: center; padding: 10px; border-radius: 6px; text-decoration: none; font-weight: bold; display: block; }
+
+        .main-content { flex: 1; padding: 30px; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        .card h3 { color: #1e3c72; margin-bottom: 15px; border-bottom: 2px solid #f4f6f9; padding-bottom: 10px; }
+
+        /* Estilos de tablas */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
+        th { background-color: #f8f9fa; color: #1e3c72; }
+        .badge { padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+        .badge-success { background: #d4edda; color: #155724; }
+        .badge-warning { background: #fff3cd; color: #856404; }
+
+        /* Formularios */
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
+        .btn-primary { background: #2a5298; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .btn-primary:hover { background: #1e3c72; }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div>
+            <div class="sidebar-header">
+                <img src="logo.jpeg" alt="Logo PRE-ICMA">
+                <h3>PRE-ICMA</h3>
+            </div>
+            <ul class="menu">
+                <li id="menu-estudiante"><a class="active">🎓 Módulo Estudiante</a></li>
+                <li id="menu-admin"><a class="active">🏛️ Módulo Administrativo</a></li>
+                <li id="menu-docente"><a class="active">👨‍🏫 Módulo Docente</a></li>
+            </ul>
+        </div>
+        <a href="index.html" class="btn-logout">Cerrar Sesión</a>
+    </aside>
+
+    <main class="main-content">
+        
+        <!-- SECCIÓN ESTUDIANTE -->
+        <div id="estudiante" class="tab-content">
+            <div class="card">
+                <h3>📌 Estado de Matrícula y Pagos</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Concepto</th>
+                            <th>Monto</th>
+                            <th>Fecha Límite</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Matrícula Ciclo Saber 11°</td>
+                            <td>,000 COP</td>
+                            <td>10 Oct 2026</td>
+                            <td><span class="badge badge-success">Pagado</span></td>
+                        </tr>
+                        <tr>
+                            <td>Mensualidad / Simulacro 2</td>
+                            <td>,000 COP</td>
+                            <td>05 Nov 2026</td>
+                            <td><span class="badge badge-warning">Pendiente</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h3>📊 Mis Resultados de Simulacros</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Prueba</th>
+                            <th>Lectura Crítica</th>
+                            <th>Matemáticas</th>
+                            <th>Sociales</th>
+                            <th>Puntaje Global</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Simulacro Diagnóstico #1</td>
+                            <td>68 / 100</td>
+                            <td>72 / 100</td>
+                            <td>65 / 100</td>
+                            <td><strong>335 / 500</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SECCIÓN ADMINISTRATIVO -->
+        <div id="admin" class="tab-content">
+            <div class="card">
+                <h3>📝 Registro de Nuevo Estudiante y Pago</h3>
+                <form onsubmit="alert('Estudiante registrado con éxito.'); return false;">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Nombre Completo</label>
+                            <input type="text" placeholder="Ej: Carlos Pérez" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Documento de Identidad</label>
+                            <input type="text" placeholder="1005123456" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Curso / Salón</label>
+                            <select>
+                                <option>11-A</option>
+                                <option>11-B</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Estado del Pago</label>
+                            <select>
+                                <option>Pago Completo</option>
+                                <option>Abono Parcial</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary">Registrar Estudiante</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- SECCIÓN DOCENTE -->
+        <div id="docente" class="tab-content">
+            <div class="card">
+                <h3>✍️ Carga de Calificaciones y Simulacros</h3>
+                <form onsubmit="alert('Calificación guardada correctamente.'); return false;">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Seleccionar Grupo</label>
+                            <select>
+                                <option>Grado 11-A - Lectura Crítica</option>
+                                <option>Grado 11-B - Matemáticas</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Simulacro</label>
+                            <input type="text" value="Simulacro General #2" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Estudiante</label>
+                            <input type="text" placeholder="Nombre del alumno">
+                        </div>
+                        <div class="form-group">
+                            <label>Puntaje (0 - 100)</label>
+                            <input type="number" max="100" min="0" placeholder="Ej: 85">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary">Guardar Nota</button>
+                </form>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Leer el rol ingresado desde la URL del login
+        const params = new URLSearchParams(window.location.search);
+        let selectedRole = params.get('rol') || 'estudiante';
+
+        // Validar que sea un rol permitido
+        if (!['estudiante', 'admin', 'docente'].includes(selectedRole)) {
+            selectedRole = 'estudiante';
+        }
+
+        // Mostrar ÚNICAMENTE el panel del rol correspondiente
+        document.getElementById(selectedRole).classList.add('active');
+
+        // Mostrar ÚNICAMENTE la opción del menú lateral del rol correspondiente
+        const menuItem = document.getElementById('menu-' + selectedRole);
+        if (menuItem) {
+            menuItem.classList.add('visible');
+        }
+    </script>
+</body>
+</html>
