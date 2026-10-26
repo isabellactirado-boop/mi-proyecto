@@ -1,9 +1,11 @@
 ﻿import os
 
+import bcrypt
 import psycopg
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 load_dotenv()
 
@@ -50,3 +52,38 @@ def version_db():
             cursor.execute("SELECT version();")
             resultado = cursor.fetchone()
     return {"version_postgres": resultado[0]}
+
+
+class DatosLogin(BaseModel):
+    correo: str
+    contrasena: str
+
+
+@app.post("/login")
+def login(datos: DatosLogin):
+    correo = datos.correo.strip().lower()
+
+    with obtener_conexion() as conexion:
+        with conexion.cursor() as cursor:
+            cursor.execute(
+                "SELECT nombre_usuario, contrasena_hash, rol "
+                "FROM usuarios WHERE lower(nombre_usuario) = %s",
+                (correo,),
+            )
+            fila = cursor.fetchone()
+
+    credenciales_ok = False
+    if fila:
+        try:
+            credenciales_ok = bcrypt.checkpw(
+                datos.contrasena.encode("utf-8"),
+                fila[1].encode("utf-8"),
+            )
+        except ValueError:
+            # el hash guardado no es un hash bcrypt valido (ej. usuarios de ejemplo)
+            credenciales_ok = False
+
+    if not credenciales_ok:
+        raise HTTPException(status_code=401, detail="Correo o contraseña incorrectos")
+
+    return {"mensaje": "ok", "usuario": fila[0], "rol": fila[2]}
