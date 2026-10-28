@@ -1,51 +1,115 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PRE-ICMA - Iniciar Sesión</title>
-    <style>
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .login-card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 100%; max-width: 400px; text-align: center; }
-        .logo-img { max-width: 140px; height: auto; margin-bottom: 15px; border-radius: 8px; }
-        .login-card h2 { color: #1e3c72; margin-bottom: 8px; font-size: 26px; }
-        .login-card p { color: #666; margin-bottom: 25px; font-size: 14px; }
-        .form-group { text-align: left; margin-bottom: 20px; }
-        .form-group label { display: block; font-weight: 600; margin-bottom: 6px; color: #333; font-size: 14px; }
-        .form-group input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; transition: 0.3s; }
-        .form-group input:focus { border-color: #2a5298; outline: none; box-shadow: 0 0 5px rgba(42, 82, 152, 0.3); }
-        .btn-login { width: 100%; background: #2a5298; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-login:hover { background: #1e3c72; }
-        .btn-login:disabled { background: #8aa0c8; cursor: wait; }
-        .forgot-pass { display: block; margin-top: 15px; color: #2a5298; font-size: 13px; text-decoration: none; }
-        .forgot-pass:hover { text-decoration: underline; }
-        .footer-text { margin-top: 25px; font-size: 13px; color: #777; border-top: 1px solid #eee; padding-top: 15px; }
-        .mensaje { margin-top: 15px; font-size: 14px; min-height: 20px; }
-        .mensaje.error { color: #c62828; }
-        .mensaje.ok { color: #2e7d32; }
-        .mensaje.info { color: #555; }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PRE-ICMA - Iniciar Sesión</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#1b2f6b; --navy-d:#12214d; --cream:#f6f1e7; --paper:#fffdf8;
+    --orange:#ff7a3d; --yellow:#ffd23f; --ink:#1a1f36; --line:#d9d3c4; --muted:#666b80;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'DM Sans',sans-serif;color:var(--ink);min-height:100vh;display:grid;grid-template-columns:1.05fr 1fr;background:var(--paper)}
+
+  /* ---------- panel izquierdo ---------- */
+  .side{background:var(--navy);position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;padding:48px 56px;color:#fff}
+  .brand{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:1.15rem;letter-spacing:.02em}
+  .brand span{color:var(--yellow)}
+  .hero{position:relative;z-index:2;max-width:430px}
+  .hero h2{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:clamp(2.2rem,3.6vw,3.3rem);line-height:1.02;letter-spacing:-.02em}
+  .hero h2 em{font-style:normal;color:var(--yellow)}
+  .hero p{margin-top:16px;color:#c3cbe6;line-height:1.55;max-width:34ch}
+  /* luna plana */
+  .moon{position:absolute;left:50%;bottom:-260px;width:620px;height:620px;margin-left:-250px;border-radius:50%;background:var(--cream)}
+  .moon i{position:absolute;border-radius:50%;background:#e4dccb}
+  .moon i:nth-child(1){width:90px;height:90px;top:70px;left:150px}
+  .moon i:nth-child(2){width:46px;height:46px;top:150px;left:330px}
+  .moon i:nth-child(3){width:64px;height:64px;top:60px;left:420px}
+  .mascot{position:absolute;z-index:3;right:48px;bottom:42px;width:190px;height:190px;border-radius:26px;border:4px solid var(--navy-d);box-shadow:8px 8px 0 var(--orange);transform:rotate(4deg);object-fit:cover;background:#2a1a6e}
+  .spark{position:absolute;fill:var(--yellow)}
+
+  /* ---------- formulario ---------- */
+  .form-side{display:grid;place-items:center;padding:40px 28px}
+  .box{width:100%;max-width:380px}
+  .box h1{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:2rem;letter-spacing:-.02em}
+  .box .sub{color:var(--muted);margin:6px 0 30px}
+  .field{margin-bottom:20px}
+  label{display:block;font-weight:700;font-size:.85rem;margin-bottom:7px}
+  input[type=email],input[type=password],input[type=text]{
+    width:100%;padding:14px 16px;font:inherit;color:var(--ink);background:#fff;
+    border:2px solid var(--ink);border-radius:12px;outline:none;transition:box-shadow .15s,transform .15s}
+  input::placeholder{color:#9a9fb0}
+  input:focus{box-shadow:4px 4px 0 var(--yellow);transform:translate(-2px,-2px)}
+  .pw{position:relative}
+  .pw button{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:0;font:inherit;font-size:.8rem;font-weight:700;color:var(--navy);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+  .btn{width:100%;margin-top:6px;padding:15px;font:inherit;font-weight:700;font-size:1rem;color:#fff;background:var(--navy);
+    border:2px solid var(--ink);border-radius:12px;cursor:pointer;box-shadow:4px 4px 0 var(--ink);transition:transform .12s,box-shadow .12s}
+  .btn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink);background:var(--navy-d)}
+  .btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+  .btn:disabled{opacity:.6;cursor:wait;transform:none;box-shadow:4px 4px 0 var(--ink)}
+  .mensaje{margin-top:16px;font-size:.9rem;min-height:22px;font-weight:500}
+  .mensaje.error{color:#c62828}.mensaje.ok{color:#2e7d32}.mensaje.info{color:var(--muted)}
+  .links{margin-top:22px;font-size:.9rem;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .links a{color:var(--navy);font-weight:500;text-underline-offset:3px}
+  .links a:hover{color:var(--orange)}
+
+  /* ---------- móvil ---------- */
+  @media (max-width:860px){
+    body{grid-template-columns:1fr}
+    .side{padding:28px 24px 96px;min-height:230px}
+    .hero h2{font-size:1.9rem}.hero p{display:none}
+    .moon{width:380px;height:380px;bottom:-250px;margin-left:-190px}
+    .mascot{width:104px;height:104px;right:24px;bottom:-34px;box-shadow:5px 5px 0 var(--orange);z-index:5}
+    .side{overflow:visible}
+    .form-side{padding-top:64px;align-items:start}
+  }
+</style>
 </head>
 <body>
-    <div class="login-card">
-        <img src="logo.jpeg" alt="Logo PRE-ICMA" class="logo-img">
-        <h2>Plataforma PRE-ICMA</h2>
-        <p>Ingresa tus credenciales para acceder</p>
-        <form id="form-login">
-            <div class="form-group">
-                <label for="correo">Correo Electrónico</label>
-                <input type="email" id="correo" placeholder="estudiante@correo.com" required>
-            </div>
-            <div class="form-group">
-                <label for="contrasena">Contraseña</label>
-                <input type="password" id="contrasena" placeholder="••••••••" required>
-            </div>
-            <button type="submit" id="btn-login" class="btn-login">Iniciar Sesión</button>
-            <div id="mensaje" class="mensaje"></div>
-            <a href="#" class="forgot-pass">¿Olvidaste tu contraseña?</a>
-        </form>
+  <aside class="side">
+    <div class="brand">PRE<span>-</span>ICMA</div>
+
+    <svg class="spark" style="top:18%;right:16%" width="22" height="22" viewBox="0 0 24 24"><path d="M12 0c1 7 5 11 12 12-7 1-11 5-12 12-1-7-5-11-12-12 7-1 11-5 12-12z"/></svg>
+    <svg class="spark" style="top:44%;right:7%" width="12" height="12" viewBox="0 0 24 24"><path d="M12 0c1 7 5 11 12 12-7 1-11 5-12 12-1-7-5-11-12-12 7-1 11-5 12-12z"/></svg>
+    <svg class="spark" style="top:10%;left:44%" width="14" height="14" viewBox="0 0 24 24"><path d="M12 0c1 7 5 11 12 12-7 1-11 5-12 12-1-7-5-11-12-12 7-1 11-5 12-12z"/></svg>
+
+    <div class="hero">
+      <h2>Tu viaje de estudio <em>despega</em> aquí.</h2>
+      <p>Entra a tu plataforma y sigue preparándote, a tu ritmo.</p>
     </div>
+
+    <div class="moon"><i></i><i></i><i></i></div>
+    <img class="mascot" src="logo.jpeg" alt="Astronauta PRE-ICMA">
+  </aside>
+
+  <main class="form-side">
+    <form class="box" id="form-login">
+      <h1>Bienvenido de vuelta</h1>
+      <p class="sub">Ingresa con tu correo y contraseña.</p>
+
+      <div class="field">
+        <label for="correo">Correo electrónico</label>
+        <input id="correo" type="email" placeholder="estudiante@correo.com" autocomplete="email" required>
+      </div>
+
+      <div class="field">
+        <label for="contrasena">Contraseña</label>
+        <div class="pw">
+          <input id="contrasena" type="password" placeholder="Tu contraseña" autocomplete="current-password" required>
+          <button type="button" onclick="const i=document.getElementById('contrasena');const s=i.type==='password';i.type=s?'text':'password';this.textContent=s?'Ocultar':'Mostrar'">Mostrar</button>
+        </div>
+      </div>
+
+      <button class="btn" type="submit" id="btn-login">Iniciar sesión</button>
+      <div id="mensaje" class="mensaje" role="status"></div>
+
+      <div class="links">
+        <a href="#">¿Olvidaste tu contraseña?</a>
+      </div>
+    </form>
+  </main>
 
     <script>
         // Dirección del backend en Render
