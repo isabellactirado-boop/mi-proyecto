@@ -81,8 +81,22 @@
 
                 if (respuesta.ok) {
                     const datos = await respuesta.json();
-                    mostrar("¡Bienvenida! Rol: " + datos.rol, "ok");
-                    // Aquí más adelante se redirige al panel principal
+                    mostrar("¡Bienvenida! Entrando al panel...", "ok");
+
+                    // Guardamos quién inició sesión (solo mientras esté abierta la pestaña)
+                    try {
+                        sessionStorage.setItem("usuario", datos.usuario);
+                        sessionStorage.setItem("rol", datos.rol);
+                    } catch (e) {}
+
+                    // Según el rol, lo mandamos a su panel
+                    setTimeout(() => {
+                        if (datos.rol === "administrador") {
+                            window.location.href = "dashboard-admin.html";
+                        } else {
+                            window.location.href = "dashboard.html";
+                        }
+                    }, 800);
                 } else if (respuesta.status === 401) {
                     mostrar("Correo o contraseña incorrectos", "error");
                 } else {
