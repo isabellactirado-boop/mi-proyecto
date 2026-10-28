@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -7,19 +7,24 @@
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .login-card { background: white; padding: 35px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 100%; max-width: 400px; text-align: center; }
-        .logo-img { max-width: 120px; height: auto; margin-bottom: 12px; border-radius: 8px; }
-        .login-card h2 { color: #1e3c72; margin-bottom: 6px; font-size: 24px; }
-        .login-card p { color: #666; margin-bottom: 20px; font-size: 14px; }
-        .form-group { text-align: left; margin-bottom: 16px; }
-        .form-group label { display: block; font-weight: 600; margin-bottom: 6px; color: #333; font-size: 13px; }
-        .form-group input, .form-group select { width: 100%; padding: 11px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; transition: 0.3s; background: white; }
-        .form-group input:focus, .form-group select:focus { border-color: #2a5298; outline: none; box-shadow: 0 0 5px rgba(42, 82, 152, 0.3); }
-        .btn-login { width: 100%; background: #2a5298; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 5px; }
+        .login-card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 100%; max-width: 400px; text-align: center; }
+        .logo-img { max-width: 140px; height: auto; margin-bottom: 15px; border-radius: 8px; }
+        .login-card h2 { color: #1e3c72; margin-bottom: 8px; font-size: 26px; }
+        .login-card p { color: #666; margin-bottom: 25px; font-size: 14px; }
+        .form-group { text-align: left; margin-bottom: 20px; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 6px; color: #333; font-size: 14px; }
+        .form-group input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; transition: 0.3s; }
+        .form-group input:focus { border-color: #2a5298; outline: none; box-shadow: 0 0 5px rgba(42, 82, 152, 0.3); }
+        .btn-login { width: 100%; background: #2a5298; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
         .btn-login:hover { background: #1e3c72; }
+        .btn-login:disabled { background: #8aa0c8; cursor: wait; }
         .forgot-pass { display: block; margin-top: 15px; color: #2a5298; font-size: 13px; text-decoration: none; }
         .forgot-pass:hover { text-decoration: underline; }
-        .footer-text { margin-top: 20px; font-size: 13px; color: #777; border-top: 1px solid #eee; padding-top: 15px; }
+        .footer-text { margin-top: 25px; font-size: 13px; color: #777; border-top: 1px solid #eee; padding-top: 15px; }
+        .mensaje { margin-top: 15px; font-size: 14px; min-height: 20px; }
+        .mensaje.error { color: #c62828; }
+        .mensaje.ok { color: #2e7d32; }
+        .mensaje.info { color: #555; }
     </style>
 </head>
 <body>
@@ -27,38 +32,68 @@
         <img src="logo.jpeg" alt="Logo PRE-ICMA" class="logo-img">
         <h2>Plataforma PRE-ICMA</h2>
         <p>Ingresa tus credenciales para acceder</p>
-        <form onsubmit="iniciarSesion(event)">
+        <form id="form-login">
             <div class="form-group">
-                <label>Tipo de Usuario</label>
-                <select id="userRole" required>
-                    <option value="estudiante">🎓 Estudiante</option>
-                    <option value="docente">👨‍🏫 Maestro / Docente</option>
-                    <option value="admin">🏛️ Directivo / Administrador</option>
-                </select>
+                <label for="correo">Correo Electrónico</label>
+                <input type="email" id="correo" placeholder="estudiante@correo.com" required>
             </div>
             <div class="form-group">
-                <label>Correo Electrónico</label>
-                <input type="email" id="email" placeholder="usuario@correo.com" required>
+                <label for="contrasena">Contraseña</label>
+                <input type="password" id="contrasena" placeholder="••••••••" required>
             </div>
-            <div class="form-group">
-                <label>Contraseña</label>
-                <input type="password" id="password" placeholder="••••••••" required>
-            </div>
-            <button type="submit" class="btn-login">Iniciar Sesión</button>
-            <a href="#" onclick="alert('Se ha enviado un enlace de recuperación a tu correo.')" class="forgot-pass">¿Olvidaste tu contraseña?</a>
+            <button type="submit" id="btn-login" class="btn-login">Iniciar Sesión</button>
+            <div id="mensaje" class="mensaje"></div>
+            <a href="#" class="forgot-pass">¿Olvidaste tu contraseña?</a>
         </form>
         <div class="footer-text">
-            ¿No tienes cuenta? <a href="#" onclick="alert('Módulo de registro en construcción.')" style="color:#2a5298; font-weight:bold;">Regístrate aquí</a>
+            ¿No tienes cuenta? <a href="#" style="color:#2a5298; font-weight:bold;">Regístrate aquí</a>
         </div>
     </div>
 
     <script>
-        function iniciarSesion(event) {
-            event.preventDefault();
-            const role = document.getElementById('userRole').value;
-            // Redirige al módulo interactivo y le pasa el rol seleccionado en la URL
-            window.location.href = "modulos.html?rol=" + role;
+        // Dirección del backend en Render
+        const API_URL = "https://preicma.onrender.com";
+
+        const form = document.getElementById("form-login");
+        const boton = document.getElementById("btn-login");
+        const mensaje = document.getElementById("mensaje");
+
+        function mostrar(texto, tipo) {
+            mensaje.textContent = texto;
+            mensaje.className = "mensaje " + tipo;
         }
+
+        form.addEventListener("submit", async (evento) => {
+            evento.preventDefault(); // evita que la página se recargue
+
+            const correo = document.getElementById("correo").value;
+            const contrasena = document.getElementById("contrasena").value;
+
+            boton.disabled = true;
+            mostrar("Verificando... (si el servidor estaba dormido, puede tardar unos segundos)", "info");
+
+            try {
+                const respuesta = await fetch(API_URL + "/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ correo: correo, contrasena: contrasena })
+                });
+
+                if (respuesta.ok) {
+                    const datos = await respuesta.json();
+                    mostrar("¡Bienvenida! Rol: " + datos.rol, "ok");
+                    // Aquí más adelante se redirige al panel principal
+                } else if (respuesta.status === 401) {
+                    mostrar("Correo o contraseña incorrectos", "error");
+                } else {
+                    mostrar("Error del servidor (" + respuesta.status + ")", "error");
+                }
+            } catch (error) {
+                mostrar("No se pudo conectar con el servidor. Intenta de nuevo.", "error");
+            } finally {
+                boton.disabled = false;
+            }
+        });
     </script>
 </body>
 </html>
