@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -17,9 +17,14 @@
         .form-group input:focus { border-color: #2a5298; outline: none; box-shadow: 0 0 5px rgba(42, 82, 152, 0.3); }
         .btn-login { width: 100%; background: #2a5298; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
         .btn-login:hover { background: #1e3c72; }
+        .btn-login:disabled { background: #8aa0c8; cursor: wait; }
         .forgot-pass { display: block; margin-top: 15px; color: #2a5298; font-size: 13px; text-decoration: none; }
         .forgot-pass:hover { text-decoration: underline; }
         .footer-text { margin-top: 25px; font-size: 13px; color: #777; border-top: 1px solid #eee; padding-top: 15px; }
+        .mensaje { margin-top: 15px; font-size: 14px; min-height: 20px; }
+        .mensaje.error { color: #c62828; }
+        .mensaje.ok { color: #2e7d32; }
+        .mensaje.info { color: #555; }
     </style>
 </head>
 <body>
@@ -27,21 +32,68 @@
         <img src="logo.jpeg" alt="Logo PRE-ICMA" class="logo-img">
         <h2>Plataforma PRE-ICMA</h2>
         <p>Ingresa tus credenciales para acceder</p>
-        <form>
+        <form id="form-login">
             <div class="form-group">
-                <label>Correo Electrónico</label>
-                <input type="email" placeholder="estudiante@correo.com" required>
+                <label for="correo">Correo Electrónico</label>
+                <input type="email" id="correo" placeholder="estudiante@correo.com" required>
             </div>
             <div class="form-group">
-                <label>Contraseña</label>
-                <input type="password" placeholder="••••••••" required>
+                <label for="contrasena">Contraseña</label>
+                <input type="password" id="contrasena" placeholder="••••••••" required>
             </div>
-            <button type="button" class="btn-login" onclick="alert('Iniciando sesión en PRE-ICMA...')">Iniciar Sesión</button>
+            <button type="submit" id="btn-login" class="btn-login">Iniciar Sesión</button>
+            <div id="mensaje" class="mensaje"></div>
             <a href="#" class="forgot-pass">¿Olvidaste tu contraseña?</a>
         </form>
         <div class="footer-text">
             ¿No tienes cuenta? <a href="#" style="color:#2a5298; font-weight:bold;">Regístrate aquí</a>
         </div>
     </div>
+
+    <script>
+        // Dirección del backend en Render
+        const API_URL = "https://preicma.onrender.com";
+
+        const form = document.getElementById("form-login");
+        const boton = document.getElementById("btn-login");
+        const mensaje = document.getElementById("mensaje");
+
+        function mostrar(texto, tipo) {
+            mensaje.textContent = texto;
+            mensaje.className = "mensaje " + tipo;
+        }
+
+        form.addEventListener("submit", async (evento) => {
+            evento.preventDefault(); // evita que la página se recargue
+
+            const correo = document.getElementById("correo").value;
+            const contrasena = document.getElementById("contrasena").value;
+
+            boton.disabled = true;
+            mostrar("Verificando... (si el servidor estaba dormido, puede tardar unos segundos)", "info");
+
+            try {
+                const respuesta = await fetch(API_URL + "/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ correo: correo, contrasena: contrasena })
+                });
+
+                if (respuesta.ok) {
+                    const datos = await respuesta.json();
+                    mostrar("¡Bienvenida! Rol: " + datos.rol, "ok");
+                    // Aquí más adelante se redirige al panel principal
+                } else if (respuesta.status === 401) {
+                    mostrar("Correo o contraseña incorrectos", "error");
+                } else {
+                    mostrar("Error del servidor (" + respuesta.status + ")", "error");
+                }
+            } catch (error) {
+                mostrar("No se pudo conectar con el servidor. Intenta de nuevo.", "error");
+            } finally {
+                boton.disabled = false;
+            }
+        });
+    </script>
 </body>
 </html>
