@@ -1,11 +1,14 @@
-﻿import os
+import os
 
 import bcrypt
-import psycopg
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
+from auth import crear_token, usuario_actual
+from db import obtener_conexion
+from resumen import router as router_resumen
 
 load_dotenv()
 
@@ -26,18 +29,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-def obtener_conexion():
-    url = os.getenv("DATABASE_URL")
-    if url:
-        return psycopg.connect(url)
-    return psycopg.connect(
-        host=os.getenv("DB_HOST", "localhost"),
-        port=os.getenv("DB_PORT", "5433"),
-        dbname=os.getenv("DB_NAME", "preicfes"),
-        user=os.getenv("DB_USER", "postgres"),
-        password=os.getenv("DB_PASSWORD"),
-    )
+app.include_router(router_resumen)
 
 
 @app.get("/")
@@ -49,9 +41,9 @@ def inicio():
 def version_db():
     with obtener_conexion() as conexion:
         with conexion.cursor() as cursor:
-            cursor.execute("SELECT version();")
+            cursor.execute("SELECT version() AS version;")
             resultado = cursor.fetchone()
-    return {"version_postgres": resultado[0]}
+    return {"version_postgres": resultado["version"]}
 
 
 class DatosLogin(BaseModel):
@@ -66,24 +58,45 @@ def login(datos: DatosLogin):
     with obtener_conexion() as conexion:
         with conexion.cursor() as cursor:
             cursor.execute(
-                "SELECT nombre_usuario, contrasena_hash, rol "
-                "FROM usuarios WHERE lower(nombre_usuario) = %s",
+                "SELECT id_usuario, nombre_usuario, contrasena_hash, rol "
+                "FROM usuarios WHERE lower(nombre_usuario) = %s AND activo",
                 (correo,),
             )
             fila = cursor.fetchone()
 
-    credenciales_ok = False
-    if fila:
-        try:
-            credenciales_ok = bcrypt.checkpw(
-                datos.contrasena.encode("utf-8"),
-                fila[1].encode("utf-8"),
-            )
-        except ValueError:
-            # el hash guardado no es un hash bcrypt valido (ej. usuarios de ejemplo)
             credenciales_ok = False
+            if fila:
+                try:
+                    credenciales_ok = bcrypt.checkpw(
+                        datos.contrasena.encode("utf-8"),
+                        fila["contrasena_hash"].encode("utf-8"),
+                    )
+                except ValueError:
+                    # el hash guardado no es un hash bcrypt valido (ej. usuarios de ejemplo)
+                    credenciales_ok = False
 
-    if not credenciales_ok:
-        raise HTTPException(status_code=401, detail="Correo o contraseña incorrectos")
+            if not credenciales_ok:
+                raise HTTPException(status_code=401, detail="Correo o contraseña incorrectos")
 
-    return {"mensaje": "ok", "usuario": fila[0], "rol": fila[2]}
+            cursor.execute(
+                "UPDATE usuarios SET fecha_ultima_sesion = CURRENT_TIMESTAMP WHERE id_usuario = %s",
+                (fila["id_usuario"],),
+            )
+
+    token = crear_token(fila["id_usuario"], fila["nombre_usuario"], fila["rol"])
+    return {
+        "mensaje": "ok",
+        "usuario": fila["nombre_usuario"],
+        "rol": fila["rol"],
+        "token": token,
+    }
+
+
+@app.get("/yo")
+def yo(usuario: dict = Depends(usuario_actual)):
+    """Quien soy y que puedo hacer. La pagina lo usa para mostrar u ocultar secciones."""
+    return {
+        "usuario": usuario["nombre_usuario"],
+        "rol": usuario["rol"],
+        "permisos": sorted(usuario["permisos"]),
+    }
