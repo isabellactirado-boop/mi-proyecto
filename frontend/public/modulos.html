@@ -4,44 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PRE-ICMA - Módulos del Sistema</title>
-    <style>
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
-        body { background-color: #f4f6f9; color: #333; display: flex; min-height: 100vh; }
-        
-        .sidebar { width: 260px; background: #1e3c72; color: white; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; }
-        .sidebar-header { text-align: center; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .sidebar-header img { max-width: 80px; border-radius: 8px; margin-bottom: 10px; }
-        .sidebar-header h3 { font-size: 18px; }
-        
-        .menu { list-style: none; margin-top: 25px; }
-        .menu li { margin-bottom: 12px; display: none; } /* Ocultos por defecto */
-        .menu li.visible { display: block; } /* Solo visible el del rol activo */
-        .menu a { color: #d0dbe8; text-decoration: none; font-size: 14px; display: block; padding: 10px 15px; border-radius: 6px; cursor: pointer; transition: 0.3s; background: #2a5298; color: white; font-weight: bold; }
-        
-        .btn-logout { background: #d9534f; color: white; text-align: center; padding: 10px; border-radius: 6px; text-decoration: none; font-weight: bold; display: block; }
-
-        .main-content { flex: 1; padding: 30px; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 25px; }
-        .card h3 { color: #1e3c72; margin-bottom: 15px; border-bottom: 2px solid #f4f6f9; padding-bottom: 10px; }
-
-        /* Estilos de tablas */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
-        th { background-color: #f8f9fa; color: #1e3c72; }
-        .badge { padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
-        .badge-success { background: #d4edda; color: #155724; }
-        .badge-warning { background: #fff3cd; color: #856404; }
-
-        /* Formularios */
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
-        .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; }
-        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
-        .btn-primary { background: #2a5298; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .btn-primary:hover { background: #1e3c72; }
-        
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-    </style>
+    <link rel="stylesheet" href="modulos.css">
 </head>
 <body>
 
@@ -184,24 +147,6 @@
 
     </main>
 
-    <script>
-        // Leer el rol ingresado desde la URL del login
-        const params = new URLSearchParams(window.location.search);
-        let selectedRole = params.get('rol') || 'estudiante';
-
-        // Validar que sea un rol permitido
-        if (!['estudiante', 'admin', 'docente'].includes(selectedRole)) {
-            selectedRole = 'estudiante';
-        }
-
-        // Mostrar ÚNICAMENTE el panel del rol correspondiente
-        document.getElementById(selectedRole).classList.add('active');
-
-        // Mostrar ÚNICAMENTE la opción del menú lateral del rol correspondiente
-        const menuItem = document.getElementById('menu-' + selectedRole);
-        if (menuItem) {
-            menuItem.classList.add('visible');
-        }
-    </script>
+    <script src="modulos.js"></script>
 </body>
 </html>
