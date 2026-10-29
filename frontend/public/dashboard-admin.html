@@ -263,17 +263,27 @@
 
       <div class="panel c4" style="--c:var(--yellow)">
         <h2><span>Registrar Pago Rápido</span></h2>
-        <form class="space-form" onsubmit="event.preventDefault(); alert('Pago guardado exitosamente.');">
+        <form class="space-form" onsubmit="event.preventDefault(); alert('Pago guardado y comprobante procesado exitosamente.');">
           <label>Estudiante</label>
-          <input type="text" class="input-space" placeholder="Buscar por documento o nombre" style="margin-bottom:12px;">
+          <input type="text" class="input-space" placeholder="Buscar por documento o nombre" style="margin-bottom:12px;" required>
+          
           <label>Monto Recibido</label>
-          <input type="text" class="input-space" placeholder="$ 0" style="margin-bottom:12px;">
+          <input type="text" class="input-space" placeholder="$ 0" style="margin-bottom:12px;" required>
+          
           <label>Método de Pago</label>
-          <select class="input-space" style="margin-bottom:16px;">
-            <option>Efectivo</option>
-            <option>Nequi / Daviplata</option>
-            <option>Transferencia Bancaria</option>
+          <select id="metodo-pago" class="input-space" style="margin-bottom:16px;" onchange="toggleComprobante()">
+            <option value="efectivo">Efectivo</option>
+            <option value="nequi">Nequi / Daviplata</option>
+            <option value="transferencia">Transferencia Bancaria</option>
           </select>
+
+          <!-- Campo dinámico para adjuntar comprobante (oculto por defecto si es efectivo) -->
+          <div id="seccion-comprobante" class="comprobante-box" style="display:none; margin-bottom:16px;">
+            <label>Adjuntar Comprobante (Captura / PDF)</label>
+            <input type="file" class="input-space file-input" accept="image/*,application/pdf">
+            <small style="color:var(--muted); font-size:0.75rem; display:block; margin-top:4px;">Formatos permitidos: JPG, PNG o PDF</small>
+          </div>
+
           <button class="btn main" style="width:100%;">Confirmar Transacción</button>
         </form>
       </div>

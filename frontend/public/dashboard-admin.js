@@ -53,6 +53,26 @@ function switchTab(tabId) {
 }
 
 /**
+ * Muestra u oculta el campo de adjuntar comprobante según el método de pago seleccionado
+ */
+function toggleComprobante() {
+  const selectMetodo = document.getElementById('metodo-pago');
+  const seccionComprobante = document.getElementById('seccion-comprobante');
+  
+  if (!selectMetodo || !seccionComprobante) return;
+
+  const valorSeleccionado = selectMetodo.value;
+
+  // Si escogen Nequi, Daviplata o Transferencia, mostramos el campo
+  if (valorSeleccionado === 'nequi' || valorSeleccionado === 'transferencia') {
+    seccionComprobante.style.display = 'block';
+  } else {
+    // Si es efectivo, lo ocultamos
+    seccionComprobante.style.display = 'none';
+  }
+}
+
+/**
   * Función para el botón de cerrar sesión
   */
 function logout() {
