@@ -1,16 +1,17 @@
+// Dirección del backend en Render
+const API_URL = "https://preicma.onrender.com";
 
-        // Dirección del backend en Render
-        const API_URL = "https://preicma.onrender.com";
+document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("form-login");
+    const boton = document.getElementById("btn-login");
+    const mensaje = document.getElementById("mensaje");
 
-        const form = document.getElementById("form-login");
-        const boton = document.getElementById("btn-login");
-        const mensaje = document.getElementById("mensaje");
+    function mostrar(texto, tipo) {
+        mensaje.textContent = texto;
+        mensaje.className = "mensaje " + tipo;
+    }
 
-        function mostrar(texto, tipo) {
-            mensaje.textContent = texto;
-            mensaje.className = "mensaje " + tipo;
-        }
-
+    if (form) {
         form.addEventListener("submit", async (evento) => {
             evento.preventDefault(); // evita que la página se recargue
 
@@ -31,13 +32,15 @@
                     const datos = await respuesta.json();
                     mostrar("¡Bienvenida! Entrando al panel...", "ok");
 
-                    // Guardamos quién inició sesión (solo mientras esté abierta la pestaña)
+                    // Solo aquí se marca la sesión activa en el navegador
+                    localStorage.setItem('isLoggedIn', 'true');
+
                     try {
                         sessionStorage.setItem("usuario", datos.usuario);
                         sessionStorage.setItem("rol", datos.rol);
                     } catch (e) {}
 
-                    // Según el rol, lo mandamos a su panel
+                    // Redirección según rol
                     setTimeout(() => {
                         if (datos.rol === "administrador") {
                             window.location.href = "dashboard-admin.html";
@@ -56,6 +59,5 @@
                 boton.disabled = false;
             }
         });
-    
-        localStorage.setItem('isLoggedIn', 'true');
-        window.location.href = 'dashboard-admin.html';
+    }
+});
