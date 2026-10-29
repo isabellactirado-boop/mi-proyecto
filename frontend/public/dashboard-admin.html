@@ -18,7 +18,7 @@
 </head>
 <body>
 
-<!-- ============ dibujos reutilizables (planetas, cohete, estrella) ============ -->
+<!-- ============ Dibujos reutilizables (planetas, cohete, estrella) ============ -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
     <clipPath id="cp"><circle cx="30" cy="30" r="24"/></clipPath>
@@ -85,19 +85,20 @@
   <symbol id="spark" viewBox="-10 -10 20 20"><path d="M0 -9Q0 0 9 0Q0 0 0 9Q0 0 -9 0Q0 0 0 -9Z" fill="currentColor"/></symbol>
 </svg>
 
+<!-- ============ MENÚ LATERAL (SIDEBAR) ============ -->
 <aside class="side">
   <div class="brand">
     <img src="logo.jpeg" alt="Logo PRE-ICMA">
     <div><b>PRE<span>-</span>ICMA</b><small>CENTRO DE MISIÓN</small></div>
   </div>
   <ul class="nav">
-    <li><a href="#" class="on"><svg><use href="#pl-pink"/></svg>Resumen</a></li>
-    <li><a href="#"><svg><use href="#pl-teal"/></svg>Estudiantes</a></li>
-    <li><a href="#"><svg><use href="#pl-orange"/></svg>Inscripciones</a></li>
-    <li><a href="#"><svg><use href="#pl-red"/></svg>Pagos y cuotas</a></li>
-    <li><a href="#"><svg viewBox="0 0 70 60"><use href="#pl-ring"/></svg>Académico</a></li>
-    <li><a href="#"><svg><use href="#pl-teal"/></svg>Docentes y clases</a></li>
-    <li><a href="#"><svg><use href="#pl-pink"/></svg>Usuarios <span class="tag">3/3</span></a></li>
+    <li><a href="#" onclick="switchTab('resumen')" class="on"><svg><use href="#pl-pink"/></svg>Resumen</a></li>
+    <li><a href="#" onclick="switchTab('estudiantes')"><svg><use href="#pl-teal"/></svg>Estudiantes</a></li>
+    <li><a href="#" onclick="switchTab('inscripciones')"><svg><use href="#pl-orange"/></svg>Inscripciones</a></li>
+    <li><a href="#" onclick="switchTab('pagos')"><svg><use href="#pl-red"/></svg>Pagos y cuotas</a></li>
+    <li><a href="#" onclick="switchTab('academico')"><svg viewBox="0 0 70 60"><use href="#pl-ring"/></svg>Académico</a></li>
+    <li><a href="#" onclick="switchTab('docentes')"><svg><use href="#pl-teal"/></svg>Docentes y clases</a></li>
+    <li><a href="#" onclick="switchTab('usuarios')"><svg><use href="#pl-pink"/></svg>Usuarios <span class="tag">3/3</span></a></li>
   </ul>
   <div class="me">
     <div class="av" id="av">A</div>
@@ -105,19 +106,20 @@
   </div>
   <div class="moonbox">
     <div class="disk"><i></i><i></i><i></i></div>
-    <a class="logout" href="index.html">Cerrar sesión</a>
+    <a class="logout" href="#" onclick="logout()">Cerrar sesión</a>
   </div>
 </aside>
 
+<!-- ============ CONTENIDO PRINCIPAL ============ -->
 <main>
   <header class="hero">
     <div class="hero-txt">
-      <span class="demo">Datos de ejemplo — aún no conectado a la base de datos</span>
-      <h1 id="hello">Hola, <em>Administrador</em></h1>
+      <span class="demo">Datos de ejemplo — panel de control espacial</span>
+      <h1 id="hello">Hola, <em id="display-user">Administrador</em></h1>
       <p id="today"></p>
       <div class="actions">
-        <button class="btn">Registrar pago</button>
-        <button class="btn main">Nueva inscripción</button>
+        <button class="btn" onclick="switchTab('pagos')">Registrar pago</button>
+        <button class="btn main" onclick="switchTab('inscripciones')">Nueva inscripción</button>
       </div>
     </div>
     <div class="hero-art" aria-hidden="true">
@@ -138,79 +140,197 @@
     </div>
   </header>
 
-  <!-- KPIs -->
-  <section class="kpis">
-    <div class="kpi" style="--c:var(--pink)"><svg><use href="#pl-pink"/></svg><span>Estudiantes activos</span><strong>128</strong><small>142 inscripciones activas</small></div>
-    <div class="kpi" style="--c:var(--teal)"><svg><use href="#pl-teal"/></svg><span>Recaudo de octubre</span><strong>$ 18.400.000</strong><small>+13% vs. septiembre</small></div>
-    <div class="kpi" style="--c:var(--orange)"><svg><use href="#pl-orange"/></svg><span>Saldo pendiente</span><strong>$ 4.850.000</strong><small>entre 41 inscripciones</small></div>
-    <div class="kpi bad" style="--c:var(--red)"><svg><use href="#pl-red"/></svg><span>Cuotas en mora</span><strong>12</strong><small>$ 1.620.000 vencidos</small></div>
-    <div class="kpi" style="--c:var(--violet)"><svg viewBox="0 0 70 60"><use href="#pl-ring"/></svg><span>Cupos disponibles</span><strong>37</strong><small>en 5 grupos abiertos</small></div>
+  <!-- ==================== PESTAÑA 1: RESUMEN ==================== -->
+  <section id="tab-resumen" class="tab-content active">
+    <!-- KPIs -->
+    <section class="kpis">
+      <div class="kpi" style="--c:var(--pink)"><svg><use href="#pl-pink"/></svg><span>Estudiantes activos</span><strong>128</strong><small>142 inscripciones activas</small></div>
+      <div class="kpi" style="--c:var(--teal)"><svg><use href="#pl-teal"/></svg><span>Recaudo de octubre</span><strong>$ 18.400.000</strong><small>+13% vs. septiembre</small></div>
+      <div class="kpi" style="--c:var(--orange)"><svg><use href="#pl-orange"/></svg><span>Saldo pendiente</span><strong>$ 4.850.000</strong><small>entre 41 inscripciones</small></div>
+      <div class="kpi bad" style="--c:var(--red)"><svg><use href="#pl-red"/></svg><span>Cuotas en mora</span><strong>12</strong><small>$ 1.620.000 vencidos</small></div>
+      <div class="kpi" style="--c:var(--violet)"><svg viewBox="0 0 70 60"><use href="#pl-ring"/></svg><span>Cupos disponibles</span><strong>37</strong><small>en 5 grupos abiertos</small></div>
+    </section>
+
+    <section class="grid">
+      <div class="panel c4" style="--c:var(--yellow)">
+        <h2><span>Misión de hoy</span></h2>
+        <ul class="todo">
+          <li><span class="n r">12</span><div>Cuotas vencidas<small>Contactar a acudientes</small></div></li>
+          <li><span class="n y">8</span><div>Cuotas que vencen en 7 días<small>Enviar recordatorio</small></div></li>
+          <li><span class="n t">5</span><div>Estudiantes con inasistencias seguidas<small>3 o más clases sin asistir</small></div></li>
+          <li><span class="n y">1</span><div>Grupo sin docente asignado<small>Calendario B · Mié 6:00 pm</small></div></li>
+        </ul>
+      </div>
+
+      <div class="panel c8" style="--c:var(--teal)">
+        <h2><span>Ingresos por mes</span><a href="#" onclick="switchTab('pagos')">Ver pagos</a></h2>
+        <div class="bars">
+          <div class="bar"><em>$12,1M</em><i style="height:62%"></i><span>Jun</span></div>
+          <div class="bar"><em>$14,8M</em><i style="height:76%"></i><span>Jul</span></div>
+          <div class="bar"><em>$13,5M</em><i style="height:69%"></i><span>Ago</span></div>
+          <div class="bar"><em>$16,2M</em><i style="height:83%"></i><span>Sep</span></div>
+          <div class="bar cur"><em>$18,4M</em><i style="height:100%"></i><span>Oct</span></div>
+        </div>
+      </div>
+    </section>
   </section>
 
-  <section class="grid">
-    <div class="panel c4" style="--c:var(--yellow)">
-      <h2><span>Misión de hoy</span></h2>
-      <ul class="todo">
-        <li><span class="n r">12</span><div>Cuotas vencidas<small>Contactar a acudientes</small></div></li>
-        <li><span class="n y">8</span><div>Cuotas que vencen en 7 días<small>Enviar recordatorio</small></div></li>
-        <li><span class="n t">5</span><div>Estudiantes con inasistencias seguidas<small>3 o más clases sin asistir</small></div></li>
-        <li><span class="n y">1</span><div>Grupo sin docente asignado<small>Calendario B · Mié 6:00 pm</small></div></li>
-      </ul>
-    </div>
-
-    <div class="panel c8" style="--c:var(--teal)">
-      <h2><span>Ingresos por mes</span><a href="#">Ver pagos</a></h2>
-      <div class="bars">
-        <div class="bar"><em>$12,1M</em><i style="height:62%"></i><span>Jun</span></div>
-        <div class="bar"><em>$14,8M</em><i style="height:76%"></i><span>Jul</span></div>
-        <div class="bar"><em>$13,5M</em><i style="height:69%"></i><span>Ago</span></div>
-        <div class="bar"><em>$16,2M</em><i style="height:83%"></i><span>Sep</span></div>
-        <div class="bar cur"><em>$18,4M</em><i style="height:100%"></i><span>Oct</span></div>
-      </div>
-    </div>
-
-    <div class="panel c7" style="--c:var(--red)">
-      <h2><span>Cuotas más atrasadas</span><a href="#">Ver todas</a></h2>
+  <!-- ==================== PESTAÑA 2: ESTUDIANTES ==================== -->
+  <section id="tab-estudiantes" class="tab-content">
+    <div class="panel c12" style="--c:var(--teal)">
+      <h2><span>Directorio de Astronautas (Estudiantes)</span><button class="btn sm main" onclick="switchTab('inscripciones')">+ Nuevo Estudiante</button></h2>
       <div class="tscroll">
-      <table>
-        <thead><tr><th>Estudiante</th><th>Cuota</th><th>Valor</th><th>Mora</th><th></th></tr></thead>
-        <tbody>
-          <tr><td>Carlos Ramírez</td><td>2 de 4</td><td>$ 150.000</td><td><span class="badge b-red">18 días</span></td><td><button class="btn sm">Registrar pago</button></td></tr>
-          <tr><td>María F. López</td><td>3 de 4</td><td>$ 120.000</td><td><span class="badge b-warn">10 días</span></td><td><button class="btn sm">Registrar pago</button></td></tr>
-          <tr><td>Juan J. Gómez</td><td>1 de 3</td><td>$ 200.000</td><td><span class="badge b-warn">7 días</span></td><td><button class="btn sm">Registrar pago</button></td></tr>
-          <tr><td>Laura Pardo</td><td>2 de 2</td><td>$ 175.000</td><td><span class="badge b-warn">4 días</span></td><td><button class="btn sm">Registrar pago</button></td></tr>
-        </tbody>
-      </table>
+        <table>
+          <thead>
+            <tr><th>Documento</th><th>Nombre completo</th><th>Grupo / Jornada</th><th>Acudiente</th><th>Estado</th><th>Acciones</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1098234123</td><td>Carlos Ramírez</td><td>Cal. A · Sábado AM</td><td>Pedro Ramírez</td><td><span class="badge b-red">En mora</span></td><td><button class="btn sm">Detalles</button></td></tr>
+            <tr><td>1098567890</td><td>María F. López</td><td>Cal. A · Domingo PM</td><td>Ana López</td><td><span class="badge b-warn">Pendiente</span></td><td><button class="btn sm">Detalles</button></td></tr>
+            <tr><td>1098112233</td><td>Juan J. Gómez</td><td>Cal. A · Sábado AM</td><td>Jorge Gómez</td><td><span class="badge b-warn">Pendiente</span></td><td><button class="btn sm">Detalles</button></td></tr>
+            <tr><td>1098445566</td><td>Laura Pardo</td><td>Cal. B · Miércoles PM</td><td>Martha Pardo</td><td><span class="badge b-ok">Al día</span></td><td><button class="btn sm">Detalles</button></td></tr>
+            <tr><td>1098998877</td><td>Sofía Martínez</td><td>Vacacional · Lun a vie</td><td>Camilo Martínez</td><td><span class="badge b-ok">Al día</span></td><td><button class="btn sm">Detalles</button></td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
+  </section>
 
-    <div class="panel c5 rk" style="--c:var(--orange)">
-      <h2><span>Ocupación de grupos</span><a href="#">Ver grupos</a></h2>
-      <div class="grp"><div><span>Cal. A · Sábado 8:00 am</span><small>96 / 100</small></div><div class="meter"><i class="full" style="--p:96%"></i></div></div>
-      <div class="grp"><div><span>Cal. A · Domingo 2:00 pm</span><small>71 / 100</small></div><div class="meter"><i style="--p:71%"></i></div></div>
-      <div class="grp"><div><span>Cal. B · Miércoles 6:00 pm</span><small>54 / 60</small></div><div class="meter"><i class="warn" style="--p:90%"></i></div></div>
-      <div class="grp"><div><span>Vacacional · Lun a vie</span><small>22 / 40</small></div><div class="meter"><i style="--p:55%"></i></div></div>
+  <!-- ==================== PESTAÑA 3: INSCRIPCIONES ==================== -->
+  <section id="tab-inscripciones" class="tab-content">
+    <div class="grid">
+      <div class="panel c7" style="--c:var(--orange)">
+        <h2><span>Formulario de Misión (Inscripción)</span></h2>
+        <form class="space-form" onsubmit="event.preventDefault(); alert('Estudiante registrado con éxito.');">
+          <div class="form-grid">
+            <div>
+              <label>Nombre del Estudiante</label>
+              <input type="text" class="input-space" placeholder="Ej: Juan Pérez" required>
+            </div>
+            <div>
+              <label>Documento de Identidad</label>
+              <input type="text" class="input-space" placeholder="Número de Documento" required>
+            </div>
+            <div>
+              <label>Teléfono / WhatsApp</label>
+              <input type="tel" class="input-space" placeholder="Ej: 3001234567" required>
+            </div>
+            <div>
+              <label>Nombre del Acudiente</label>
+              <input type="text" class="input-space" placeholder="Ej: María Pérez" required>
+            </div>
+            <div style="grid-column: span 2;">
+              <label>Programa / Grupo Asignado</label>
+              <select class="input-space">
+                <option>Calendario A · Sábado 8:00 am (96/100 cupos)</option>
+                <option>Calendario A · Domingo 2:00 pm (71/100 cupos)</option>
+                <option>Calendario B · Miércoles 6:00 pm (54/60 cupos)</option>
+                <option>Vacacional · Lunes a Viernes (22/40 cupos)</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="btn main" style="margin-top: 18px; width: 100%;">Lanzar Misión (Inscribir)</button>
+        </form>
+      </div>
+
+      <div class="panel c5 rk" style="--c:var(--orange)">
+        <h2><span>Ocupación de grupos</span></h2>
+        <div class="grp"><div><span>Cal. A · Sábado 8:00 am</span><small>96 / 100</small></div><div class="meter"><i class="full" style="--p:96%"></i></div></div>
+        <div class="grp"><div><span>Cal. A · Domingo 2:00 pm</span><small>71 / 100</small></div><div class="meter"><i style="--p:71%"></i></div></div>
+        <div class="grp"><div><span>Cal. B · Miércoles 6:00 pm</span><small>54 / 60</small></div><div class="meter"><i class="warn" style="--p:90%"></i></div></div>
+        <div class="grp"><div><span>Vacacional · Lun a vie</span><small>22 / 40</small></div><div class="meter"><i style="--p:55%"></i></div></div>
+      </div>
     </div>
+  </section>
 
-    <div class="panel c6" style="--c:var(--violet)">
-      <h2><span>Último simulacro</span><a href="#">Ver resultados</a></h2>
-      <div class="score"><strong>312</strong><span>promedio global de 500</span><span class="up">+14 vs. anterior</span></div>
-      <div class="area" style="--c:var(--pink)"><svg><use href="#pl-pink"/></svg><span>Matemáticas</span><div class="meter"><i style="--p:58%"></i></div><b>58</b></div>
-      <div class="area" style="--c:var(--teal)"><svg><use href="#pl-teal"/></svg><span>Lectura crítica</span><div class="meter"><i style="--p:64%"></i></div><b>64</b></div>
-      <div class="area" style="--c:var(--orange)"><svg><use href="#pl-orange"/></svg><span>Sociales</span><div class="meter"><i style="--p:61%"></i></div><b>61</b></div>
-      <div class="area" style="--c:var(--violet)"><svg viewBox="0 0 70 60"><use href="#pl-ring"/></svg><span>Ciencias nat.</span><div class="meter"><i style="--p:59%"></i></div><b>59</b></div>
-      <div class="area" style="--c:var(--red)"><svg><use href="#pl-red"/></svg><span>Inglés</span><div class="meter"><i style="--p:52%"></i></div><b>52</b></div>
-      <small class="note">Inglés es el área con menor promedio: conviene reforzarla.</small>
+  <!-- ==================== PESTAÑA 4: PAGOS Y CUOTAS ==================== -->
+  <section id="tab-pagos" class="tab-content">
+    <div class="grid">
+      <div class="panel c8" style="--c:var(--red)">
+        <h2><span>Cuotas más atrasadas y por cobrar</span></h2>
+        <div class="tscroll">
+          <table>
+            <thead><tr><th>Estudiante</th><th>Cuota</th><th>Valor</th><th>Mora</th><th>Acción</th></tr></thead>
+            <tbody>
+              <tr><td>Carlos Ramírez</td><td>2 de 4</td><td>$ 150.000</td><td><span class="badge b-red">18 días</span></td><td><button class="btn sm main">Registrar pago</button></td></tr>
+              <tr><td>María F. López</td><td>3 de 4</td><td>$ 120.000</td><td><span class="badge b-warn">10 días</span></td><td><button class="btn sm main">Registrar pago</button></td></tr>
+              <tr><td>Juan J. Gómez</td><td>1 de 3</td><td>$ 200.000</td><td><span class="badge b-warn">7 días</span></td><td><button class="btn sm main">Registrar pago</button></td></tr>
+              <tr><td>Laura Pardo</td><td>2 de 2</td><td>$ 175.000</td><td><span class="badge b-warn">4 días</span></td><td><button class="btn sm main">Registrar pago</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel c4" style="--c:var(--yellow)">
+        <h2><span>Registrar Pago Rápido</span></h2>
+        <form class="space-form" onsubmit="event.preventDefault(); alert('Pago guardado exitosamente.');">
+          <label>Estudiante</label>
+          <input type="text" class="input-space" placeholder="Buscar por documento o nombre" style="margin-bottom:12px;">
+          <label>Monto Recibido</label>
+          <input type="text" class="input-space" placeholder="$ 0" style="margin-bottom:12px;">
+          <label>Método de Pago</label>
+          <select class="input-space" style="margin-bottom:16px;">
+            <option>Efectivo</option>
+            <option>Nequi / Daviplata</option>
+            <option>Transferencia Bancaria</option>
+          </select>
+          <button class="btn main" style="width:100%;">Confirmar Transacción</button>
+        </form>
+      </div>
     </div>
+  </section>
 
-    <div class="panel c6" style="--c:var(--pink)">
-      <h2><span>Próximas clases</span><a href="#">Calendario</a></h2>
+  <!-- ==================== PESTAÑA 5: ACADÉMICO ==================== -->
+  <section id="tab-academico" class="tab-content">
+    <div class="grid">
+      <div class="panel c6" style="--c:var(--violet)">
+        <h2><span>Último simulacro</span></h2>
+        <div class="score"><strong>312</strong><span>promedio global de 500</span><span class="up">+14 vs. anterior</span></div>
+        <div class="area" style="--c:var(--pink)"><svg><use href="#pl-pink"/></svg><span>Matemáticas</span><div class="meter"><i style="--p:58%"></i></div><b>58</b></div>
+        <div class="area" style="--c:var(--teal)"><svg><use href="#pl-teal"/></svg><span>Lectura crítica</span><div class="meter"><i style="--p:64%"></i></div><b>64</b></div>
+        <div class="area" style="--c:var(--orange)"><svg><use href="#pl-orange"/></svg><span>Sociales</span><div class="meter"><i style="--p:61%"></i></div><b>61</b></div>
+        <div class="area" style="--c:var(--violet)"><svg viewBox="0 0 70 60"><use href="#pl-ring"/></svg><span>Ciencias nat.</span><div class="meter"><i style="--p:59%"></i></div><b>59</b></div>
+        <div class="area" style="--c:var(--red)"><svg><use href="#pl-red"/></svg><span>Inglés</span><div class="meter"><i style="--p:52%"></i></div><b>52</b></div>
+        <small class="note">Inglés es el área con menor promedio: conviene reforzarla.</small>
+      </div>
+
+      <div class="panel c6" style="--c:var(--yellow)">
+        <h2><span>Próximos Simulacros Programados</span></h2>
+        <ul class="todo">
+          <li><span class="n y">1</span><div>Simulacro Diagnóstico Cal. A<small>Programado: Sábado 15 de Noviembre</small></div></li>
+          <li><span class="n t">2</span><div>Simulacro Final Intensivo<small>Programado: Domingo 29 de Noviembre</small></div></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PESTAÑA 6: DOCENTES Y CLASES ==================== -->
+  <section id="tab-docentes" class="tab-content">
+    <div class="panel c12" style="--c:var(--pink)">
+      <h2><span>Programación de Clases y Profesores</span><button class="btn sm main">+ Asignar Docente</button></h2>
       <ul class="cls">
         <li><svg><use href="#pl-pink"/></svg><time>Hoy 6:00 pm</time><div>Matemáticas · Cal. B<small>Prof. Andrea Ruiz · Google Meet</small></div><span class="badge b-warn live">Sin docente</span></li>
         <li><svg><use href="#pl-teal"/></svg><time>Sáb 8:00 am</time><div>Lectura crítica · Cal. A<small>Prof. Daniel Castro · Google Meet</small></div></li>
         <li><svg><use href="#pl-orange"/></svg><time>Sáb 10:00 am</time><div>Ciencias naturales · Cal. A<small>Prof. Sofía Mejía · Google Meet</small></div></li>
         <li><svg><use href="#pl-red"/></svg><time>Dom 2:00 pm</time><div>Inglés · Cal. A<small>Prof. Camilo Torres · Google Meet</small></div></li>
       </ul>
+    </div>
+  </section>
+
+  <!-- ==================== PESTAÑA 7: USUARIOS ==================== -->
+  <section id="tab-usuarios" class="tab-content">
+    <div class="panel c12" style="--c:var(--pink)">
+      <h2><span>Usuarios del Sistema con Acceso</span><button class="btn sm main">+ Nuevo Usuario</button></h2>
+      <div class="tscroll">
+        <table>
+          <thead><tr><th>Usuario / Email</th><th>Rol</th><th>Último Acceso</th><th>Estado</th></tr></thead>
+          <tbody>
+            <tr><td id="table-user-email">Administrador</td><td>Superadmin</td><td>Hoy</td><td><span class="badge b-ok">Activo</span></td></tr>
+            <tr><td>coordinacion@preicma.edu.co</td><td>Coordinador</td><td>Ayer</td><td><span class="badge b-ok">Activo</span></td></tr>
+            <tr><td>docente.math@preicma.edu.co</td><td>Profesor</td><td>Hace 3 días</td><td><span class="badge b-ok">Activo</span></td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </section>
 </main>

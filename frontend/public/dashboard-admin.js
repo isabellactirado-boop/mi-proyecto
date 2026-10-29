@@ -1,33 +1,61 @@
 document.addEventListener('DOMContentLoaded', () => {
-  try {
-    const u = sessionStorage.getItem("usuario");
-    const r = sessionStorage.getItem("rol");
-    if (u) {
-      document.getElementById("uname").textContent = u;
-      document.getElementById("hello").innerHTML = "Hola, <em></em>";
-      document.querySelector("#hello em").textContent = u;
-      document.getElementById("av").textContent = u.charAt(0).toUpperCase();
-    }
-    if (r) document.getElementById("urol").textContent = r.charAt(0).toUpperCase() + r.slice(1);
-  } catch (e) {}
-
-  const f = new Date().toLocaleDateString("es-CO", {weekday:"long", day:"numeric", month:"long", year:"numeric"});
-  const todayElement = document.getElementById("today");
+  // 1. Mostrar la fecha actual con formato amigable
+  const todayElement = document.getElementById('today');
   if (todayElement) {
-    todayElement.textContent = f.charAt(0).toUpperCase() + f.slice(1);
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const now = new Date();
+    const formattedDate = now.toLocaleDateString('es-ES', options);
+    todayElement.textContent = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
   }
 
-  // Botón de Cerrar Sesión
-  const btnLogout = document.querySelector('.logout');
-  if (btnLogout) {
-    btnLogout.addEventListener('click', (e) => {
-      e.preventDefault();
-      
-      // Limpiamos los datos de la sesión actual
-      sessionStorage.clear();
-      
-      // Forzamos la redirección absoluta al login
-      window.location.replace('index.html');
-    });
-  }
+  // 2. Cargar usuario dinámico desde sessionStorage
+  const activeUser = sessionStorage.getItem('currentUser') || 'Administrador';
+  
+  const displayUser = document.getElementById('display-user');
+  if (displayUser) displayUser.textContent = activeUser;
+
+  const uname = document.getElementById('uname');
+  if (uname) uname.textContent = activeUser;
+
+  const av = document.getElementById('av');
+  if (av && activeUser) av.textContent = activeUser.charAt(0).toUpperCase();
+
+  const tableUserEmail = document.getElementById('table-user-email');
+  if (tableUserEmail) tableUserEmail.textContent = activeUser;
 });
+
+/**
+  * Función principal para alternar vistas (pestañas)
+  * @param {string} tabId Id del módulo a mostrar ('resumen', 'estudiantes', etc.)
+  */
+function switchTab(tabId) {
+  // Ocultar todas las secciones
+  const tabs = document.querySelectorAll('.tab-content');
+  tabs.forEach(tab => tab.classList.remove('active'));
+
+  // Desmarcar todos los botones del menú lateral
+  const navLinks = document.querySelectorAll('.nav a');
+  navLinks.forEach(link => link.classList.remove('on'));
+
+  // Activar la vista correspondiente
+  const selectedTab = document.getElementById(`tab-${tabId}`);
+  if (selectedTab) {
+    selectedTab.classList.add('active');
+  }
+
+  // Marcar como activo el elemento clicado en el sidebar
+  const activeLink = Array.from(navLinks).find(link => 
+    link.getAttribute('onclick') && link.getAttribute('onclick').includes(tabId)
+  );
+  if (activeLink) {
+    activeLink.classList.add('on');
+  }
+}
+
+/**
+  * Función para el botón de cerrar sesión
+  */
+function logout() {
+  sessionStorage.clear();
+  window.location.replace('index.html');
+}
