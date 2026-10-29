@@ -1,4 +1,3 @@
-// 1. Manejo del nombre de usuario y la fecha actual en el panel
 document.addEventListener('DOMContentLoaded', () => {
   try {
     const u = sessionStorage.getItem("usuario");
@@ -18,20 +17,16 @@ document.addEventListener('DOMContentLoaded', () => {
     todayElement.textContent = f.charAt(0).toUpperCase() + f.slice(1);
   }
 
-  // 2. Gestión segura del botón de Cerrar Sesión
+  // Botón de Cerrar Sesión
   const btnLogout = document.querySelector('.logout');
   if (btnLogout) {
     btnLogout.addEventListener('click', (e) => {
-      e.preventDefault(); // Evita que recargue mal o navegue por defecto
+      e.preventDefault();
       
-      // Borramos las credenciales y la bandera de sesión del navegador
-      localStorage.removeItem('isLoggedIn');
+      // Borramos todo rastro de la sesión actual
+      sessionStorage.clear();
       
-      try {
-        sessionStorage.clear();
-      } catch (err) {}
-
-      // Redirigimos de forma limpia al login y evitamos bucles hacia atrás
+      // Redirigimos al login
       window.location.replace('index.html');
     });
   }

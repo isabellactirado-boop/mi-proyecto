@@ -1,3 +1,4 @@
+
 // Dirección del backend en Render
 const API_URL = "https://preicma.onrender.com";
 
@@ -13,7 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (form) {
         form.addEventListener("submit", async (evento) => {
-            evento.preventDefault(); // evita que la página se recargue
+            evento.preventDefault();
 
             const correo = document.getElementById("correo").value;
             const contrasena = document.getElementById("contrasena").value;
@@ -32,15 +33,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     const datos = await respuesta.json();
                     mostrar("¡Bienvenida! Entrando al panel...", "ok");
 
-                    // Solo aquí se marca la sesión activa en el navegador
-                    localStorage.setItem('isLoggedIn', 'true');
+                    // Guardamos la sesión en sessionStorage (se borra al cerrar la pestaña)
+                    sessionStorage.setItem('isLoggedIn', 'true');
+                    sessionStorage.setItem("usuario", datos.usuario);
+                    sessionStorage.setItem("rol", datos.rol);
 
-                    try {
-                        sessionStorage.setItem("usuario", datos.usuario);
-                        sessionStorage.setItem("rol", datos.rol);
-                    } catch (e) {}
-
-                    // Redirección según rol
                     setTimeout(() => {
                         if (datos.rol === "administrador") {
                             window.location.href = "dashboard-admin.html";
