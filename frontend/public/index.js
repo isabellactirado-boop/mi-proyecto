@@ -1,4 +1,3 @@
-
 // Dirección del backend en Render
 const API_URL = "https://preicma.onrender.com";
 
@@ -33,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     const datos = await respuesta.json();
                     mostrar("¡Bienvenida! Entrando al panel...", "ok");
 
-                    // Guardamos la sesión en sessionStorage (se borra al cerrar la pestaña)
+                    // Guardamos la sesión en sessionStorage de forma estricta
                     sessionStorage.setItem('isLoggedIn', 'true');
                     sessionStorage.setItem("usuario", datos.usuario);
                     sessionStorage.setItem("rol", datos.rol);

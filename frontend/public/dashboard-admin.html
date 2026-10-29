@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PRE-ICMA - Panel de administración</title>
 
-<!-- Script de protección de ruta: Si no hay sesión, se devuelve al login -->
+<!-- Script estricto de validación de sesión por pestaña -->
 <script>
-  const sesionActiva = localStorage.getItem('isLoggedIn');
+  const sesionActiva = sessionStorage.getItem('isLoggedIn');
   if (!sesionActiva || sesionActiva !== 'true') {
-    window.location.href = 'index.html';
+    window.location.replace('index.html');
   }
 </script>
 

@@ -23,10 +23,10 @@ document.addEventListener('DOMContentLoaded', () => {
     btnLogout.addEventListener('click', (e) => {
       e.preventDefault();
       
-      // Borramos todo rastro de la sesión actual
+      // Limpiamos los datos de la sesión actual
       sessionStorage.clear();
       
-      // Redirigimos al login
+      // Forzamos la redirección absoluta al login
       window.location.replace('index.html');
     });
   }
