@@ -13,3 +13,17 @@
   } catch (e) {}
   const f = new Date().toLocaleDateString("es-CO", {weekday:"long", day:"numeric", month:"long", year:"numeric"});
   document.getElementById("today").textContent = f.charAt(0).toUpperCase() + f.slice(1);
+
+
+  document.addEventListener('DOMContentLoaded', () => {
+  const btnLogout = document.querySelector('.logout');
+  if (btnLogout) {
+    btnLogout.addEventListener('click', (e) => {
+      e.preventDefault();
+      // Borramos la bandera de sesión del navegador
+      localStorage.removeItem('isLoggedIn');
+      // Redirigimos al usuario al login
+      window.location.href = 'index.html';
+    });
+  }
+});

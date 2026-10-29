@@ -57,3 +57,5 @@
             }
         });
     
+        localStorage.setItem('isLoggedIn', 'true');
+        window.location.href = 'dashboard-admin.html';
