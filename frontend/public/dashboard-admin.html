@@ -117,7 +117,8 @@
       <span class="demo">Datos de ejemplo — panel de control espacial</span>
       <h1 id="hello">Hola, <em id="display-user">Administrador</em></h1>
       <p id="today"></p>
-      <div class="actions">
+      <!-- Acciones exclusivas del Resumen -->
+      <div class="actions" id="hero-actions">
         <button class="btn" onclick="switchTab('pagos')">Registrar pago</button>
         <button class="btn main" onclick="switchTab('inscripciones')">Nueva inscripción</button>
       </div>
@@ -185,11 +186,46 @@
             <tr><th>Documento</th><th>Nombre completo</th><th>Grupo / Jornada</th><th>Acudiente</th><th>Estado</th><th>Acciones</th></tr>
           </thead>
           <tbody>
-            <tr><td>1098234123</td><td>Carlos Ramírez</td><td>Cal. A · Sábado AM</td><td>Pedro Ramírez</td><td><span class="badge b-red">En mora</span></td><td><button class="btn sm">Detalles</button></td></tr>
-            <tr><td>1098567890</td><td>María F. López</td><td>Cal. A · Domingo PM</td><td>Ana López</td><td><span class="badge b-warn">Pendiente</span></td><td><button class="btn sm">Detalles</button></td></tr>
-            <tr><td>1098112233</td><td>Juan J. Gómez</td><td>Cal. A · Sábado AM</td><td>Jorge Gómez</td><td><span class="badge b-warn">Pendiente</span></td><td><button class="btn sm">Detalles</button></td></tr>
-            <tr><td>1098445566</td><td>Laura Pardo</td><td>Cal. B · Miércoles PM</td><td>Martha Pardo</td><td><span class="badge b-ok">Al día</span></td><td><button class="btn sm">Detalles</button></td></tr>
-            <tr><td>1098998877</td><td>Sofía Martínez</td><td>Vacacional · Lun a vie</td><td>Camilo Martínez</td><td><span class="badge b-ok">Al día</span></td><td><button class="btn sm">Detalles</button></td></tr>
+            <tr>
+              <td>1098234123</td>
+              <td>Carlos Ramírez</td>
+              <td>Cal. A · Sábado AM</td>
+              <td>Pedro Ramírez</td>
+              <td><span class="badge b-red">En mora</span></td>
+              <td><button class="btn sm" onclick="generarInformePDF('Carlos Ramírez', '1098234123', 'Cal. A · Sábado AM', 'Pedro Ramírez', '3158901234', 'pedro.ramirez@gmail.com', 'En mora', '85%', '$ 150.000', '310 / 500')">Detalles (PDF)</button></td>
+            </tr>
+            <tr>
+              <td>1098567890</td>
+              <td>María F. López</td>
+              <td>Cal. A · Domingo PM</td>
+              <td>Ana López</td>
+              <td><span class="badge b-warn">Pendiente</span></td>
+              <td><button class="btn sm" onclick="generarInformePDF('María F. López', '1098567890', 'Cal. A · Domingo PM', 'Ana López', '3104567890', 'ana.lopez@gmail.com', 'Pendiente', '92%', '$ 120.000', '335 / 500')">Detalles (PDF)</button></td>
+            </tr>
+            <tr>
+              <td>1098112233</td>
+              <td>Juan J. Gómez</td>
+              <td>Cal. A · Sábado AM</td>
+              <td>Jorge Gómez</td>
+              <td><span class="badge b-warn">Pendiente</span></td>
+              <td><button class="btn sm" onclick="generarInformePDF('Juan J. Gómez', '1098112233', 'Cal. A · Sábado AM', 'Jorge Gómez', '3187654321', 'jorge.gomez@gmail.com', 'Pendiente', '78%', '$ 200.000', '290 / 500')">Detalles (PDF)</button></td>
+            </tr>
+            <tr>
+              <td>1098445566</td>
+              <td>Laura Pardo</td>
+              <td>Cal. B · Miércoles PM</td>
+              <td>Martha Pardo</td>
+              <td><span class="badge b-ok">Al día</span></td>
+              <td><button class="btn sm" onclick="generarInformePDF('Laura Pardo', '1098445566', 'Cal. B · Miércoles PM', 'Martha Pardo', '3009876543', 'martha.pardo@gmail.com', 'Al día', '98%', '$ 0', '352 / 500')">Detalles (PDF)</button></td>
+            </tr>
+            <tr>
+              <td>1098998877</td>
+              <td>Sofía Martínez</td>
+              <td>Vacacional · Lun a vie</td>
+              <td>Camilo Martínez</td>
+              <td><span class="badge b-ok">Al día</span></td>
+              <td><button class="btn sm" onclick="generarInformePDF('Sofía Martínez', '1098998877', 'Vacacional · Lun a vie', 'Camilo Martínez', '3123456789', 'camilo.martinez@gmail.com', 'Al día', '100%', '$ 0', '368 / 500')">Detalles (PDF)</button></td>
+            </tr>
           </tbody>
         </table>
       </div>
