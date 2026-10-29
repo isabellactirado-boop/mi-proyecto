@@ -1,5 +1,5 @@
-
-  // Nombre desde la sesión del login (si existe). No bloquea la vista previa.
+// 1. Manejo del nombre de usuario y la fecha actual en el panel
+document.addEventListener('DOMContentLoaded', () => {
   try {
     const u = sessionStorage.getItem("usuario");
     const r = sessionStorage.getItem("rol");
@@ -11,19 +11,28 @@
     }
     if (r) document.getElementById("urol").textContent = r.charAt(0).toUpperCase() + r.slice(1);
   } catch (e) {}
+
   const f = new Date().toLocaleDateString("es-CO", {weekday:"long", day:"numeric", month:"long", year:"numeric"});
-  document.getElementById("today").textContent = f.charAt(0).toUpperCase() + f.slice(1);
+  const todayElement = document.getElementById("today");
+  if (todayElement) {
+    todayElement.textContent = f.charAt(0).toUpperCase() + f.slice(1);
+  }
 
-
-  document.addEventListener('DOMContentLoaded', () => {
+  // 2. Gestión segura del botón de Cerrar Sesión
   const btnLogout = document.querySelector('.logout');
   if (btnLogout) {
     btnLogout.addEventListener('click', (e) => {
-      e.preventDefault();
-      // Borramos la bandera de sesión del navegador
+      e.preventDefault(); // Evita que recargue mal o navegue por defecto
+      
+      // Borramos las credenciales y la bandera de sesión del navegador
       localStorage.removeItem('isLoggedIn');
-      // Redirigimos al usuario al login
-      window.location.href = 'index.html';
+      
+      try {
+        sessionStorage.clear();
+      } catch (err) {}
+
+      // Redirigimos de forma limpia al login y evitamos bucles hacia atrás
+      window.location.replace('index.html');
     });
   }
 });
