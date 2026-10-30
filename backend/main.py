@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from auth import crear_token, usuario_actual
 from db import obtener_conexion
 from resumen import router as router_resumen
+from usuarios import router as router_usuarios
 
 load_dotenv()
 
@@ -30,6 +31,7 @@ app.add_middleware(
 )
 
 app.include_router(router_resumen)
+app.include_router(router_usuarios)
 
 
 @app.get("/")
@@ -58,7 +60,7 @@ def login(datos: DatosLogin):
     with obtener_conexion() as conexion:
         with conexion.cursor() as cursor:
             cursor.execute(
-                "SELECT id_usuario, nombre_usuario, contrasena_hash, rol "
+                "SELECT id_usuario, nombre_usuario, contrasena_hash, rol, debe_cambiar_contrasena "
                 "FROM usuarios WHERE lower(nombre_usuario) = %s AND activo",
                 (correo,),
             )
@@ -83,12 +85,15 @@ def login(datos: DatosLogin):
                 (fila["id_usuario"],),
             )
 
-    token = crear_token(fila["id_usuario"], fila["nombre_usuario"], fila["rol"])
+    token = crear_token(
+        fila["id_usuario"], fila["nombre_usuario"], fila["rol"], fila["contrasena_hash"]
+    )
     return {
         "mensaje": "ok",
         "usuario": fila["nombre_usuario"],
         "rol": fila["rol"],
         "token": token,
+        "debe_cambiar_contrasena": fila["debe_cambiar_contrasena"],
     }
 
 
@@ -98,5 +103,6 @@ def yo(usuario: dict = Depends(usuario_actual)):
     return {
         "usuario": usuario["nombre_usuario"],
         "rol": usuario["rol"],
+        "debe_cambiar_contrasena": usuario["debe_cambiar_contrasena"],
         "permisos": sorted(usuario["permisos"]),
     }

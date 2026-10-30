@@ -1,6 +1,8 @@
+import hashlib
 import os
 from datetime import datetime, timedelta, timezone
 
+import bcrypt
 import jwt
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -23,11 +25,23 @@ def _secreto() -> str:
     return secreto
 
 
-def crear_token(id_usuario: int, usuario: str, rol: str) -> str:
+def generar_hash(contrasena: str) -> str:
+    """Convierte una contrasena en su hash bcrypt (lo unico que se guarda)."""
+    return bcrypt.hashpw(contrasena.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+
+def huella_contrasena(contrasena_hash: str) -> str:
+    """Huella corta del hash guardado. Va dentro del token: si la contrasena
+    cambia, la huella cambia y los tokens anteriores dejan de servir."""
+    return hashlib.sha256(contrasena_hash.encode("utf-8")).hexdigest()[:16]
+
+
+def crear_token(id_usuario: int, usuario: str, rol: str, contrasena_hash: str) -> str:
     datos = {
         "sub": str(id_usuario),
         "usuario": usuario,
         "rol": rol,
+        "h": huella_contrasena(contrasena_hash),
         "exp": datetime.now(timezone.utc) + timedelta(hours=HORAS_SESION),
     }
     return jwt.encode(datos, _secreto(), algorithm=ALGORITMO)
@@ -39,7 +53,8 @@ def usuario_actual(
     """Devuelve quien hace la peticion, con sus permisos reales de la BD.
 
     Los permisos se leen de la base de datos en cada peticion, asi que si se
-    desactiva un usuario o se cambia su rol, el cambio aplica de inmediato.
+    desactiva un usuario, se cambia su rol o su contrasena, el cambio aplica
+    de inmediato.
     """
     if credenciales is None:
         raise HTTPException(status_code=401, detail="Debes iniciar sesion")
@@ -55,13 +70,20 @@ def usuario_actual(
     with obtener_conexion() as conexion:
         with conexion.cursor() as cursor:
             cursor.execute(
-                "SELECT id_usuario, nombre_usuario, rol, id_docente "
+                "SELECT id_usuario, nombre_usuario, rol, id_docente, "
+                "       contrasena_hash, debe_cambiar_contrasena "
                 "FROM usuarios WHERE id_usuario = %s AND activo",
                 (id_usuario,),
             )
             usuario = cursor.fetchone()
             if not usuario:
                 raise HTTPException(status_code=401, detail="Usuario inactivo o inexistente")
+
+            if datos.get("h") != huella_contrasena(usuario["contrasena_hash"]):
+                raise HTTPException(
+                    status_code=401,
+                    detail="Tu contraseña cambio, inicia sesion de nuevo",
+                )
 
             cursor.execute(
                 "SELECT p.nombre_permiso "
@@ -73,6 +95,7 @@ def usuario_actual(
             )
             usuario["permisos"] = {fila["nombre_permiso"] for fila in cursor.fetchall()}
 
+    del usuario["contrasena_hash"]  # el hash no sale de esta funcion
     return usuario
 
 
