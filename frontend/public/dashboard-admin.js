@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // 1. Mostrar la fecha actual amigable
+  // 1. Mostrar la fecha actual
   const todayElement = document.getElementById('today');
   if (todayElement) {
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -8,8 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     todayElement.textContent = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
   }
 
-  // 2. Cargar usuario profesor
-  const activeUser = sessionStorage.getItem('currentUser') || 'Profesor Titular';
+  // 2. Cargar datos del usuario
+  const activeUser = sessionStorage.getItem('currentUser') || 'Administrador';
   
   const displayUser = document.getElementById('display-user');
   if (displayUser) displayUser.textContent = activeUser;
@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * Función principal para alternar vistas del panel docente con animación
+ * Alternar pestañas del panel
  */
 function switchTab(tabId) {
   const tabs = document.querySelectorAll('.tab-content');
@@ -50,21 +50,14 @@ function switchTab(tabId) {
 }
 
 /**
- * Sistema de Notificaciones Toast Flotantes
+ * Mostrar/Ocultar campo de comprobante según método de pago
  */
-function mostrarToast(mensaje, tipo = 'success') {
-  const container = document.getElementById('toast-container');
-  if (!container) return;
-
-  const toast = document.createElement('div');
-  toast.className = `toast ${tipo}`;
-  toast.textContent = mensaje;
-
-  container.appendChild(toast);
-
-  setTimeout(() => {
-    toast.remove();
-  }, 3000);
+function toggleComprobante() {
+  const metodo = document.getElementById('metodo-pago').value;
+  const cajaComprobante = document.getElementById('seccion-comprobante');
+  if (cajaComprobante) {
+    cajaComprobante.style.display = (metodo === 'nequi' || metodo === 'transferencia') ? 'block' : 'none';
+  }
 }
 
 /**
@@ -92,7 +85,7 @@ function filtrarTablaEstudiantes() {
 }
 
 /**
- * Genera el informe PDF del estudiante para control del docente
+ * Generar reporte imprimible/PDF del estudiante
  */
 function generarInformePDF(nombre, doc, grupo, acudiente, tel, email, estado, asistencia, mora, puntaje) {
   const printWindow = window.open('', '_blank');
