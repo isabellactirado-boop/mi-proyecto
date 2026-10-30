@@ -6,12 +6,20 @@
 <title>PRE-ICMA - Panel de Docente</title>
 
 <!-- Script estricto de validación de sesión -->
-
+<script>
+  const sesionActiva = sessionStorage.getItem('isLoggedIn');
+  if (!sesionActiva || sesionActiva !== 'true') {
+    window.location.replace('index.html');
+  }
+</script>
 
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="dashboard-docente.css">
 </head>
 <body>
+
+<!-- ============ Contenedor de Notificaciones Toast ============ -->
+<div id="toast-container" class="toast-container"></div>
 
 <!-- ============ Dibujos reutilizables (planetas, cohete, estrella) ============ -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -101,7 +109,6 @@
       <span class="demo">Portal Docente — Panel Autorizado</span>
       <h1 id="hello">Hola, <em id="display-user">Profesor</em></h1>
       <p id="today"></p>
-      <!-- Acciones exclusivas del docente en el resumen -->
       <div class="actions" id="hero-actions">
         <button class="btn" onclick="switchTab('asistencia')">Tomar asistencia</button>
         <button class="btn main" onclick="switchTab('calificaciones')">Subir calificaciones</button>
@@ -124,7 +131,6 @@
 
   <!-- ==================== PESTAÑA 1: RESUMEN ==================== -->
   <section id="tab-resumen" class="tab-content active">
-    <!-- KPIs Docente -->
     <section class="kpis" style="grid-template-columns: repeat(3, 1fr);">
       <div class="kpi" style="--c:var(--pink)"><svg><use href="#pl-pink"/></svg><span>Mis Estudiantes Asignados</span><strong>96</strong><small>En 2 grupos activos</small></div>
       <div class="kpi" style="--c:var(--teal)"><svg><use href="#pl-teal"/></svg><span>Próxima Clase</span><strong>Hoy 6:00 PM</strong><small>Matemáticas · Cal. B</small></div>
@@ -147,15 +153,37 @@
           <li><span class="n r">5</span><div>Estudiantes con ausencias consecutivas<small>Revisar motivo de inasistencia</small></div></li>
         </ul>
       </div>
+
+      <!-- Nueva sección: Gráfica visual de rendimiento -->
+      <div class="panel c12" style="--c:var(--violet)">
+        <h2><span>Distribución de Desempeño (Último Simulacro)</span></h2>
+        <div class="chart-container">
+          <div class="bar-group">
+            <div class="bar" style="height: 40%; background: var(--pink);"><span>40%</span></div>
+            <label>Bajo (&lt;50)</label>
+          </div>
+          <div class="bar-group">
+            <div class="bar" style="height: 85%; background: var(--yellow);"><span>85%</span></div>
+            <label>Medio (50-75)</label>
+          </div>
+          <div class="bar-group">
+            <div class="bar" style="height: 55%; background: var(--teal);"><span>55%</span></div>
+            <label>Alto (&gt;75)</label>
+          </div>
+        </div>
+      </div>
     </section>
   </section>
 
   <!-- ==================== PESTAÑA 2: MIS CURSOS ==================== -->
   <section id="tab-cursos" class="tab-content">
     <div class="panel c12" style="--c:var(--teal)">
-      <h2><span>Grupos y Estudiantes a Mi Cargo</span></h2>
+      <h2>
+        <span>Grupos y Estudiantes a Mi Cargo</span>
+        <input type="text" id="searchInput" class="input-space" placeholder="Buscar por nombre o cédula..." style="max-width: 260px; padding: 6px 10px; font-size: 0.8rem;" onkeyup="filtrarTablaEstudiantes()">
+      </h2>
       <div class="tscroll">
-        <table>
+        <table id="tablaEstudiantes">
           <thead>
             <tr><th>Documento</th><th>Nombre completo</th><th>Grupo / Jornada</th><th>Asistencia</th><th>Acciones</th></tr>
           </thead>
@@ -184,7 +212,7 @@
   <section id="tab-asistencia" class="tab-content">
     <div class="panel c12" style="--c:var(--orange)">
       <h2><span>Control de Asistencia por Clase</span></h2>
-      <form class="space-form" onsubmit="event.preventDefault(); alert('Asistencia registrada correctamente.');">
+      <form class="space-form" onsubmit="event.preventDefault(); mostrarToast('Asistencia registrada correctamente.', 'success');">
         <div class="form-grid">
           <div>
             <label>Seleccionar Grupo</label>
@@ -220,7 +248,7 @@
   <section id="tab-calificaciones" class="tab-content">
     <div class="panel c12" style="--c:var(--violet)">
       <h2><span>Registro y Edición de Notas</span></h2>
-      <form class="space-form" onsubmit="event.preventDefault(); alert('Calificaciones guardadas exitosamente.');">
+      <form class="space-form" onsubmit="event.preventDefault(); mostrarToast('Calificaciones guardadas exitosamente.', 'success');">
         <div class="form-grid">
           <div>
             <label>Evaluación / Taller</label>
@@ -248,7 +276,7 @@
   <!-- ==================== PESTAÑA 5: MATERIAL DE APOYO ==================== -->
   <section id="tab-materiales" class="tab-content">
     <div class="panel c12" style="--c:var(--pink)">
-      <h2><span>Repositorio de Materiales y Guías</span><button class="btn sm main">+ Subir Archivo</button></h2>
+      <h2><span>Repositorio de Materiales y Guías</span><button class="btn sm main" onclick="mostrarToast('Función de subida lista para conectar.', 'info')">+ Subir Archivo</button></h2>
       <p style="margin-bottom: 15px; color: var(--muted); font-size: 0.9rem;">Comparte guías de estudio, talleres y presentaciones con los estudiantes.</p>
       <ul class="todo">
         <li><span class="n t">PDF</span><div>Guía de Ejercicios de Ecuaciones Cuadráticas<small>Subido el 24 de Octubre · 4.2 MB</small></div></li>

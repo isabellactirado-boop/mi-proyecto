@@ -73,9 +73,15 @@
   
   .c6{grid-column:span 6}.c12{grid-column:span 12}
 
-  /* Control de pestañas dinámicas */
-  .tab-content { display: none; }
-  .tab-content.active { display: block; }
+  /* Control de pestañas dinámicas con animación suave */
+  .tab-content { display: none; opacity: 0; transition: opacity 0.25s ease-in-out; }
+  .tab-content.active { display: block; opacity: 1; }
+
+  /* Gráfica de barras simulada */
+  .chart-container { display: flex; justify-content: space-around; align-items: flex-end; height: 140px; padding: 10px 0 0; border-bottom: 2px solid var(--ink); margin-top: 10px; }
+  .bar-group { display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; width: 30%; }
+  .bar { width: 100%; border-radius: 6px 6px 0 0; border: 2px solid var(--ink); display: grid; place-items: center; font-size: 0.75rem; font-weight: 800; color: var(--ink); }
+  .bar-group label { margin-top: 6px; font-size: 0.78rem; font-weight: 700; color: var(--muted); text-align: center; }
 
   /* Formularios */
   .space-form { background: #fff; padding: 18px; border-radius: 14px; border: 2px solid var(--ink); }
@@ -108,6 +114,14 @@
   .cls time{min-width:84px;font-weight:700;font-size:.85rem}
   .cls small{display:block;color:var(--muted);font-size:.78rem}
   .cls .live{margin-left:auto}
+
+  /* Notificaciones Toast flotantes */
+  .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+  .toast { background: var(--cream); color: var(--ink); border: 2.5px solid var(--ink); padding: 12px 18px; border-radius: 12px; font-weight: 700; font-size: 0.88rem; box-shadow: 4px 4px 0 var(--ink); animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards; }
+  .toast.success { border-color: var(--ok); background: var(--ok-bg); color: var(--ok); }
+  .toast.info { border-color: var(--teal); background: #e0f7fc; }
+  @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  @keyframes fadeOut { to { opacity: 0; transform: translateY(10px); } }
 
   @media (max-width:900px){
     body{grid-template-columns:1fr}
