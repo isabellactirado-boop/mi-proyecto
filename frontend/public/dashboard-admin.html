@@ -87,10 +87,12 @@
 
 <!-- MENÚ LATERAL (SIDEBAR) -->
 <aside class="side">
-  <div class="brand">
-    <img src="logo.jpeg" alt="Logo PRE-ICMA">
-    <div><b>PRE<span>-</span>ICMA</b><small>CENTRO DE MISIÓN</small></div>
+  <!-- Usuario arriba (reemplaza al bloque PRE-ICMA / Centro de misión) -->
+  <div class="me">
+    <div class="av" id="av">A</div>
+    <div><strong id="uname">Administrador</strong><small id="urol">Panel de gestión</small></div>
   </div>
+
   <ul class="nav">
     <li><a href="#" onclick="switchTab('resumen')" class="on"><svg><use href="#pl-pink"/></svg>Resumen</a></li>
     <li><a href="#" onclick="switchTab('estudiantes')"><svg><use href="#pl-teal"/></svg>Estudiantes</a></li>
@@ -100,10 +102,7 @@
     <li><a href="#" onclick="switchTab('docentes')"><svg><use href="#pl-teal"/></svg>Docentes y clases</a></li>
     <li><a href="#" onclick="switchTab('usuarios')"><svg><use href="#pl-pink"/></svg>Usuarios <span class="tag">3/3</span></a></li>
   </ul>
-  <div class="me">
-    <div class="av" id="av">A</div>
-    <div><strong id="uname">Administrador</strong><small id="urol">Panel de gestión</small></div>
-  </div>
+
   <div class="moonbox">
     <div class="disk"><i></i><i></i><i></i></div>
     <a class="logout" href="#" onclick="logout()">Cerrar sesión</a>
@@ -114,7 +113,34 @@
 <main>
   <header class="hero">
     <div class="hero-txt">
-      <h1 id="hello">Hola, <em id="display-user">Administrador</em></h1>
+      <h1 id="hello">Hola, <span class="name-wrap"><em id="display-user">Administrador</em><svg class="astro-sit" viewBox="0 0 64 72" aria-hidden="true">
+          <!-- Mochila -->
+          <rect x="6" y="22" width="12" height="22" rx="4" fill="#cfcdf0" stroke="#1a1240" stroke-width="2.2"/>
+          <!-- Piernas colgando -->
+          <g class="legs" stroke-linecap="round" stroke-linejoin="round" fill="none">
+            <path d="M26 48 L42 53 L45 66" stroke="#1a1240" stroke-width="11"/>
+            <path d="M26 48 L42 53 L45 66" stroke="#cfcdf0" stroke-width="6.500"/>
+            <circle cx="45" cy="67" r="5.500" fill="#e8322f" stroke="#1a1240" stroke-width="2"/>
+            <path d="M30 47 L48 50 L52 63" stroke="#1a1240" stroke-width="11"/>
+            <path d="M30 47 L48 50 L52 63" stroke="#fff" stroke-width="6.500"/>
+            <circle cx="52" cy="64" r="5.500" fill="#e8322f" stroke="#1a1240" stroke-width="2"/>
+          </g>
+          <!-- Torso -->
+          <rect x="14" y="26" width="28" height="26" rx="9" fill="#fff" stroke="#1a1240" stroke-width="2.500"/>
+          <rect x="21" y="35" width="14" height="9" rx="2.500" fill="#e8368f" stroke="#1a1240" stroke-width="1.600"/>
+          <circle cx="25" cy="39.500" r="1.600" fill="#ffd23f"/>
+          <circle cx="31" cy="39.500" r="1.600" fill="#5bc8e8"/>
+          <!-- Brazo apoyado -->
+          <path d="M38 32 L44 43" stroke="#1a1240" stroke-width="8.500" stroke-linecap="round" fill="none"/>
+          <path d="M38 32 L44 43" stroke="#fff" stroke-width="4.500" stroke-linecap="round" fill="none"/>
+          <circle cx="45" cy="45" r="3.700" fill="#ffd23f" stroke="#1a1240" stroke-width="1.800"/>
+          <!-- Casco -->
+          <circle cx="30" cy="14" r="13" fill="#fff" stroke="#1a1240" stroke-width="2.500"/>
+          <ellipse cx="33" cy="14.500" rx="8.500" ry="6.800" fill="#2f8fd0" stroke="#1a1240" stroke-width="2"/>
+          <ellipse cx="35.500" cy="12" rx="3" ry="1.800" fill="#fff" opacity=".6" transform="rotate(-20 35.500 12)"/>
+          <rect x="29" y="-2" width="2.400" height="5" rx="1.200" fill="#1a1240"/>
+          <circle cx="30.200" cy="-2" r="2" fill="#e8322f" stroke="#1a1240" stroke-width="1.200"/>
+        </svg></span></h1>
       <p id="today"></p>
       <div class="actions" id="hero-actions">
         <button class="btn" onclick="switchTab('pagos')">Registrar pago</button>
