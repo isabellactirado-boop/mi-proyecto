@@ -16,7 +16,9 @@ app = FastAPI()
 
 origenes = [
     "http://localhost:3000",
-    "https://mi-proyecto-preicma.vercel.app",
+    "https://mi-proyecto-preicma.vercel.app",  
+    "https://preicma.space",
+    "https://www.preicma.space",
 ]
 frontend_url = os.getenv("FRONTEND_URL")
 if frontend_url:
