@@ -8,25 +8,42 @@
 <link rel="stylesheet" href="index.css">
 </head>
 <body>
-  <aside class="side">
+  <aside class="side" id="side">
     <div class="brand">PRE<span>-</span>ICMA</div>
 
-    <svg class="spark" style="top:18%;right:16%" width="22" height="22" viewBox="0 0 24 24"><path d="M12 0c1 7 5 11 12 12-7 1-11 5-12 12-1-7-5-11-12-12 7-1 11-5 12-12z"/></svg>
-    <svg class="spark" style="top:44%;right:7%" width="12" height="12" viewBox="0 0 24 24"><path d="M12 0c1 7 5 11 12 12-7 1-11 5-12 12-1-7-5-11-12-12 7-1 11-5 12-12z"/></svg>
-    <svg class="spark" style="top:10%;left:44%" width="14" height="14" viewBox="0 0 24 24"><path d="M12 0c1 7 5 11 12 12-7 1-11 5-12 12-1-7-5-11-12-12 7-1 11-5 12-12z"/></svg>
+    <div class="shoot s1"></div>
+    <div class="shoot s2"></div>
+
+    <svg class="spark sp1" width="22" height="22" viewBox="0 0 24 24"><path d="M12 0c1 7 5 11 12 12-7 1-11 5-12 12-1-7-5-11-12-12 7-1 11-5 12-12z"/></svg>
+    <svg class="spark sp2" width="12" height="12" viewBox="0 0 24 24"><path d="M12 0c1 7 5 11 12 12-7 1-11 5-12 12-1-7-5-11-12-12 7-1 11-5 12-12z"/></svg>
+    <svg class="spark sp3" width="14" height="14" viewBox="0 0 24 24"><path d="M12 0c1 7 5 11 12 12-7 1-11 5-12 12-1-7-5-11-12-12 7-1 11-5 12-12z"/></svg>
 
     <div class="hero">
-      <h2>Tu viaje de estudio <em>despega</em> aquí.</h2>
+      <h2>
+        <span class="w" style="--d:.15s">Tu</span>
+        <span class="w" style="--d:.25s">viaje</span>
+        <span class="w" style="--d:.35s">de</span>
+        <span class="w" style="--d:.45s">estudio</span>
+        <em class="w" style="--d:.6s">despega</em>
+        <span class="w" style="--d:.75s">aquí.</span>
+      </h2>
     </div>
 
     <div class="moon"><i></i><i></i><i></i></div>
-    <img class="mascot" src="logo.jpeg" alt="Astronauta PRE-ICMA">
+    <img class="mascot" id="mascot" src="logo.jpeg" alt="Astronauta PRE-ICMA">
   </aside>
 
-  <main class="form-side">
-    <form class="box" id="form-login">
+  <main class="form-side" id="form-side">
+    <div class="hint" id="hint"><span class="pulse-dot"></span> Haz clic en cualquier lugar para comenzar</div>
+
+    <form class="box locked" id="form-login">
       <h1>Bienvenido de vuelta</h1>
       <p class="sub">Ingresa con tu correo y contraseña.</p>
+
+      <div class="rol-badge" id="rol-badge" hidden>
+        Entrando como <strong id="rol-nombre">—</strong>
+        <button type="button" id="btn-cambiar">Cambiar</button>
+      </div>
 
       <div class="field">
         <label for="correo">Correo electrónico</label>
@@ -41,7 +58,7 @@
         </div>
       </div>
 
-      <button class="btn" type="submit" id="btn-login">Iniciar sesión</button>
+      <button class="btn" type="submit" id="btn-login"><span>Iniciar sesión</span></button>
       <div id="mensaje" class="mensaje" role="status"></div>
 
       <div class="links">
@@ -49,6 +66,65 @@
       </div>
     </form>
   </main>
+
+  <!-- ===== Selector de rol (aparece al primer clic) ===== -->
+  <div class="modal" id="modal-rol" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
+      <div class="modal-orbit"></div>
+      <h3 id="modal-titulo">¿Cómo quieres entrar?</h3>
+      <p>Elige tu perfil para continuar.</p>
+      <div class="roles">
+        <button class="rol-card" data-rol="docente" type="button">
+          <span class="rol-ico">
+            <svg viewBox="0 0 48 48" width="44" height="44" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="8" width="36" height="24" rx="3"/><path d="M14 18h14M14 24h20M24 32v8M16 40h16"/></svg>
+          </span>
+          <strong>Docente</strong>
+          <small>Gestiona tus grupos y estudiantes</small>
+        </button>
+        <button class="rol-card" data-rol="administrador" type="button">
+          <span class="rol-ico">
+            <svg viewBox="0 0 48 48" width="44" height="44" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M24 5l15 6v11c0 10-6 17-15 21C15 39 9 32 9 22V11z"/><path d="M17 24l5 5 9-10"/></svg>
+          </span>
+          <strong>Administrador</strong>
+          <small>Control total de la plataforma</small>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Pantalla de carga: cohete explotando ===== -->
+  <div class="loader" id="loader" aria-hidden="true">
+    <div class="loader-stars" id="loader-stars"></div>
+    <div class="loader-score">
+      <small>PUNTAJE GLOBAL ICFES</small>
+      <b id="score-num">0</b>
+      <span>/ 500</span>
+    </div>
+
+    <div class="pad"></div>
+    <div class="rocket" id="rocket">
+      <svg viewBox="0 0 80 170" width="90">
+        <g class="flame">
+          <path d="M40 116c-12 8-14 28-8 52 3-8 6-10 8-10s5 2 8 10c6-24 4-44-8-52z" fill="#ff7a3d"/>
+          <path d="M40 120c-6 6-8 18-4 34 2-4 3-6 4-6s2 2 4 6c4-16 2-28-4-34z" fill="#ffd23f"/>
+        </g>
+        <path d="M20 92L2 124l24-10z" fill="#ff7a3d" stroke="#1a1f36" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M60 92l18 32-24-10z" fill="#ff7a3d" stroke="#1a1f36" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M40 4C58 26 62 60 58 116H22C18 60 22 26 40 4z" fill="#fffdf8" stroke="#1a1f36" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M40 4c8 10 13 20 15 31H25c2-11 7-21 15-31z" fill="#ff7a3d" stroke="#1a1f36" stroke-width="3" stroke-linejoin="round"/>
+        <circle cx="40" cy="64" r="12" fill="#1b2f6b" stroke="#1a1f36" stroke-width="3"/>
+        <circle cx="36" cy="60" r="3.5" fill="#fff" opacity=".8"/>
+        <rect x="22" y="92" width="36" height="7" fill="#ffd23f" stroke="#1a1f36" stroke-width="2.5"/>
+      </svg>
+    </div>
+
+    <div class="flash" id="flash"></div>
+    <div class="ring" id="ring"></div>
+    <div class="ring r2" id="ring2"></div>
+    <div class="burst" id="burst"></div>
+
+    <div class="loader-status" id="loader-status">Encendiendo motores…</div>
+  </div>
 
   <script src="index.js"></script>
 </body>
