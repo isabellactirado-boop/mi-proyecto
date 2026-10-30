@@ -1,0 +1,268 @@
+﻿<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PRE-ICMA - Panel de Docente</title>
+
+<!-- Script estricto de validación de sesión -->
+<script>
+  const sesionActiva = sessionStorage.getItem('isLoggedIn');
+  if (!sesionActiva || sesionActiva !== 'true') {
+    window.location.replace('index.html');
+  }
+</script>
+
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="dashboard-docente.css">
+</head>
+<body>
+
+<!-- ============ Dibujos reutilizables (planetas, cohete, estrella) ============ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <clipPath id="cp"><circle cx="30" cy="30" r="24"/></clipPath>
+  </defs>
+
+  <symbol id="pl-pink" viewBox="0 0 60 60">
+    <circle cx="30" cy="30" r="24" fill="#e8368f"/>
+    <g clip-path="url(#cp)"><g transform="rotate(-18 30 30)">
+      <rect x="0" y="12" width="60" height="7" fill="#ff7ab8"/><rect x="0" y="25" width="60" height="5" fill="#a3166b"/>
+      <rect x="0" y="35" width="60" height="8" fill="#ff7ab8"/><rect x="0" y="48" width="60" height="5" fill="#a3166b"/>
+    </g><ellipse cx="20" cy="17" rx="8" ry="4" fill="#fff" opacity=".28" transform="rotate(-30 20 17)"/></g>
+    <circle cx="30" cy="30" r="24" fill="none" stroke="#1a1240" stroke-width="3"/>
+  </symbol>
+
+  <symbol id="pl-teal" viewBox="0 0 60 60">
+    <circle cx="30" cy="30" r="24" fill="#5bc8e8"/>
+    <g clip-path="url(#cp)">
+      <path d="M2 24c10-8 18 4 28-2s18-8 30 2v-30H2z" fill="#a8ecf5"/>
+      <path d="M0 42c12-6 20 6 32 0s16-6 28 0v24H0z" fill="#2f8fd0"/>
+      <circle cx="40" cy="30" r="4" fill="#2f8fd0"/><circle cx="20" cy="33" r="2.600" fill="#2f8fd0"/>
+    </g>
+    <circle cx="30" cy="30" r="24" fill="none" stroke="#1a1240" stroke-width="3"/>
+  </symbol>
+
+  <symbol id="pl-orange" viewBox="0 0 60 60">
+    <circle cx="30" cy="30" r="24" fill="#ff8a2b"/>
+    <g clip-path="url(#cp)">
+      <circle cx="21" cy="22" r="6" fill="#d9511c"/><circle cx="19.500" cy="20.500" r="3" fill="#ffb04d"/>
+      <circle cx="40" cy="30" r="7" fill="#d9511c"/><circle cx="38.500" cy="28.500" r="3.500" fill="#ffb04d"/>
+      <circle cx="26" cy="43" r="5" fill="#d9511c"/><circle cx="46" cy="16" r="3" fill="#d9511c"/>
+    </g>
+    <circle cx="30" cy="30" r="24" fill="none" stroke="#1a1240" stroke-width="3"/>
+  </symbol>
+
+  <symbol id="pl-ring" viewBox="0 0 70 60">
+    <g transform="rotate(-20 35 30)">
+      <ellipse cx="35" cy="30" rx="31" ry="9" fill="none" stroke="#1a1240" stroke-width="7"/>
+      <ellipse cx="35" cy="30" rx="31" ry="9" fill="none" stroke="#ffd23f" stroke-width="3.500"/>
+    </g>
+    <circle cx="35" cy="30" r="17" fill="#8a5cf0" stroke="#1a1240" stroke-width="3"/>
+    <path d="M20 24c9 4 21 4 30 0" fill="none" stroke="#b9a6ff" stroke-width="4"/>
+    <g transform="rotate(-20 35 30)">
+      <path d="M4 30A31 9 0 0 0 66 30" fill="none" stroke="#1a1240" stroke-width="7"/>
+      <path d="M4 30A31 9 0 0 0 66 30" fill="none" stroke="#ffd23f" stroke-width="3.500"/>
+    </g>
+  </symbol>
+
+  <symbol id="rocket" viewBox="0 0 24 24">
+    <path d="M7 16.500l-3.500 4.500 5.500-1zM17 16.500l3.500 4.500-5.500-1z" fill="#e8322f" stroke="#1a1240" stroke-width="1.300" stroke-linejoin="round"/>
+    <path d="M12 1.500c3.200 2.600 4.600 6.400 4.600 10.500V18H7.400v-6c0-4.100 1.400-7.900 4.600-10.500z" fill="#fff" stroke="#1a1240" stroke-width="1.500" stroke-linejoin="round"/>
+    <path d="M12 1.800c1.700 1.400 2.900 3.200 3.600 5.200H8.400C9.100 5 10.300 3.200 12 1.800z" fill="#e8322f"/>
+    <circle cx="12" cy="11" r="2.200" fill="#2f8fe8" stroke="#1a1240" stroke-width="1.200"/>
+  </symbol>
+
+  <symbol id="spark" viewBox="-10 -10 20 20"><path d="M0 -9Q0 0 9 0Q0 0 0 9Q0 0 -9 0Q0 0 0 -9Z" fill="currentColor"/></symbol>
+</svg>
+
+<!-- ============ MENÚ LATERAL (DOCENTE) ============ -->
+<aside class="side">
+  <div class="brand">
+    <img src="logo.jpeg" alt="Logo PRE-ICMA">
+    <div><b>PRE<span>-</span>ICMA</b><small>PORTAL DOCENTE</small></div>
+  </div>
+  <ul class="nav">
+    <li><a href="#" onclick="switchTab('resumen')" class="on"><svg><use href="#pl-pink"/></svg>Resumen</a></li>
+    <li><a href="#" onclick="switchTab('cursos')"><svg><use href="#pl-teal"/></svg>Mis Cursos</a></li>
+    <li><a href="#" onclick="switchTab('asistencia')"><svg><use href="#pl-orange"/></svg>Asistencia</a></li>
+    <li><a href="#" onclick="switchTab('calificaciones')"><svg viewBox="0 0 70 60"><use href="#pl-ring"/></svg>Calificaciones</a></li>
+    <li><a href="#" onclick="switchTab('materiales')"><svg><use href="#pl-pink"/></svg>Material de Apoyo</a></li>
+  </ul>
+  <div class="me">
+    <div class="av" id="av">P</div>
+    <div><strong id="uname">Profesor</strong><small>Docente Titular</small></div>
+  </div>
+  <div class="moonbox">
+    <div class="disk"><i></i><i></i><i></i></div>
+    <a class="logout" href="#" onclick="logout()">Cerrar sesión</a>
+  </div>
+</aside>
+
+<!-- ============ CONTENIDO PRINCIPAL ============ -->
+<main>
+  <header class="hero">
+    <div class="hero-txt">
+      <span class="demo">Portal Docente — Panel Autorizado</span>
+      <h1 id="hello">Hola, <em id="display-user">Profesor</em></h1>
+      <p id="today"></p>
+      <!-- Acciones exclusivas del docente en el resumen -->
+      <div class="actions" id="hero-actions">
+        <button class="btn" onclick="switchTab('asistencia')">Tomar asistencia</button>
+        <button class="btn main" onclick="switchTab('calificaciones')">Subir calificaciones</button>
+      </div>
+    </div>
+    <div class="hero-art" aria-hidden="true">
+      <svg viewBox="0 0 480 190">
+        <g fill="none" stroke="#8f86d6" stroke-width="2" stroke-dasharray="3 8" stroke-linecap="round">
+          <ellipse cx="300" cy="100" rx="190" ry="62" transform="rotate(-12 300 100)"/>
+        </g>
+        <use href="#pl-pink" x="248" y="14" width="150" height="150"/>
+        <use href="#pl-teal" x="120" y="108" width="52" height="52"/>
+        <use href="#rocket" x="60" y="66" width="38" height="38" transform="rotate(62 79 85)"/>
+        <use href="#spark" x="20" y="20" width="16" height="16" color="#fff"/>
+        <use href="#spark" x="190" y="30" width="11" height="11" color="#ffd23f"/>
+        <use href="#spark" x="440" y="30" width="20" height="20" color="#fff"/>
+      </svg>
+    </div>
+  </header>
+
+  <!-- ==================== PESTAÑA 1: RESUMEN ==================== -->
+  <section id="tab-resumen" class="tab-content active">
+    <!-- KPIs Docente -->
+    <section class="kpis" style="grid-template-columns: repeat(3, 1fr);">
+      <div class="kpi" style="--c:var(--pink)"><svg><use href="#pl-pink"/></svg><span>Mis Estudiantes Asignados</span><strong>96</strong><small>En 2 grupos activos</small></div>
+      <div class="kpi" style="--c:var(--teal)"><svg><use href="#pl-teal"/></svg><span>Próxima Clase</span><strong>Hoy 6:00 PM</strong><small>Matemáticas · Cal. B</small></div>
+      <div class="kpi" style="--c:var(--orange)"><svg><use href="#pl-orange"/></svg><span>Promedio de mis grupos</span><strong>61 / 100</strong><small>Simulacro ICFES actual</small></div>
+    </section>
+
+    <section class="grid">
+      <div class="panel c6" style="--c:var(--yellow)">
+        <h2><span>Mis próximas clases</span></h2>
+        <ul class="cls">
+          <li><svg><use href="#pl-pink"/></svg><time>Hoy 6:00 pm</time><div>Matemáticas · Cal. B<small>Google Meet · Sala Principal</small></div><span class="badge b-ok live">Enlace activo</span></li>
+          <li><svg><use href="#pl-teal"/></svg><time>Sáb 8:00 am</time><div>Matemáticas · Cal. A<small>Google Meet · Sala Principal</small></div></li>
+        </ul>
+      </div>
+
+      <div class="panel c6" style="--c:var(--red)">
+        <h2><span>Tareas pendientes del docente</span></h2>
+        <ul class="todo">
+          <li><span class="n y">3</span><div>Subir notas del taller de álgebra<small>Fecha límite: Mañana</small></div></li>
+          <li><span class="n r">5</span><div>Estudiantes con ausencias consecutivas<small>Revisar motivo de inasistencia</small></div></li>
+        </ul>
+      </div>
+    </section>
+  </section>
+
+  <!-- ==================== PESTAÑA 2: MIS CURSOS ==================== -->
+  <section id="tab-cursos" class="tab-content">
+    <div class="panel c12" style="--c:var(--teal)">
+      <h2><span>Grupos y Estudiantes a Mi Cargo</span></h2>
+      <div class="tscroll">
+        <table>
+          <thead>
+            <tr><th>Documento</th><th>Nombre completo</th><th>Grupo / Jornada</th><th>Asistencia</th><th>Acciones</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1098234123</td>
+              <td>Carlos Ramírez</td>
+              <td>Cal. A · Sábado AM</td>
+              <td>85%</td>
+              <td><button class="btn sm" onclick="generarInformePDF('Carlos Ramírez', '1098234123', 'Cal. A · Sábado AM', 'Pedro Ramírez', '3158901234', 'pedro.ramirez@gmail.com', 'Activo', '85%', 'N/A', '310 / 500')">Ver Ficha</button></td>
+            </tr>
+            <tr>
+              <td>1098567890</td>
+              <td>María F. López</td>
+              <td>Cal. A · Sábado AM</td>
+              <td>92%</td>
+              <td><button class="btn sm" onclick="generarInformePDF('María F. López', '1098567890', 'Cal. A · Sábado AM', 'Ana López', '3104567890', 'ana.lopez@gmail.com', 'Activo', '92%', 'N/A', '335 / 500')">Ver Ficha</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PESTAÑA 3: ASISTENCIA ==================== -->
+  <section id="tab-asistencia" class="tab-content">
+    <div class="panel c12" style="--c:var(--orange)">
+      <h2><span>Control de Asistencia por Clase</span></h2>
+      <form class="space-form" onsubmit="event.preventDefault(); alert('Asistencia registrada correctamente.');">
+        <div class="form-grid">
+          <div>
+            <label>Seleccionar Grupo</label>
+            <select class="input-space">
+              <option>Calendario A - Sábado 8:00 am</option>
+              <option>Calendario B - Miércoles 6:00 pm</option>
+            </select>
+          </div>
+          <div>
+            <label>Fecha de la Clase</label>
+            <input type="date" class="input-space" required>
+          </div>
+        </div>
+        <div style="margin-top: 15px;">
+          <p style="font-size: 0.9rem; margin-bottom: 10px; font-weight: 700;">Marcar asistencia de alumnos:</p>
+          <div style="display:flex; gap: 15px; align-items:center; background: #f6f1e7; padding: 10px; border-radius: 8px; border: 1.5px solid var(--ink); margin-bottom: 8px;">
+            <span>Carlos Ramírez</span>
+            <label><input type="radio" name="asist_1" checked> Presente</label>
+            <label><input type="radio" name="asist_1"> Ausente</label>
+          </div>
+          <div style="display:flex; gap: 15px; align-items:center; background: #f6f1e7; padding: 10px; border-radius: 8px; border: 1.5px solid var(--ink);">
+            <span>María F. López</span>
+            <label><input type="radio" name="asist_2" checked> Presente</label>
+            <label><input type="radio" name="asist_2"> Ausente</label>
+          </div>
+        </div>
+        <button type="submit" class="btn main" style="margin-top: 15px;">Guardar Asistencia</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ==================== PESTAÑA 4: CALIFICACIONES ==================== -->
+  <section id="tab-calificaciones" class="tab-content">
+    <div class="panel c12" style="--c:var(--violet)">
+      <h2><span>Registro y Edición de Notas</span></h2>
+      <form class="space-form" onsubmit="event.preventDefault(); alert('Calificaciones guardadas exitosamente.');">
+        <div class="form-grid">
+          <div>
+            <label>Evaluación / Taller</label>
+            <input type="text" class="input-space" placeholder="Ej: Simulacro Parcial 1" required>
+          </div>
+          <div>
+            <label>Grupo</label>
+            <select class="input-space">
+              <option>Calendario A - Sábado 8:00 am</option>
+              <option>Calendario B - Miércoles 6:00 pm</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top: 15px;">
+          <label>Nota de Carlos Ramírez (0 - 100)</label>
+          <input type="number" class="input-space" placeholder="Ej: 85" style="margin-bottom: 10px;" required>
+          <label>Nota de María F. López (0 - 100)</label>
+          <input type="number" class="input-space" placeholder="Ej: 90" style="margin-bottom: 15px;" required>
+        </div>
+        <button type="submit" class="btn main">Publicar Calificaciones</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ==================== PESTAÑA 5: MATERIAL DE APOYO ==================== -->
+  <section id="tab-materiales" class="tab-content">
+    <div class="panel c12" style="--c:var(--pink)">
+      <h2><span>Repositorio de Materiales y Guías</span><button class="btn sm main">+ Subir Archivo</button></h2>
+      <p style="margin-bottom: 15px; color: var(--muted); font-size: 0.9rem;">Comparte guías de estudio, talleres y presentaciones con los estudiantes.</p>
+      <ul class="todo">
+        <li><span class="n t">PDF</span><div>Guía de Ejercicios de Ecuaciones Cuadráticas<small>Subido el 24 de Octubre · 4.2 MB</small></div></li>
+        <li><span class="n y">DOC</span><div>Formulas Clave para Razonamiento Cuantítativo<small>Subido el 18 de Octubre · 1.5 MB</small></div></li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<script src="dashboard-docente.js"></script>
+</body>
+</html>
