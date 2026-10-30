@@ -338,16 +338,11 @@ document.addEventListener("DOMContentLoaded", () => {
             const datos = resultado.datos;
             const esAdmin = datos.rol === "administrador";
 
-            // El rol elegido debe coincidir con el de la cuenta
-            if (rolElegido === "administrador" && !esAdmin) {
+            // El rol elegido debe coincidir con el de la cuenta.
+            // Si no coincide, se muestra el mismo error genérico para no revelar nada.
+            if ((rolElegido === "administrador") !== esAdmin) {
                 ocultarCarga();
-                mostrar("Esta cuenta no tiene permisos de administrador.", "error");
-                boton.disabled = false;
-                return;
-            }
-            if (rolElegido === "docente" && esAdmin) {
-                ocultarCarga();
-                mostrar("Esta cuenta es de administrador. Pulsa «Cambiar» y elige Administrador.", "error");
+                mostrar("Correo o contraseña incorrectos", "error");
                 boton.disabled = false;
                 return;
             }
