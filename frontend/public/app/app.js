@@ -24,7 +24,7 @@ function guardar(clave, valor) {
   try { localStorage.setItem(clave, valor); } catch (e) { /* sin almacenamiento */ }
 }
 function cerrarSesion() {
-  try { localStorage.removeItem("token"); } catch (e) { /* nada */ }
+  try { ["token", "rol", "ver_como"].forEach((k) => localStorage.removeItem(k)); } catch (e) { /* nada */ }
   cerrarPerfil();
   clearInterval(relojCuenta);
   datosClases = null;
@@ -54,8 +54,21 @@ function terminarCarga() {
 
 /* ---------- peticiones ---------- */
 
+/* El propietario (CEO) puede ver la app como cualquier estudiante. */
+function esPropietario() {
+  return leer("rol") === "propietario";
+}
+function verComo() {
+  try { return JSON.parse(leer("ver_como") || "null"); } catch (e) { return null; }
+}
+
 async function pedir(ruta, opciones) {
   if (DEMO) return datosDemo(ruta);
+
+  const elegido = verComo();
+  if (esPropietario() && elegido && ruta.indexOf("/estudiante/") === 0) {
+    ruta += (ruta.indexOf("?") === -1 ? "?" : "&") + "id_estudiante=" + elegido.id;
+  }
 
   const config = Object.assign({}, opciones);
   config.headers = Object.assign({ "Content-Type": "application/json" }, config.headers);
@@ -185,7 +198,7 @@ function contar(nodo, hasta, sufijo) { // numero que sube de 0 al valor
 /* ---------- pantallas ---------- */
 
 function mostrarPantalla(nombre) {
-  ["login", "clave", "app"].forEach((p) => { $("pantalla-" + p).hidden = p !== nombre; });
+  ["login", "clave", "elegir", "app"].forEach((p) => { $("pantalla-" + p).hidden = p !== nombre; });
   window.scrollTo(0, 0);
 }
 
@@ -699,7 +712,11 @@ function manejarError(error, texto) {
     cerrarSesion();
     $("msg-login").textContent = error.status === 401
       ? "Tu sesión terminó. Inicia sesión de nuevo."
-      : "Esta cuenta no es de estudiante.";
+      : error.message || "Esta cuenta no es de estudiante.";
+    return;
+  }
+  if (esPropietario() && (error.status === 400 || error.status === 404)) {
+    abrirElegir();   // el estudiante elegido ya no existe: elegir otro
     return;
   }
   mostrarAviso(error.status ? texto : "Sin conexión con el servidor. Revisa tu internet e intenta de nuevo.");
@@ -710,9 +727,67 @@ function manejarError(error, texto) {
 let claveTemporal = "";
 
 function entrarApp() {
+  if (esPropietario() && !verComo() && !DEMO) return abrirElegir();
+  const elegido = verComo();
+  $("vista-dueno").hidden = !esPropietario();
+  $("btn-otro").hidden = !esPropietario();
+  if (esPropietario() && elegido) $("vista-dueno").textContent = "Vista del propietario · " + primerNombre(elegido.nombre);
+  datosClases = null;
   mostrarPantalla("app");
   mostrarTab("inicio");
   cargarInicio();
+}
+
+/* ---------- propietario: elegir a que estudiante ver ---------- */
+
+let listaEstudiantes = [];
+
+function pintarElegir() {
+  const q = $("elegir-buscar").value.trim().toLowerCase();
+  const caja = $("elegir-lista");
+  const filtrados = listaEstudiantes.filter((e) =>
+    !q || e.nombre_completo.toLowerCase().includes(q) || String(e.doc_identidad).includes(q));
+  caja.textContent = "";
+  if (!filtrados.length) return vacio(caja, listaEstudiantes.length ? "Nadie coincide con esa búsqueda." : "Aún no hay estudiantes registrados.");
+  filtrados.slice(0, 50).forEach((e, i) => {
+    const b = revelar(el("button", "elegible"), Math.min(i, 8));
+    b.type = "button";
+    b.appendChild(el("span", "curso-ico", e.nombre_completo.trim().charAt(0).toUpperCase()));
+    const info = el("div");
+    info.appendChild(el("strong", null, e.nombre_completo));
+    info.appendChild(el("small", null, [e.doc_identidad, e.curso, e.nombre_grupo].filter(Boolean).join(" · ") ||
+      "Sin inscripción activa"));
+    b.appendChild(info);
+    b.addEventListener("click", () => {
+      guardar("ver_como", JSON.stringify({ id: e.id_estudiante, nombre: e.nombre_completo }));
+      entrarApp();
+    });
+    caja.appendChild(b);
+  });
+}
+
+async function abrirElegir() {
+  cerrarPerfil();
+  clearInterval(relojCuenta);
+  mostrarPantalla("elegir");
+  if (listaEstudiantes.length) return pintarElegir();
+  try {
+    const d = await pedir("/estudiantes");
+    // primero los que tienen inscripcion activa
+    listaEstudiantes = d.estudiantes.slice().sort((a, b) =>
+      (b.estado_inscripcion === "activa") - (a.estado_inscripcion === "activa"));
+    pintarElegir();
+  } catch (error) {
+    if (error.status === 401 || error.status === 403) return manejarError(error);
+    vacio($("elegir-lista"), "No se pudo cargar la lista de estudiantes. Intenta de nuevo.");
+  }
+}
+
+function despuesDeEntrar(d) {
+  guardar("token", d.token);
+  if (d.rol) guardar("rol", d.rol);
+  try { localStorage.removeItem("ver_como"); } catch (e) { /* nada */ }
+  entrarApp();
 }
 
 $("form-login").addEventListener("submit", async (evento) => {
@@ -726,18 +801,19 @@ $("form-login").addEventListener("submit", async (evento) => {
   $("btn-login").disabled = true;
   try {
     const d = await pedir("/login", { method: "POST", body: JSON.stringify({ correo, contrasena }) });
-    if (d.rol !== "estudiante") {
+    if (d.rol !== "estudiante" && d.rol !== "propietario") {
       msg.textContent = "Esta app es solo para estudiantes. Usa el panel web.";
       return;
     }
     guardar("token", d.token);
+    guardar("rol", d.rol);
     $("contrasena").value = "";
     if (d.debe_cambiar_contrasena) {
       claveTemporal = contrasena;
       $("clave-actual").value = contrasena;
       mostrarPantalla("clave");
     } else {
-      entrarApp();
+      despuesDeEntrar(d);
     }
   } catch (error) {
     msg.textContent = error.status === 401
@@ -761,10 +837,9 @@ $("form-clave").addEventListener("submit", async (evento) => {
       method: "POST",
       body: JSON.stringify({ contrasena_actual: actual, contrasena_nueva: nueva }),
     });
-    guardar("token", d.token);
     claveTemporal = "";
     ["clave-actual", "clave-nueva", "clave-repetir"].forEach((id) => { $(id).value = ""; });
-    entrarApp();
+    despuesDeEntrar(d);
   } catch (error) {
     msg.textContent = error.message;
   }
@@ -773,6 +848,9 @@ $("form-clave").addEventListener("submit", async (evento) => {
 $("av").addEventListener("click", abrirPerfil);
 $("perfil-bg").addEventListener("click", cerrarPerfil);
 $("btn-salir").addEventListener("click", cerrarSesion);
+$("btn-otro").addEventListener("click", abrirElegir);
+$("elegir-buscar").addEventListener("input", pintarElegir);
+$("elegir-salir").addEventListener("click", cerrarSesion);
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") cerrarPerfil(); });
 
 document.querySelectorAll(".bottom button").forEach((b) => {
@@ -781,6 +859,11 @@ document.querySelectorAll(".bottom button").forEach((b) => {
 
 /* ---------- arranque ---------- */
 
+// El panel web abre la app con ?desde=panel despues de copiar la sesion del CEO
+if (new URLSearchParams(location.search).get("desde") === "panel") {
+  try { localStorage.removeItem("ver_como"); } catch (e) { /* nada */ }
+  history.replaceState(null, "", location.pathname);
+}
 if (DEMO || leer("token")) entrarApp(); else mostrarPantalla("login");
 
 /* ---------- datos de ejemplo (?demo) ---------- */

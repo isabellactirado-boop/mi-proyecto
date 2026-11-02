@@ -10,7 +10,8 @@
     var rol = sessionStorage.getItem('rol');
     if (sessionStorage.getItem('isLoggedIn') !== 'true' || !sessionStorage.getItem('token')) {
       window.location.replace('index.html');
-    } else if (rol === 'administrador' || rol === 'propietario') {
+    } else if (rol === 'administrador') {
+      // El propietario si puede entrar: ve las clases de todos los docentes
       window.location.replace('dashboard-admin.html');
     }
   })();
@@ -22,6 +23,8 @@
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M11 18h2"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></symbol>
   <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
 </svg>
 
@@ -32,6 +35,8 @@
   </div>
   <ul class="nav">
     <li><a href="#" class="on"><svg class="ico"><use href="#i-calendar"/></svg>Mis clases</a></li>
+    <li class="solo-dueno" hidden><a href="dashboard-admin.html"><svg class="ico"><use href="#i-home"/></svg>Volver al panel admin</a></li>
+    <li class="solo-dueno" hidden><a href="#" onclick="abrirApp(event)"><svg class="ico"><use href="#i-phone"/></svg>Ver app de estudiantes</a></li>
   </ul>
   <div class="moonbox">
     <div class="disk"><i></i><i></i><i></i></div>

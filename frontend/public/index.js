@@ -339,8 +339,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            // Cada persona entra solo por la tarjeta de su propio rol
-            if (datos.rol !== rolElegido) {
+            // Cada persona entra solo por la tarjeta de su propio rol.
+            // El propietario (CEO) puede entrar por cualquiera para ver cada panel.
+            if (datos.rol !== rolElegido && datos.rol !== "propietario") {
                 ocultarCarga();
                 mostrar("Correo o contraseña incorrectos", "error");
                 boton.disabled = false;
@@ -364,7 +365,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             $("loader-status").textContent = "¡Bienvenida! Entrando al panel…";
             await esperar(600);
-            window.location.href = datos.rol === "profesor" ? "dashboard-docente.html" : "dashboard-admin.html";
+            window.location.href = rolElegido === "profesor" ? "dashboard-docente.html" : "dashboard-admin.html";
         });
     }
 });

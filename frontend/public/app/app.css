@@ -244,3 +244,15 @@ main{padding:4px 16px 0;max-width:560px;margin:0 auto}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+
+/* ---------- propietario: ver la app como un estudiante ---------- */
+.elegir #elegir-buscar{width:100%;margin-bottom:14px}
+.elegir-lista{display:flex;flex-direction:column;gap:10px;margin-bottom:18px}
+.elegible{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px;border-radius:18px;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.12);color:#fff;cursor:pointer;transition:transform .15s var(--ease),background .2s}
+.elegible:active{transform:scale(.98)}
+.elegible:hover{background:rgba(255,255,255,.12)}
+.elegible strong{display:block;font-size:.98rem}
+.elegible small{display:block;font-size:.8rem;color:var(--soft);margin-top:2px}
+.elegible .curso-ico{flex:none}
+.vista-dueno{margin:10px 16px 0;padding:8px 12px;border-radius:12px;background:var(--yellow);color:var(--ink);font-weight:700;font-size:.82rem;text-align:center;border:2px solid var(--ink)}
+#btn-otro{width:100%;margin-top:14px;box-shadow:3px 3px 0 var(--teal)}

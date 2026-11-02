@@ -133,8 +133,25 @@ def requiere_admin(usuario: dict = Depends(usuario_actual)) -> dict:
     return usuario
 
 
-def requiere_estudiante(usuario: dict = Depends(usuario_actual)) -> dict:
-    """Solo deja pasar cuentas con rol estudiante (las de la app movil)."""
-    if usuario["rol"] != "estudiante" or usuario["id_estudiante"] is None:
-        raise HTTPException(status_code=403, detail="Esta seccion es solo para estudiantes")
-    return usuario
+def requiere_estudiante(
+    id_estudiante: int | None = None,
+    usuario: dict = Depends(usuario_actual),
+) -> dict:
+    """Rutas de la app movil.
+
+    - Un estudiante solo ve lo suyo (el parametro id_estudiante se ignora).
+    - El propietario puede ver la app como cualquier estudiante (?id_estudiante=N),
+      para revisar lo que ellos ven. Las rutas de la app son solo de lectura.
+    """
+    if usuario["rol"] == "estudiante" and usuario["id_estudiante"] is not None:
+        return usuario
+    if usuario["rol"] == "propietario":
+        if id_estudiante is None:
+            raise HTTPException(status_code=400, detail="Elige el estudiante que quieres ver")
+        with obtener_conexion() as conexion:
+            with conexion.cursor() as cursor:
+                cursor.execute("SELECT 1 FROM estudiantes WHERE id_estudiante = %s", (id_estudiante,))
+                if not cursor.fetchone():
+                    raise HTTPException(status_code=404, detail="Estudiante no encontrado")
+        return {**usuario, "id_estudiante": id_estudiante}
+    raise HTTPException(status_code=403, detail="Esta seccion es solo para estudiantes")

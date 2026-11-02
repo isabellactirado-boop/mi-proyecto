@@ -1,7 +1,7 @@
 {
   "appId": "com.preicma.estudiantes",
   "appName": "Preicma Estudiantes",
-  "webDir": "www",
+  "webDir": "../frontend/public/app",
   "android": {
     "backgroundColor": "#140b4f"
   }

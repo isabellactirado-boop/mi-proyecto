@@ -9,7 +9,8 @@ from db import obtener_conexion
 router = APIRouter(prefix="/estudiante")
 
 # Cada estudiante solo ve SUS datos: todas las consultas filtran por el
-# id_estudiante de la cuenta que hizo la peticion, nunca por un parametro.
+# id_estudiante que entrega requiere_estudiante (el de su cuenta; solo el
+# propietario puede elegir otro, para ver la app como ese estudiante).
 
 
 def _hoy():

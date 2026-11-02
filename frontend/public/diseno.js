@@ -82,7 +82,25 @@
     });
   }
 
+  /* ---------- accesos del propietario (CEO) ---------- */
+
+  // Abre la app de estudiantes con la misma sesion (la app la guarda en localStorage)
+  window.abrirApp = function (evento) {
+    if (evento) evento.preventDefault();
+    try {
+      localStorage.setItem("token", sessionStorage.getItem("token"));
+      localStorage.setItem("rol", "propietario");
+    } catch (e) { /* sin almacenamiento: la app pedira iniciar sesion */ }
+    window.open("app/index.html?desde=panel", "_blank");
+  };
+
+  function accesosDueno() {
+    if (sessionStorage.getItem("rol") !== "propietario") return;
+    document.querySelectorAll(".solo-dueno").forEach((el) => { el.hidden = false; });
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
+    accesosDueno();
     saludar();
     observarKpis();
     observarPendientes();

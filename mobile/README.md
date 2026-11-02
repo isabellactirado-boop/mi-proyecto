@@ -1,7 +1,7 @@
 # Preicma Estudiantes (app Android)
 
 App para que los estudiantes vean su próxima clase, horario, asistencia,
-estado de pagos y resultados de simulacros. Es una página web (`www/`)
+estado de pagos y resultados de simulacros. Es una página web (`frontend/public/app/`)
 empaquetada como APK con [Capacitor](https://capacitorjs.com).
 Usa el mismo backend del panel: `https://preicma.onrender.com`.
 
@@ -18,7 +18,8 @@ Usa el mismo backend del panel: `https://preicma.onrender.com`.
 
 ## Probar en el navegador
 
-Abre `www/index.html` con cualquier servidor local. Agrega `?demo` a la URL
+También se publica en la web junto al panel: `/app/index.html`.
+Abre `frontend/public/app/index.html` con cualquier servidor local. Agrega `?demo` a la URL
 para ver la app con datos de ejemplo, sin backend.
 
 ## Generar el APK
@@ -30,9 +31,15 @@ Requisitos: [Node.js LTS](https://nodejs.org) y
 cd mobile
 npm install
 npm run android:agregar   # solo la primera vez: crea la carpeta android/
-npm run android:sync      # cada vez que cambies algo en www/
+npm run android:sync      # cada vez que cambies algo en frontend/public/app/
 npm run android:abrir     # abre Android Studio
 ```
 
 En Android Studio: **Build → Build App Bundle(s) / APK(s) → Build APK(s)**.
 El APK queda en `android/app/build/outputs/apk/debug/app-debug.apk`.
+
+## El propietario (CEO) en la app
+
+La cuenta con rol `propietario` también entra a la app: elige un estudiante
+y ve exactamente lo que ese estudiante ve (solo lectura). Desde el panel
+admin, el menú tiene **Ver app de estudiantes** y **Ver panel docente**.
