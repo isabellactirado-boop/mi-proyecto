@@ -768,6 +768,12 @@
         estado.type = "button";
         estado.addEventListener("click", () => cambiarActivo(u, !u.activo));
         tdA.appendChild(estado);
+        if (u.rol !== "propietario") {
+          const borrar = el("button", "btn sm peligro", "Eliminar");
+          borrar.type = "button";
+          borrar.addEventListener("click", () => eliminarUsuario(u));
+          tdA.appendChild(borrar);
+        }
       } else {
         tdA.appendChild(el("span", "ac-sub", "Tu cuenta"));
       }
@@ -810,6 +816,25 @@
     if (!confirm(aviso)) return;
     try {
       await api("/usuarios/" + u.id_usuario + "/activo", "PATCH", { activo });
+      cargarUsuarios();
+    } catch (e) {
+      alert(e.message);
+    }
+  }
+
+  async function eliminarUsuario(u) {
+    const nombre = u.nombre_docente || u.nombre_estudiante || u.nombre_usuario;
+    const queda = u.rol === "estudiante" ? "Su ficha, pagos, asistencias y simulacros se conservan"
+      : u.rol === "profesor" ? "Su ficha de docente y sus clases se conservan" : "Sus registros se conservan";
+    const escrito = prompt(
+      "Vas a eliminar para siempre la cuenta de " + nombre + " (" + u.nombre_usuario + ").\n" +
+      "Ya no podrá entrar. " + queda + ", y luego le puedes crear una cuenta nueva.\n\n" +
+      "Si solo quieres bloquearla un tiempo, usa Desactivar.\n\n" +
+      "Para confirmar escribe ELIMINAR:");
+    if (escrito === null) return;
+    if (escrito.trim().toUpperCase() !== "ELIMINAR") return alert("No se eliminó: no escribiste ELIMINAR.");
+    try {
+      await api("/usuarios/" + u.id_usuario, "DELETE");
       cargarUsuarios();
     } catch (e) {
       alert(e.message);
@@ -1269,6 +1294,7 @@
       if (/\/restablecer-contrasena$/.test(ruta)) return Promise.resolve({ usuario: "juan@correo.com", contrasena_temporal: "Rt8kPq2mWx", aviso: "Entrega esta contraseña a la persona. No se vuelve a mostrar y deberá cambiarla al entrar." });
       if (ruta === "/usuarios") return Promise.resolve({ usuario: cuerpo.correo, rol: cuerpo.rol, contrasena_temporal: "Hm4tZq9pLa", aviso: "Entrega esta contraseña a la persona." });
       if (/\/activo$/.test(ruta)) return Promise.resolve({ activo: cuerpo.activo });
+      if (metodo === "DELETE" && ruta.indexOf("/usuarios/") === 0) return Promise.resolve({ mensaje: "Cuenta eliminada" });
       if (ruta === "/cuentas-estudiante") return Promise.resolve(Object.assign({ estudiante: "Juan Pérez" }, cuenta));
       return Promise.resolve({ registros: (cuerpo && cuerpo.registros || []).length });
     }

@@ -43,3 +43,33 @@ def activar_o_desactivar_usuario(
     if not fila:
         raise HTTPException(status_code=404, detail="El usuario no existe")
     return fila
+
+
+@router.delete("/usuarios/{id_usuario}")
+def eliminar_usuario(
+    id_usuario: int,
+    usuario: dict = Depends(requiere_permiso("gestionar_usuarios")),
+):
+    """Elimina para siempre la cuenta de acceso (correo y contraseña).
+
+    No borra la ficha del estudiante o del docente ni su historial (pagos,
+    asistencias, resultados, clases): esos datos siguen en el panel y se le
+    puede volver a crear una cuenta. Para un bloqueo reversible, desactivar.
+    """
+    if id_usuario == usuario["id_usuario"]:
+        raise HTTPException(status_code=400, detail="No puedes eliminar tu propia cuenta")
+
+    with obtener_conexion() as conexion:
+        with conexion.cursor() as cursor:
+            cursor.execute("SELECT rol FROM usuarios WHERE id_usuario = %s", (id_usuario,))
+            fila = cursor.fetchone()
+            if not fila:
+                raise HTTPException(status_code=404, detail="El usuario no existe")
+            if fila["rol"] == "propietario":
+                raise HTTPException(status_code=400, detail="La cuenta del propietario no se puede eliminar")
+            cursor.execute(
+                "DELETE FROM usuarios WHERE id_usuario = %s RETURNING nombre_usuario", (id_usuario,)
+            )
+            eliminado = cursor.fetchone()
+
+    return {"mensaje": "Cuenta eliminada", "usuario": eliminado["nombre_usuario"]}
