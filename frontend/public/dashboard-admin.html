@@ -36,9 +36,9 @@
 
 <!-- MENÚ LATERAL (SIDEBAR) -->
 <aside class="side">
-  <div class="brand">
-    <img src="logo.jpeg" alt="">
-    <div><b>PRE <span>ICMA</span></b><small>Panel de gestión</small></div>
+  <div class="me">
+    <div class="av" id="av">A</div>
+    <div><strong id="uname">Administrador</strong><small id="urol">Panel de gestión</small></div>
   </div>
 
   <ul class="nav">
@@ -51,12 +51,9 @@
     <li><a href="#" onclick="switchTab('usuarios')"><svg class="ico"><use href="#i-key"/></svg>Usuarios</a></li>
   </ul>
 
-  <div class="side-foot">
-    <div class="me">
-      <div class="av" id="av">A</div>
-      <div><strong id="uname">Administrador</strong><small id="urol">Panel de gestión</small></div>
-    </div>
-    <a class="logout" href="#" onclick="logout()" aria-label="Cerrar sesión" title="Cerrar sesión"><svg class="ico"><use href="#i-logout"/></svg></a>
+  <div class="moonbox">
+    <div class="disk"><i></i><i></i><i></i></div>
+    <a class="logout" href="#" onclick="logout()">Cerrar sesión</a>
   </div>
 </aside>
 
@@ -64,32 +61,47 @@
 <main>
   <header class="hero">
     <div class="hero-txt">
-      <p class="eyebrow" id="today"></p>
-      <h1 id="hello"><span id="saludo-hora">Hola</span>, <em id="display-user">Administrador</em></h1>
-      <p class="hero-sub">Así va PRE ICMA hoy.</p>
+      <h1 id="hello"><span id="saludo-hora">Hola</span>, <span class="name-wrap"><em id="display-user">Administrador</em><svg class="astro-sit" viewBox="0 0 64 72" aria-hidden="true">
+          <!-- Mochila -->
+          <rect x="6" y="22" width="12" height="22" rx="4" fill="#cfcdf0" stroke="#1a1240" stroke-width="2.2"/>
+          <!-- Piernas colgando -->
+          <g class="legs" stroke-linecap="round" stroke-linejoin="round" fill="none">
+            <path d="M26 48 L42 53 L45 66" stroke="#1a1240" stroke-width="11"/>
+            <path d="M26 48 L42 53 L45 66" stroke="#cfcdf0" stroke-width="6.500"/>
+            <circle cx="45" cy="67" r="5.500" fill="#e8322f" stroke="#1a1240" stroke-width="2"/>
+            <path d="M30 47 L48 50 L52 63" stroke="#1a1240" stroke-width="11"/>
+            <path d="M30 47 L48 50 L52 63" stroke="#fff" stroke-width="6.500"/>
+            <circle cx="52" cy="64" r="5.500" fill="#e8322f" stroke="#1a1240" stroke-width="2"/>
+          </g>
+          <!-- Torso -->
+          <rect x="14" y="26" width="28" height="26" rx="9" fill="#fff" stroke="#1a1240" stroke-width="2.500"/>
+          <rect x="21" y="35" width="14" height="9" rx="2.500" fill="#e8368f" stroke="#1a1240" stroke-width="1.600"/>
+          <circle cx="25" cy="39.500" r="1.600" fill="#ffd23f"/>
+          <circle cx="31" cy="39.500" r="1.600" fill="#5bc8e8"/>
+          <!-- Brazo apoyado -->
+          <path d="M38 32 L44 43" stroke="#1a1240" stroke-width="8.500" stroke-linecap="round" fill="none"/>
+          <path d="M38 32 L44 43" stroke="#fff" stroke-width="4.500" stroke-linecap="round" fill="none"/>
+          <circle cx="45" cy="45" r="3.700" fill="#ffd23f" stroke="#1a1240" stroke-width="1.800"/>
+          <!-- Casco -->
+          <circle cx="30" cy="14" r="13" fill="#fff" stroke="#1a1240" stroke-width="2.500"/>
+          <ellipse cx="33" cy="14.500" rx="8.500" ry="6.800" fill="#2f8fd0" stroke="#1a1240" stroke-width="2"/>
+          <ellipse cx="35.500" cy="12" rx="3" ry="1.800" fill="#fff" opacity=".6" transform="rotate(-20 35.500 12)"/>
+          <rect x="29" y="-2" width="2.400" height="5" rx="1.200" fill="#1a1240"/>
+          <circle cx="30.200" cy="-2" r="2" fill="#e8322f" stroke="#1a1240" stroke-width="1.200"/>
+        </svg></span></h1>
+      <p id="today"></p>
       <div class="actions" id="hero-actions">
         <button class="btn" onclick="switchTab('pagos')">Registrar pago</button>
         <button class="btn main" onclick="switchTab('inscripciones')">Nueva inscripción</button>
       </div>
     </div>
     <div class="hero-art" aria-hidden="true">
-      <svg viewBox="0 0 440 220">
-        <defs>
-          <radialGradient id="g-planeta" cx="34%" cy="30%" r="75%">
-            <stop offset="0" stop-color="#fff4c7"/><stop offset=".45" stop-color="#ffd23f"/><stop offset="1" stop-color="#b9780a"/>
-          </radialGradient>
-          <radialGradient id="g-halo"><stop offset="0" stop-color="#ffd23f" stop-opacity=".28"/><stop offset="1" stop-color="#ffd23f" stop-opacity="0"/></radialGradient>
-        </defs>
-        <circle cx="290" cy="110" r="110" fill="url(#g-halo)"/>
-        <ellipse class="orbita" cx="290" cy="110" rx="168" ry="52"/>
-        <ellipse class="orbita o2" cx="290" cy="110" rx="118" ry="36"/>
-        <circle class="planeta" cx="290" cy="110" r="38" fill="url(#g-planeta)"/>
-        <circle class="sat s1" r="5"/>
-        <circle class="sat s2" r="3.5"/>
-        <g class="titilan">
-          <circle cx="40" cy="40" r="1.6"/><circle cx="120" cy="170" r="1.2"/><circle cx="190" cy="28" r="1.4"/>
-          <circle cx="410" cy="32" r="1.6"/><circle cx="430" cy="190" r="1.2"/><circle cx="80" cy="120" r="1"/>
-        </g>
+      <svg viewBox="0 0 480 190">
+        <ellipse class="orbita" cx="300" cy="100" rx="190" ry="62" transform="rotate(-12 300 100)"/>
+        <g transform="rotate(-12 300 100)"><circle class="satelite" r="9"/></g>
+        <circle class="chispa" cx="28" cy="28" r="2.5"/><circle class="chispa" cx="196" cy="36" r="2"/>
+        <circle class="chispa" cx="450" cy="40" r="3"/><circle class="chispa" cx="376" cy="172" r="2"/>
+        <circle class="chispa" cx="236" cy="156" r="1.8"/><circle class="chispa" cx="120" cy="150" r="2.2"/>
       </svg>
     </div>
   </header>
