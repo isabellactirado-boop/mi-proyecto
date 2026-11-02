@@ -49,20 +49,28 @@ main{padding:26px 34px 56px;min-width:0}
 .hero p{color:#b6b2e6;margin:6px 0 18px;font-size:.95rem}
 
 /* Astronauta sentado sobre "Administrador" */
-.name-wrap{position:relative;display:inline-block}
+.name-wrap{position:relative;display:inline-block;padding-right:.15em}
+/* El asiento del dibujo (y=64 de 96) queda a la altura de las minusculas y
+   las rodillas justo despues de la ultima letra: las piernas cuelgan por fuera. */
 .astro-sit{
   position:absolute;
-  right:-.35em;
-  bottom:.62em;
-  width:1.9em;
-  height:2.1em;
+  right:-.5em;
+  bottom:.15em;
+  width:1.5em;
+  height:1.8em;
   overflow:visible;
   pointer-events:none;
-  filter:drop-shadow(0 2px 0 rgba(11,6,48,.45));
+  filter:drop-shadow(0 3px 2px rgba(11,6,48,.45));
 }
-.astro-sit .legs{transform-origin:28px 48px;animation:swing 2.6s ease-in-out infinite}
-@keyframes swing{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(5deg)}}
-@media (prefers-reduced-motion:reduce){.astro-sit .legs{animation:none}}
+.astro-sit .pierna .canilla{transform-box:view-box;animation:columpio 2.8s ease-in-out infinite}
+.astro-sit .p1 .canilla{transform-origin:55px 62px}
+.astro-sit .p2 .canilla{transform-origin:50px 61px;animation-delay:-.7s}
+.astro-sit .brazo{transform-box:view-box;transform-origin:25px 41px;animation:saluda 3.6s ease-in-out infinite}
+.astro-sit .luz{animation:parpadea 2.4s ease-in-out infinite}
+@keyframes columpio{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(9deg)}}
+@keyframes saluda{0%,55%,100%{transform:rotate(0)}65%{transform:rotate(-16deg)}75%{transform:rotate(8deg)}85%{transform:rotate(-12deg)}}
+@keyframes parpadea{50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.astro-sit *{animation:none!important}}
 
 .actions{display:flex;gap:12px;flex-wrap:wrap}
 .btn{font:inherit;font-weight:700;font-size:.9rem;padding:11px 18px;border-radius:12px;border:2.5px solid var(--ink);cursor:pointer;background:var(--cream);color:var(--ink);box-shadow:3px 3px 0 var(--ink);transition:transform .12s,box-shadow .12s}
