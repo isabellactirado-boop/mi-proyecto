@@ -22,29 +22,22 @@ def informe_asistencias(
 
     - Sin filtros: todos los grupos. Con `id_grupo`: solo ese grupo.
     - `desde` / `hasta` (AAAA-MM-DD) limitan las clases que se cuentan.
-    - Un profesor solo ve los grupos que dicta; el administrador y el propietario ven todos.
+    - Todos los roles con permiso (profesor, administrador, propietario) ven a todos
+      los estudiantes de todos los grupos.
     - `faltas_seguidas` es la racha actual de ausencias (no depende de las fechas).
     """
     if desde and hasta and desde > hasta:
         raise HTTPException(status_code=422, detail="La fecha 'desde' no puede ser posterior a 'hasta'")
 
-    es_profesor = usuario["rol"] == "profesor"
-    id_docente = usuario["id_docente"] if es_profesor else None
-    if es_profesor and id_docente is None:
-        return {"filtro": {"id_grupo": id_grupo, "desde": desde, "hasta": hasta},
-                "resumen": _resumen_vacio(), "estudiantes": []}
-
     with obtener_conexion() as conexion:
         with conexion.cursor() as cursor:
             if id_grupo is not None:
                 cursor.execute(
-                    "SELECT id_docente FROM grupos WHERE id_grupo = %s", (id_grupo,)
+                    "SELECT id_grupo FROM grupos WHERE id_grupo = %s", (id_grupo,)
                 )
                 grupo = cursor.fetchone()
                 if not grupo:
                     raise HTTPException(status_code=404, detail="El grupo no existe")
-                if es_profesor and grupo["id_docente"] != id_docente:
-                    raise HTTPException(status_code=403, detail="Ese grupo no es tuyo")
 
             cursor.execute(
                 """
@@ -84,13 +77,12 @@ def informe_asistencias(
                 LEFT JOIN acudientes ac ON ac.id_acudiente = ea.id_acudiente
                 WHERE i.estado = 'activa'
                   AND (%(grupo)s::int   IS NULL OR g.id_grupo   = %(grupo)s::int)
-                  AND (%(docente)s::int IS NULL OR g.id_docente = %(docente)s::int)
                 GROUP BY i.id_inscripcion, e.doc_identidad, e.nombre_completo, e.telefono_celular,
                          g.id_grupo, g.nombre_grupo, c.nombre_curso, rs.faltas_seguidas,
                          ac.nombre_completo, ac.telefono
                 ORDER BY g.nombre_grupo, e.nombre_completo
                 """,
-                {"desde": desde, "hasta": hasta, "grupo": id_grupo, "docente": id_docente},
+                {"desde": desde, "hasta": hasta, "grupo": id_grupo},
             )
             filas = cursor.fetchall()
 
@@ -105,11 +97,6 @@ def informe_asistencias(
     }
     return {"filtro": {"id_grupo": id_grupo, "desde": desde, "hasta": hasta},
             "resumen": resumen, "estudiantes": filas}
-
-
-def _resumen_vacio() -> dict:
-    return {"estudiantes": 0, "registros_de_asistencia": 0, "porcentaje_asistencia": None,
-            "con_inasistencias_seguidas": 0, "minimo_faltas_seguidas": ALERTA_FALTAS_SEGUIDAS}
 
 
 @router.get("/reportes/pagos")

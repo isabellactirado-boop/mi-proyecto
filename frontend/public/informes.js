@@ -2,6 +2,7 @@
    informes.js - informes de pagos y de asistencias.
    - Pagos (#inf-pagos): quien esta en mora y quien esta al dia.
    - Asistencias (#inf-asis): asistencia por estudiante, por grupo y fechas.
+     Todos los profesores ven a todos los estudiantes.
    Cada informe se ve en pantalla, se imprime (o guarda como PDF) y se
    descarga para Excel. Solo se activa si su panel existe en la pagina.
    Se carga solo cuando el panel se hace visible (no gasta peticiones).
@@ -99,37 +100,95 @@
       .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
 
-  // informe = { titulo, subtitulo, resumen: [[etiqueta, valor]], columnas: [], filas: [[]] }
+  // informe = { titulo, subtitulo, etiqueta, seccion, resumen: [[etiqueta, valor, tono]],
+  //             columnas: [], filas: [[celda]] }
+  // celda: texto, o { t: texto, sub: texto pequeño, badge: "rojo"|"verde"|"amarillo", barra: 0-100 }
+  const PLANETAS = `<svg width="150" height="70" viewBox="0 0 150 70" aria-hidden="true">
+    <ellipse cx="88" cy="36" rx="58" ry="17" fill="none" stroke="#8f86d6" stroke-width="1.6" stroke-dasharray="2 5" transform="rotate(-10 88 36)"/>
+    <circle cx="92" cy="33" r="22" fill="#e8368f" stroke="#1a1240" stroke-width="2.5"/>
+    <path d="M72 26q20 6 40-4M71 38q22 7 42-3" stroke="#ff7ab8" stroke-width="4" fill="none"/>
+    <circle cx="38" cy="50" r="9" fill="#5bc8e8" stroke="#1a1240" stroke-width="2"/>
+    <circle cx="136" cy="52" r="7" fill="#ff8a2b" stroke="#1a1240" stroke-width="2"/>
+    <path d="M14 14q0 7 7 7q-7 0-7 7q0-7-7-7q7 0 7-7z" fill="#ffd23f" stroke="#1a1240" stroke-width="1.2"/>
+    <path d="M128 6q0 5 5 5q-5 0-5 5q0-5-5-5q5 0 5-5z" fill="#ffd23f" stroke="#1a1240" stroke-width="1"/>
+  </svg>`;
+  const SOMBRAS = ["#e8368f", "#5bc8e8", "#ff8a2b", "#8a5cf0"];
+
+  // El logo va incrustado en el informe (una ventana nueva a veces no alcanza a cargarlo)
+  let logoListo = null;
+  function precargarLogo() {
+    if (logoListo) return;
+    fetch("logo.jpeg").then((r) => r.blob()).then((b) => {
+      const lector = new FileReader();
+      lector.onload = () => { logoListo = lector.result; };
+      lector.readAsDataURL(b);
+    }).catch(() => { /* sin logo: el informe sale igual */ });
+  }
+
+  function celdaHTML(c) {
+    if (c === null || c === undefined || typeof c !== "object") return escapar(c);
+    let h = "";
+    if (c.badge) h += `<span class="pill ${c.badge}">${escapar(c.t)}</span>`;
+    else if (c.t !== undefined) h += `<strong>${escapar(c.t)}</strong>`;
+    if (c.barra !== undefined && c.barra !== null) {
+      const p = Math.max(3, Math.min(100, Number(c.barra)));
+      h += `<span class="barra"><i class="${p < 60 ? "rojo" : p < 80 ? "amarillo" : ""}" style="width:${p}%"></i></span>`;
+    }
+    if (c.sub) h += `<small>${escapar(c.sub)}</small>`;
+    return h;
+  }
+
   function imprimir(informe) {
     const v = window.open("", "_blank");
     if (!v) { alert("El navegador bloqueó la ventana. Permite las ventanas emergentes para esta página."); return; }
-    const logo = new URL("logo.jpeg", location.href).href;
+    const logo = logoListo || new URL("logo.jpeg", location.href).href;
     v.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
 <title>${escapar(informe.titulo)} · PRE-ICMA</title>
 <style>
-  *{box-sizing:border-box} body{font-family:Arial,Helvetica,sans-serif;color:#1a1240;margin:28px}
-  header{display:flex;align-items:center;gap:16px;border-bottom:3px solid #1a1240;padding-bottom:14px;margin-bottom:18px}
-  header img{width:58px;height:58px;border-radius:12px;object-fit:cover;border:2px solid #1a1240}
-  h1{margin:0;font-size:21px} header p{margin:3px 0 0;color:#5b5788;font-size:12.5px}
-  .res{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px}
-  .res div{border:2px solid #1a1240;border-radius:10px;padding:8px 14px;min-width:130px}
-  .res strong{display:block;font-size:17px} .res span{font-size:11.5px;color:#5b5788}
-  table{width:100%;border-collapse:collapse;font-size:11.5px}
-  th{background:#1a1240;color:#fff;text-align:left;padding:7px 8px;font-size:10.5px;text-transform:uppercase;letter-spacing:.03em}
-  td{padding:6px 8px;border-bottom:1px solid #d9d5ea;vertical-align:top}
-  tr:nth-child(even) td{background:#f6f1e7}
-  footer{margin-top:22px;font-size:10.5px;color:#5b5788;text-align:center}
-  @media print{body{margin:12mm} th{-webkit-print-color-adjust:exact;print-color-adjust:exact} tr:nth-child(even) td{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+  *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{font-family:Arial,Helvetica,sans-serif;color:#1a1240;margin:30px;line-height:1.45}
+  .header{display:flex;align-items:center;gap:16px;border-bottom:3px solid #1a1240;padding-bottom:14px;margin-bottom:22px}
+  .header img{width:62px;height:62px;border-radius:14px;object-fit:cover;border:2.5px solid #1a1240;box-shadow:3px 3px 0 #ffd23f}
+  .header .txt{flex:1}
+  .header h1{margin:0;font-size:23px}
+  .header p{margin:2px 0 6px;color:#5b5788;font-size:12.5px}
+  .badge{display:inline-block;background:#ffd23f;padding:4px 12px;border-radius:20px;font-weight:bold;font-size:11px;border:1.5px solid #1a1240}
+  .res{display:grid;grid-template-columns:repeat(${informe.resumen.length},1fr);gap:14px;margin-bottom:20px}
+  .res div{background:#fff;border:2px solid #1a1240;border-radius:12px;padding:10px 14px}
+  .res strong{display:block;font-size:20px} .res span{font-size:11.5px;color:#5b5788;font-weight:bold}
+  .res .mal strong{color:#c62828} .res .bien strong{color:#2e7d32}
+  .section{background:#f6f1e7;border:2px solid #1a1240;border-radius:12px;padding:16px;margin-bottom:16px}
+  .section h2{font-size:15px;margin:0 0 10px;border-bottom:1px solid #1a1240;padding-bottom:6px}
+  .section h2::before{content:"\\2726";color:#e8a800;margin-right:6px}
+  table{width:100%;border-collapse:collapse;font-size:11.5px;background:#fff;border-radius:8px;overflow:hidden}
+  th{background:#1a1240;color:#fff;text-align:left;padding:8px;font-size:10.5px;text-transform:uppercase;letter-spacing:.03em}
+  td{padding:7px 8px;border-bottom:1px solid #e3dff0;vertical-align:middle}
+  td strong{display:block} td small{display:block;color:#6b6790;font-size:10px}
+  tr{page-break-inside:avoid}
+  .pill{display:inline-block;padding:3px 10px;border-radius:99px;font-weight:bold;font-size:10.5px;border:1.5px solid #1a1240;white-space:nowrap}
+  .pill.rojo{background:#fde0de;color:#c62828} .pill.verde{background:#dcf2de;color:#2e7d32} .pill.amarillo{background:#fff0b8;color:#7a5b00}
+  .barra{display:block;width:90px;height:9px;margin-top:3px;background:#fff;border:1.5px solid #1a1240;border-radius:99px;overflow:hidden}
+  .barra i{display:block;height:100%;background:#5bc8e8} .barra i.amarillo{background:#ffd23f} .barra i.rojo{background:#e8322f}
+  .footer{margin-top:26px;text-align:center;font-size:11px;color:#6b6790}
+  @media print{body{margin:10mm}}
 </style></head><body>
-<header><img src="${escapar(logo)}" alt=""><div><h1>${escapar(informe.titulo)}</h1>
-<p>PRE-ICMA · ${escapar(informe.subtitulo)} · Generado el ${escapar(hoyTexto())}</p></div></header>
-<div class="res">${informe.resumen.map(([e, val]) => `<div><strong>${escapar(val)}</strong><span>${escapar(e)}</span></div>`).join("")}</div>
+<div class="header">
+  <img src="${escapar(logo)}" alt="">
+  <div class="txt"><h1>PRE-ICMA | ${escapar(informe.titulo)}</h1>
+    <p>${escapar(informe.subtitulo)} · Generado el ${escapar(hoyTexto())}</p>
+    <span class="badge">${escapar(informe.etiqueta)}</span></div>
+  ${PLANETAS}
+</div>
+<div class="res">${informe.resumen.map(([e, val, tono], i) =>
+      `<div class="${tono || ""}" style="box-shadow:4px 4px 0 ${SOMBRAS[i % SOMBRAS.length]}"><strong>${escapar(val)}</strong><span>${escapar(e)}</span></div>`).join("")}</div>
+<div class="section"><h2>${escapar(informe.seccion)}</h2>
 <table><thead><tr>${informe.columnas.map((c) => `<th>${escapar(c)}</th>`).join("")}</tr></thead>
 <tbody>${informe.filas.length
-      ? informe.filas.map((f) => `<tr>${f.map((c) => `<td>${escapar(c)}</td>`).join("")}</tr>`).join("")
+      ? informe.filas.map((f) => `<tr>${f.map((c) => `<td>${celdaHTML(c)}</td>`).join("")}</tr>`).join("")
       : `<tr><td colspan="${informe.columnas.length}" style="text-align:center;padding:18px">Sin registros</td></tr>`}</tbody></table>
-<footer>Informe generado desde el panel de PRE-ICMA</footer>
-<script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script>
+</div>
+<div class="footer">✦ Generado desde el panel de PRE-ICMA ✦</div>
+<script>window.onload=function(){setTimeout(function(){window.print()},400)}<\/script>
 </body></html>`);
     v.document.close();
   }
@@ -140,7 +199,7 @@
       const s = String(t === null || t === undefined ? "" : t);
       return /[";\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
     };
-    const lineas = [informe.columnas, ...informe.filasExcel].map((f) => f.map(celda).join(";"));
+    const lineas = [informe.columnasExcel, ...informe.filasExcel].map((f) => f.map(celda).join(";"));
     const blob = new Blob(["﻿" + lineas.join("\r\n")], { type: "text/csv;charset=utf-8" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -229,23 +288,34 @@
 
     function armar() {
       const r = ultimo.resumen;
-      const columnas = ["Estudiante", "Documento", "Curso", "Grupo", "Valor acordado", "Pagado", "Saldo",
-        "Cuotas vencidas", "Valor vencido", "Días de mora", "Estado", "Acudiente", "Teléfono"];
-      const base = ultimo.inscripciones.map((f) => [
-        f.estudiante, f.doc_identidad, f.curso, f.nombre_grupo || "",
-        f.valor_acordado, f.total_pagado, f.saldo_pendiente,
-        num(f.cuotas_en_mora), f.valor_en_mora, num(f.dias_mora_maximo),
-        f.estado_pago === "en_mora" ? "En mora" : "Al día",
-        f.acudiente || "", f.telefono_acudiente || f.telefono_estudiante || "",
-      ]);
+      const lista = ultimo.inscripciones;
       return {
         titulo: "Informe de pagos",
-        subtitulo: "Inscripciones activas · " + ESTADO_PAGO[filtro.value],
-        resumen: [["En mora", num(r.en_mora)], ["Al día", num(r.al_dia)],
-          ["Valor vencido", dinero(r.valor_en_mora)], ["Saldo por cobrar", dinero(r.saldo_pendiente)]],
-        columnas,
-        filas: base.map((f) => f.map((c, i) => ([4, 5, 6, 8].includes(i) ? dinero(c) : c))),
-        filasExcel: base.map((f) => f.map((c, i) => ([4, 5, 6, 8].includes(i) ? Math.round(num(c)) : c))),
+        subtitulo: "Inscripciones activas",
+        etiqueta: ESTADO_PAGO[filtro.value],
+        seccion: "Estado de pago por estudiante",
+        resumen: [["En mora", num(r.en_mora), num(r.en_mora) ? "mal" : ""], ["Al día", num(r.al_dia), "bien"],
+          ["Valor vencido", dinero(r.valor_en_mora), num(r.valor_en_mora) ? "mal" : ""], ["Saldo por cobrar", dinero(r.saldo_pendiente)]],
+        columnas: ["Estudiante", "Curso · Grupo", "Acordado", "Pagado", "Saldo", "Vencido", "Estado", "Acudiente"],
+        filas: lista.map((f) => [
+          { t: f.estudiante, sub: f.doc_identidad },
+          { t: f.curso, sub: f.nombre_grupo || "" },
+          dinero(f.valor_acordado), dinero(f.total_pagado), dinero(f.saldo_pendiente),
+          f.estado_pago === "en_mora"
+            ? { t: dinero(f.valor_en_mora), sub: num(f.cuotas_en_mora) + (num(f.cuotas_en_mora) === 1 ? " cuota · " : " cuotas · ") + num(f.dias_mora_maximo) + " días" }
+            : "—",
+          f.estado_pago === "en_mora" ? { t: "En mora", badge: "rojo" } : { t: "Al día", badge: "verde" },
+          { t: f.acudiente || "Sin acudiente", sub: f.telefono_acudiente || f.telefono_estudiante || "" },
+        ]),
+        columnasExcel: ["Estudiante", "Documento", "Curso", "Grupo", "Valor acordado", "Pagado", "Saldo",
+          "Cuotas vencidas", "Valor vencido", "Días de mora", "Estado", "Acudiente", "Teléfono"],
+        filasExcel: lista.map((f) => [
+          f.estudiante, f.doc_identidad, f.curso, f.nombre_grupo || "",
+          Math.round(num(f.valor_acordado)), Math.round(num(f.total_pagado)), Math.round(num(f.saldo_pendiente)),
+          num(f.cuotas_en_mora), Math.round(num(f.valor_en_mora)), num(f.dias_mora_maximo),
+          f.estado_pago === "en_mora" ? "En mora" : "Al día",
+          f.acudiente || "", f.telefono_acudiente || f.telefono_estudiante || "",
+        ]),
       };
     }
 
@@ -270,16 +340,18 @@
     desde.value = hoyISO(-30);
     hasta.value = hoyISO();
 
-    async function llenarGrupos() {
-      try {
-        const lista = await api("/grupos");
-        lista.forEach((g) => {
-          const o = el("option", null, g.nombre_curso + " · " + g.nombre_grupo);
-          o.value = g.id_grupo;
-          grupo.appendChild(o);
-        });
-      } catch (e) { /* el informe igual funciona con "Todos los grupos" */ }
+    // La lista de grupos sale del primer informe (todos los grupos con estudiantes),
+    // asi un profesor tambien puede elegir grupos que no dicta.
+    function llenarGrupos(estudiantes) {
+      const vistos = new Map();
+      estudiantes.forEach((f) => { if (!vistos.has(f.id_grupo)) vistos.set(f.id_grupo, f.curso + " · " + f.nombre_grupo); });
+      [...vistos.entries()].sort((x, y) => x[1].localeCompare(y[1], "es")).forEach(([id, texto]) => {
+        const o = el("option", null, texto);
+        o.value = id;
+        grupo.appendChild(o);
+      });
     }
+    let gruposListos = false;
 
     async function cargar() {
       msg.textContent = "";
@@ -306,6 +378,7 @@
         return vacio(tabla, 6, e.message);
       }
       ocupado([bVer, bImprimir, bExcel], false);
+      if (!gruposListos && !grupo.value) { llenarGrupos(ultimo.estudiantes); gruposListos = true; }
       const r = ultimo.resumen;
       const minimo = num(r.minimo_faltas_seguidas) || 3;
       resumen(caja, [
@@ -357,22 +430,37 @@
 
     function armar() {
       const r = ultimo.resumen;
-      const rango = (consulta.desde ? fechaLarga(consulta.desde) : "el inicio") + " a " + (consulta.hasta ? fechaLarga(consulta.hasta) : "hoy");
-      const columnas = ["Estudiante", "Documento", "Curso", "Grupo", "Clases", "Presente", "Tarde", "Ausente",
-        "Excusa", "% asistencia", "Faltas seguidas", "Acudiente", "Teléfono"];
-      const base = ultimo.estudiantes.map((f) => [
-        f.estudiante, f.doc_identidad, f.curso, f.nombre_grupo, num(f.total_clases), num(f.presentes),
-        num(f.tardes), num(f.ausentes), num(f.excusas), f.porcentaje_asistencia, num(f.faltas_seguidas),
-        f.acudiente || "", f.telefono_acudiente || f.telefono_estudiante || "",
-      ]);
+      const minimo = num(r.minimo_faltas_seguidas) || 3;
+      const rango = "Del " + (consulta.desde ? fechaLarga(consulta.desde) : "inicio") + " al " + (consulta.hasta ? fechaLarga(consulta.hasta) : "hoy");
+      const lista = ultimo.estudiantes;
       return {
         titulo: "Informe de asistencias",
-        subtitulo: consulta.grupo + " · de " + rango,
-        resumen: [["Estudiantes", num(r.estudiantes)], ["Asistencia promedio", pct(r.porcentaje_asistencia)],
-          ["Con " + (num(r.minimo_faltas_seguidas) || 3) + "+ faltas seguidas", num(r.con_inasistencias_seguidas)]],
-        columnas,
-        filas: base.map((f) => f.map((c, i) => (i === 9 ? pct(c) : c))),
-        filasExcel: base.map((f) => f.map((c, i) => (i === 9 ? (c === null ? "" : String(c).replace(".", ",")) : c))),
+        subtitulo: rango,
+        etiqueta: consulta.grupo,
+        seccion: "Asistencia por estudiante",
+        resumen: [["Estudiantes", num(r.estudiantes)],
+          ["Asistencia promedio", pct(r.porcentaje_asistencia), r.porcentaje_asistencia !== null && r.porcentaje_asistencia < 70 ? "mal" : "bien"],
+          ["Con " + minimo + "+ faltas seguidas", num(r.con_inasistencias_seguidas), num(r.con_inasistencias_seguidas) ? "mal" : ""],
+          ["Asistencias registradas", num(r.registros_de_asistencia)]],
+        columnas: ["Estudiante", "Curso · Grupo", "Clases", "Presente", "Tarde", "Ausente", "Excusa", "Asistencia", "Faltas", "Acudiente"],
+        filas: lista.map((f) => {
+          const fs = num(f.faltas_seguidas);
+          return [
+            { t: f.estudiante, sub: f.doc_identidad }, { t: f.curso, sub: f.nombre_grupo },
+            num(f.total_clases), num(f.presentes), num(f.tardes), num(f.ausentes), num(f.excusas),
+            f.porcentaje_asistencia === null ? "—" : { t: pct(f.porcentaje_asistencia), barra: f.porcentaje_asistencia },
+            fs >= minimo ? { t: fs + " seguidas", badge: "rojo" } : fs > 0 ? { t: fs + (fs === 1 ? " falta" : " seguidas"), badge: "amarillo" } : { t: "Bien", badge: "verde" },
+            { t: f.acudiente || "Sin acudiente", sub: f.telefono_acudiente || f.telefono_estudiante || "" },
+          ];
+        }),
+        columnasExcel: ["Estudiante", "Documento", "Curso", "Grupo", "Clases", "Presente", "Tarde", "Ausente",
+          "Excusa", "% asistencia", "Faltas seguidas", "Acudiente", "Teléfono"],
+        filasExcel: lista.map((f) => [
+          f.estudiante, f.doc_identidad, f.curso, f.nombre_grupo, num(f.total_clases), num(f.presentes),
+          num(f.tardes), num(f.ausentes), num(f.excusas),
+          f.porcentaje_asistencia === null ? "" : String(f.porcentaje_asistencia).replace(".", ","),
+          num(f.faltas_seguidas), f.acudiente || "", f.telefono_acudiente || f.telefono_estudiante || "",
+        ]),
       };
     }
 
@@ -380,7 +468,7 @@
     grupo.addEventListener("change", cargar);
     bImprimir.addEventListener("click", () => ultimo && imprimir(armar()));
     bExcel.addEventListener("click", () => ultimo && descargarExcel(armar(), "informe_asistencias"));
-    alVerse(panel, () => { llenarGrupos(); cargar(); });
+    alVerse(panel, cargar);
   }
 
   /* ---------- datos de ejemplo (?demo) ---------- */
@@ -414,11 +502,11 @@
       return Promise.resolve({
         resumen: { estudiantes: 3, registros_de_asistencia: 24, porcentaje_asistencia: 70.8, con_inasistencias_seguidas: 1, minimo_faltas_seguidas: 3 },
         estudiantes: [
-          { doc_identidad: "1009998887", estudiante: "Ana Ruiz", curso: "Pre-ICFES Cal. B", nombre_grupo: "Grupo 1", total_clases: 8,
+          { id_grupo: 1, doc_identidad: "1009998887", estudiante: "Ana Ruiz", curso: "Pre-ICFES Cal. B", nombre_grupo: "Grupo 1", total_clases: 8,
             presentes: 8, tardes: 0, ausentes: 0, excusas: 0, porcentaje_asistencia: 100, faltas_seguidas: 0, acudiente: "Pedro Ruiz", telefono_acudiente: "3104445566" },
-          { doc_identidad: "1002223334", estudiante: "Juan Pérez", curso: "Pre-ICFES Cal. B", nombre_grupo: "Grupo 2", total_clases: 8,
+          { id_grupo: 2, doc_identidad: "1002223334", estudiante: "Juan Pérez", curso: "Pre-ICFES Cal. B", nombre_grupo: "Grupo 2", total_clases: 8,
             presentes: 4, tardes: 1, ausentes: 3, excusas: 0, porcentaje_asistencia: 50, faltas_seguidas: 3, acudiente: "María Gómez", telefono_acudiente: "3001112233" },
-          { doc_identidad: "1005556667", estudiante: "Laura Ríos", curso: "Pre-ICFES Cal. B", nombre_grupo: "Grupo 2", total_clases: 8,
+          { id_grupo: 2, doc_identidad: "1005556667", estudiante: "Laura Ríos", curso: "Pre-ICFES Cal. B", nombre_grupo: "Grupo 2", total_clases: 8,
             presentes: 5, tardes: 2, ausentes: 0, excusas: 1, porcentaje_asistencia: 62.5, faltas_seguidas: 0, acudiente: null, telefono_estudiante: "3159998877" },
         ],
       });
@@ -427,6 +515,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
+    if ($("inf-pagos") || $("inf-asis")) precargarLogo();
     iniciarPagos();
     iniciarAsistencias();
   });
