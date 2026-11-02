@@ -308,21 +308,31 @@
             <option value="tarjeta">Tarjeta</option>
             <option value="otro">Otro</option>
           </select>
+          <div id="pg-soporte" hidden>
+            <label for="pg-ref">Número de referencia</label>
+            <input id="pg-ref" class="input-space" maxlength="60" placeholder="Ej: M1234567 (sale en el comprobante)">
+            <label for="pg-archivo">Comprobante (foto o PDF)</label>
+            <input id="pg-archivo" type="file" class="input-space file-input" accept="image/jpeg,image/png,image/webp,application/pdf">
+            <div class="ac-previa" id="pg-previa" hidden></div>
+            <small class="note">Escribe la referencia, adjunta el comprobante, o ambos. Las fotos se comprimen solas.</small>
+          </div>
           <label for="pg-fecha">Fecha del pago</label>
           <input id="pg-fecha" type="date" class="input-space" required>
-          <label for="pg-nota">Referencia o nota (opcional)</label>
-          <input id="pg-nota" class="input-space" maxlength="200" placeholder="Ej: Nequi ref. 123456 · cuota 2">
+          <label for="pg-nota">Nota (opcional)</label>
+          <input id="pg-nota" class="input-space" maxlength="200" placeholder="Ej: cuota 2 · pagó la mamá">
           <p class="ac-msg" role="status"></p>
           <button class="btn main" type="submit">Confirmar pago</button>
         </form>
       </div>
 
       <div class="panel c12" style="--c:var(--teal)">
-        <h2><span>Últimos pagos</span></h2>
+        <h2><span>Últimos pagos</span>
+          <input id="pg-filtro-ref" type="search" class="input-space ac-select" placeholder="Buscar por referencia" aria-label="Buscar pagos por número de referencia">
+        </h2>
         <div class="tscroll">
           <table>
-            <thead><tr><th>Fecha</th><th>Estudiante</th><th>Curso</th><th>Método</th><th>Nota</th><th>Monto</th></tr></thead>
-            <tbody id="pagos-tabla"><tr><td colspan="6" class="ac-vacio">Cargando…</td></tr></tbody>
+            <thead><tr><th>Fecha</th><th>Estudiante</th><th>Curso</th><th>Método</th><th>Referencia</th><th>Monto</th><th>Comprobante</th></tr></thead>
+            <tbody id="pagos-tabla"><tr><td colspan="7" class="ac-vacio">Cargando…</td></tr></tbody>
           </table>
         </div>
       </div>

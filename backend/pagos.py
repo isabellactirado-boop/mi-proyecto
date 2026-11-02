@@ -1,9 +1,12 @@
+import base64
+import binascii
+import re
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Literal
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel, Field
 
 from auth import requiere_permiso
@@ -76,19 +79,101 @@ def buscar_inscripcion(q: str, usuario: dict = Depends(requiere_permiso("ver_pag
 
 
 @router.get("/pagos/recientes")
-def pagos_recientes(usuario: dict = Depends(requiere_permiso("ver_pagos"))):
+def pagos_recientes(ref: str | None = None, usuario: dict = Depends(requiere_permiso("ver_pagos"))):
+    """Ultimos 15 pagos, o los que tengan una referencia parecida a `ref`."""
+    filtro, params = "", []
+    if ref and ref.strip():
+        filtro, params = "WHERE p.referencia ILIKE %s ", ["%" + ref.strip() + "%"]
     with obtener_conexion() as conexion:
         with conexion.cursor() as cursor:
             cursor.execute(
                 "SELECT p.id_pago, p.fecha_pago, p.monto_pagado, p.metodo_pago, p.descripcion, "
-                "       e.nombre_completo AS estudiante, c.nombre_curso AS curso "
+                "       p.referencia, e.nombre_completo AS estudiante, c.nombre_curso AS curso, "
+                "       EXISTS (SELECT 1 FROM comprobantes_pago cp WHERE cp.id_pago = p.id_pago) "
+                "         AS tiene_comprobante "
                 "FROM pagos p "
                 "JOIN inscripciones i ON i.id_inscripcion = p.id_inscripcion "
                 "JOIN estudiantes e ON e.id_estudiante = i.id_estudiante "
-                "JOIN cursos c ON c.id_curso = i.id_curso "
-                "ORDER BY p.fecha_pago DESC, p.id_pago DESC LIMIT 15"
+                "JOIN cursos c ON c.id_curso = i.id_curso " + filtro +
+                "ORDER BY p.fecha_pago DESC, p.id_pago DESC LIMIT 15",
+                params,
             )
             return cursor.fetchall()
+
+
+# ---------------------------------------------------------------------
+# Comprobantes (foto o PDF guardados en la base)
+# ---------------------------------------------------------------------
+MAX_COMPROBANTE = 2 * 1024 * 1024
+_DATA_URL = re.compile(r"^data:(image/jpeg|image/png|image/webp|application/pdf);base64,(.+)$", re.S)
+_FIRMAS = {  # primeros bytes de cada formato: evita que suban otra cosa con el nombre cambiado
+    "image/jpeg": lambda b: b[:3] == b"\xff\xd8\xff",
+    "image/png": lambda b: b[:8] == b"\x89PNG\r\n\x1a\n",
+    "image/webp": lambda b: b[:4] == b"RIFF" and b[8:12] == b"WEBP",
+    "application/pdf": lambda b: b[:5] == b"%PDF-",
+}
+
+
+def _leer_comprobante(data_url: str) -> tuple[str, bytes]:
+    """Valida un 'data:<tipo>;base64,...' y devuelve (tipo, bytes)."""
+    encontrado = _DATA_URL.match(data_url or "")
+    if not encontrado:
+        raise HTTPException(status_code=400, detail="El comprobante debe ser una foto (JPG, PNG, WEBP) o un PDF")
+    tipo = encontrado.group(1)
+    try:
+        contenido = base64.b64decode(encontrado.group(2), validate=True)
+    except (binascii.Error, ValueError):
+        raise HTTPException(status_code=400, detail="El archivo del comprobante esta dañado")
+    if len(contenido) > MAX_COMPROBANTE:
+        raise HTTPException(status_code=400, detail="El comprobante pesa mas de 2 MB")
+    if not contenido or not _FIRMAS[tipo](contenido):
+        raise HTTPException(status_code=400, detail="El archivo no es realmente una imagen o un PDF")
+    return tipo, contenido
+
+
+def _guardar_comprobante(cursor, id_pago: int, data_url: str) -> None:
+    tipo, contenido = _leer_comprobante(data_url)
+    cursor.execute(
+        "INSERT INTO comprobantes_pago (id_pago, tipo_mime, tamano_bytes, contenido) "
+        "VALUES (%s, %s, %s, %s) "
+        "ON CONFLICT (id_pago) DO UPDATE SET tipo_mime = EXCLUDED.tipo_mime, "
+        "  tamano_bytes = EXCLUDED.tamano_bytes, contenido = EXCLUDED.contenido, "
+        "  fecha_subida = CURRENT_TIMESTAMP",
+        (id_pago, tipo, len(contenido), contenido),
+    )
+
+
+@router.get("/pagos/{id_pago}/comprobante")
+def ver_comprobante(id_pago: int, usuario: dict = Depends(requiere_permiso("ver_pagos"))):
+    with obtener_conexion() as conexion:
+        with conexion.cursor() as cursor:
+            cursor.execute(
+                "SELECT tipo_mime, contenido FROM comprobantes_pago WHERE id_pago = %s", (id_pago,)
+            )
+            fila = cursor.fetchone()
+    if not fila:
+        raise HTTPException(status_code=404, detail="Ese pago no tiene comprobante")
+    return Response(
+        content=bytes(fila["contenido"]),
+        media_type=fila["tipo_mime"],
+        headers={"Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff"},
+    )
+
+
+class NuevoComprobante(BaseModel):
+    comprobante: str
+
+
+@router.put("/pagos/{id_pago}/comprobante")
+def subir_comprobante(id_pago: int, datos: NuevoComprobante, usuario: dict = Depends(requiere_permiso("editar_pagos"))):
+    """Para adjuntar (o cambiar) el comprobante de un pago ya registrado."""
+    with obtener_conexion() as conexion:
+        with conexion.cursor() as cursor:
+            cursor.execute("SELECT 1 FROM pagos WHERE id_pago = %s", (id_pago,))
+            if not cursor.fetchone():
+                raise HTTPException(status_code=404, detail="Pago no encontrado")
+            _guardar_comprobante(cursor, id_pago, datos.comprobante)
+    return {"mensaje": "Comprobante guardado"}
 
 
 class NuevoPago(BaseModel):
@@ -97,6 +182,13 @@ class NuevoPago(BaseModel):
     metodo_pago: Literal["efectivo", "nequi_daviplata", "transferencia", "tarjeta", "otro"]
     fecha_pago: date | None = None
     descripcion: str | None = Field(default=None, max_length=200)
+    referencia: str | None = Field(default=None, max_length=60)
+    comprobante: str | None = None  # "data:image/jpeg;base64,..."
+    # Si la referencia ya se uso en otro pago, el panel pregunta y reenvia con True
+    confirmar_referencia_repetida: bool = False
+
+
+METODOS_CON_SOPORTE = ("nequi_daviplata", "transferencia")
 
 
 @router.post("/pagos", status_code=201)
@@ -104,6 +196,12 @@ def registrar_pago(datos: NuevoPago, usuario: dict = Depends(requiere_permiso("c
     fecha = datos.fecha_pago or _hoy()
     if fecha > _hoy() + timedelta(days=1):
         raise HTTPException(status_code=400, detail="La fecha del pago no puede ser futura")
+    referencia = (datos.referencia or "").strip() or None
+    if datos.metodo_pago in METODOS_CON_SOPORTE and not referencia and not datos.comprobante:
+        raise HTTPException(
+            status_code=400,
+            detail="Para Nequi, Daviplata o transferencia escribe el numero de referencia o adjunta el comprobante",
+        )
 
     with obtener_conexion() as conexion:
         with conexion.cursor() as cursor:
@@ -129,13 +227,31 @@ def registrar_pago(datos: NuevoPago, usuario: dict = Depends(requiere_permiso("c
                     detail=f"El pago supera el saldo pendiente (${saldo:,.0f})".replace(",", "."),
                 )
 
+            if referencia and not datos.confirmar_referencia_repetida:
+                cursor.execute(
+                    "SELECT p.fecha_pago, e.nombre_completo FROM pagos p "
+                    "JOIN inscripciones i ON i.id_inscripcion = p.id_inscripcion "
+                    "JOIN estudiantes e ON e.id_estudiante = i.id_estudiante "
+                    "WHERE LOWER(p.referencia) = LOWER(%s) ORDER BY p.id_pago LIMIT 1",
+                    (referencia,),
+                )
+                repetido = cursor.fetchone()
+                if repetido:
+                    raise HTTPException(status_code=409, detail={
+                        "codigo": "referencia_repetida",
+                        "mensaje": f"La referencia {referencia} ya se uso en un pago de "
+                                   f"{repetido['nombre_completo']} del {repetido['fecha_pago']:%d/%m/%Y}.",
+                    })
+
             cursor.execute(
-                "INSERT INTO pagos (id_inscripcion, fecha_pago, monto_pagado, metodo_pago, descripcion) "
-                "VALUES (%s, %s, %s, %s, %s) RETURNING id_pago",
+                "INSERT INTO pagos (id_inscripcion, fecha_pago, monto_pagado, metodo_pago, descripcion, referencia) "
+                "VALUES (%s, %s, %s, %s, %s, %s) RETURNING id_pago",
                 (datos.id_inscripcion, fecha, datos.monto_pagado, datos.metodo_pago,
-                 (datos.descripcion or "").strip() or None),
+                 (datos.descripcion or "").strip() or None, referencia),
             )
             id_pago = cursor.fetchone()["id_pago"]
+            if datos.comprobante:
+                _guardar_comprobante(cursor, id_pago, datos.comprobante)
 
     return {
         "id_pago": id_pago,

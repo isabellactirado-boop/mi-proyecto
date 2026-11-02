@@ -241,3 +241,9 @@ tr:last-child td{border-bottom:0}
 .ac-elegido small{display:block;color:var(--muted)}
 .ac-elegido button{flex:none;border:0;background:none;font-size:1.2rem;cursor:pointer}
 .ac-wa{color:var(--ok);font-weight:700;text-decoration:none}
+.ac-previa{margin-top:8px;display:flex;align-items:center;gap:10px;padding:8px;border-radius:12px;background:var(--cream);border:2px dashed var(--ink);font-size:.8rem}
+.ac-previa img{width:64px;height:64px;object-fit:cover;border-radius:8px;border:2px solid var(--ink)}
+.ac-previa button{margin-left:auto;border:0;background:none;font-size:1.2rem;cursor:pointer}
+.ac-ref{font-family:ui-monospace,Consolas,monospace;font-size:.84rem}
+.ac-visor .ac-caja{max-width:760px}
+.ac-visor img{display:block;max-width:100%;max-height:70vh;margin:12px auto 0;border-radius:12px;border:2px solid var(--ink)}

@@ -36,10 +36,27 @@
     try { datos = await respuesta.json(); } catch (e) { /* sin cuerpo */ }
     if (!respuesta.ok) {
       let detalle = datos && datos.detail;
+      let codigo = null;
       if (Array.isArray(detalle)) detalle = "Revisa los datos del formulario";
-      throw new Error(detalle || "Error " + respuesta.status);
+      else if (detalle && typeof detalle === "object") { codigo = detalle.codigo; detalle = detalle.mensaje; }
+      const error = new Error(detalle || "Error " + respuesta.status);
+      error.codigo = codigo;
+      throw error;
     }
     return datos;
+  }
+
+  // Descarga un archivo protegido (con el token) para mostrarlo
+  async function apiArchivo(ruta) {
+    if (DEMO) {
+      const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="360" height="520"><rect width="100%" height="100%" fill="#7a2fd0"/>' +
+        '<text x="50%" y="45%" fill="#fff" font-size="28" text-anchor="middle" font-family="sans-serif">Nequi</text>' +
+        '<text x="50%" y="55%" fill="#fff" font-size="18" text-anchor="middle" font-family="sans-serif">Ref. M1234567 · $200.000</text></svg>';
+      return new Blob([svg], { type: "image/svg+xml" });
+    }
+    const respuesta = await fetch(API + ruta, { headers: { Authorization: "Bearer " + sessionStorage.getItem("token") } });
+    if (!respuesta.ok) throw new Error(respuesta.status === 404 ? "Ese pago no tiene comprobante" : "Error " + respuesta.status);
+    return respuesta.blob();
   }
 
   /* ---------- formatos ---------- */
@@ -465,24 +482,98 @@
   async function cargarPagosRecientes() {
     const tabla = $("pagos-tabla");
     if (!tabla) return;
+    const ref = $("pg-filtro-ref") ? $("pg-filtro-ref").value.trim() : "";
     let lista;
     try {
-      lista = await api("/pagos/recientes");
+      lista = await api("/pagos/recientes" + (ref ? "?ref=" + encodeURIComponent(ref) : ""));
     } catch (e) {
-      return filaVacia(tabla, 6, e.message);
+      return filaVacia(tabla, 7, e.message);
     }
-    if (!lista.length) return filaVacia(tabla, 6, "Aún no hay pagos registrados.");
+    if (!lista.length) return filaVacia(tabla, 7, ref ? "Ningún pago tiene una referencia parecida a «" + ref + "»." : "Aún no hay pagos registrados.");
     tabla.textContent = "";
     lista.forEach((p) => {
       const tr = el("tr");
       tr.appendChild(el("td", null, fechaCorta(p.fecha_pago)));
-      tr.appendChild(el("td", null, p.estudiante));
+      const tdE = el("td");
+      tdE.appendChild(el("strong", null, p.estudiante));
+      if (p.descripcion) tdE.appendChild(el("small", "ac-sub", p.descripcion));
+      tr.appendChild(tdE);
       tr.appendChild(el("td", null, p.curso));
       tr.appendChild(el("td", null, METODOS[p.metodo_pago] || p.metodo_pago));
-      tr.appendChild(el("td", "ac-tema", p.descripcion || "—"));
+      tr.appendChild(el("td", "ac-ref", p.referencia || "—"));
       tr.appendChild(el("td", null, dinero(p.monto_pagado)));
+      const tdC = el("td");
+      if (p.tiene_comprobante) {
+        const ver = el("button", "btn sm", "Ver");
+        ver.type = "button";
+        ver.addEventListener("click", () => verComprobante(p));
+        tdC.appendChild(ver);
+      } else {
+        tdC.appendChild(el("span", "ac-sub", "—"));
+      }
+      tr.appendChild(tdC);
       tabla.appendChild(tr);
     });
+  }
+
+  async function verComprobante(p) {
+    let blob;
+    try { blob = await apiArchivo("/pagos/" + p.id_pago + "/comprobante"); } catch (e) { return alert(e.message); }
+    const url = URL.createObjectURL(blob);
+    if (blob.type === "application/pdf") {   // los PDF se abren en otra pestaña
+      window.open(url, "_blank", "noopener");
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      return;
+    }
+    let visor = $("ac-visor");
+    if (!visor) {
+      visor = el("div", "ac-modal ac-visor");
+      visor.id = "ac-visor";
+      visor.innerHTML = '<div class="ac-caja" role="dialog" aria-modal="true" aria-labelledby="ac-v-titulo">' +
+        '<div class="ac-m-top"><div><h3 id="ac-v-titulo"></h3><p id="ac-v-sub"></p></div>' +
+        '<button class="ac-cerrar" type="button" aria-label="Cerrar">×</button></div><img id="ac-v-img" alt="Comprobante de pago"></div>';
+      document.body.appendChild(visor);
+      const cerrar = () => { visor.hidden = true; URL.revokeObjectURL($("ac-v-img").src); };
+      visor.querySelector(".ac-cerrar").addEventListener("click", cerrar);
+      visor.addEventListener("click", (e) => { if (e.target === visor) cerrar(); });
+    }
+    $("ac-v-titulo").textContent = "Comprobante · " + p.estudiante;
+    $("ac-v-sub").textContent = dinero(p.monto_pagado) + " · " + (METODOS[p.metodo_pago] || p.metodo_pago) +
+      (p.referencia ? " · Ref. " + p.referencia : "") + " · " + fechaCorta(p.fecha_pago);
+    $("ac-v-img").src = url;
+    visor.hidden = false;
+  }
+
+  // Fotos: se reducen a 1600 px y JPEG para que pesen ~200-400 KB. Los PDF van tal cual.
+  const MAX_BYTES = 2 * 1024 * 1024;
+  function leerComoDataUrl(blob) {
+    return new Promise((ok, mal) => {
+      const lector = new FileReader();
+      lector.onload = () => ok(lector.result);
+      lector.onerror = () => mal(new Error("No se pudo leer el archivo"));
+      lector.readAsDataURL(blob);
+    });
+  }
+  async function prepararArchivo(archivo) {
+    if (archivo.type === "application/pdf") {
+      if (archivo.size > MAX_BYTES) throw new Error("El PDF pesa más de 2 MB. Toma una captura de pantalla en su lugar.");
+      return leerComoDataUrl(archivo);
+    }
+    if (!/^image\//.test(archivo.type)) throw new Error("El comprobante debe ser una foto o un PDF");
+    const imagen = await createImageBitmap(archivo).catch(() => { throw new Error("No se pudo abrir la foto"); });
+    const escala = Math.min(1, 1600 / Math.max(imagen.width, imagen.height));
+    const lienzo = document.createElement("canvas");
+    lienzo.width = Math.round(imagen.width * escala);
+    lienzo.height = Math.round(imagen.height * escala);
+    const ctx = lienzo.getContext("2d");
+    ctx.fillStyle = "#fff";  // fondo blanco para PNG transparentes
+    ctx.fillRect(0, 0, lienzo.width, lienzo.height);
+    ctx.drawImage(imagen, 0, 0, lienzo.width, lienzo.height);
+    for (const calidad of [0.82, 0.7, 0.55]) {
+      const blob = await new Promise((ok) => lienzo.toBlob(ok, "image/jpeg", calidad));
+      if (blob && blob.size <= MAX_BYTES) return leerComoDataUrl(blob);
+    }
+    throw new Error("La foto es demasiado pesada incluso comprimida");
   }
 
   function elegirInscripcion(ins, montoSugerido) {
@@ -512,6 +603,48 @@
     if (!form) return;
     $("pg-fecha").value = hoyIso();
 
+    // Referencia y comprobante: obligatorio uno de los dos para Nequi/Daviplata y transferencia
+    let comprobante = null;
+    const conSoporte = () => ["nequi_daviplata", "transferencia", "tarjeta"].includes($("pg-metodo").value);
+    const exigeSoporte = () => ["nequi_daviplata", "transferencia"].includes($("pg-metodo").value);
+    const limpiarArchivo = () => { comprobante = null; $("pg-archivo").value = ""; $("pg-previa").hidden = true; };
+    $("pg-metodo").addEventListener("change", () => { $("pg-soporte").hidden = !conSoporte(); });
+    $("pg-archivo").addEventListener("change", async () => {
+      const archivo = $("pg-archivo").files[0];
+      const previa = $("pg-previa");
+      if (!archivo) return limpiarArchivo();
+      previa.hidden = false;
+      previa.textContent = "Preparando…";
+      try {
+        comprobante = await prepararArchivo(archivo);
+      } catch (e) {
+        limpiarArchivo();
+        return mensaje(form, e.message, "error");
+      }
+      previa.textContent = "";
+      if (comprobante.startsWith("data:image/")) {
+        const img = el("img");
+        img.src = comprobante;
+        img.alt = "Vista previa del comprobante";
+        previa.appendChild(img);
+      }
+      const kb = Math.round((comprobante.length * 3) / 4 / 1024);
+      previa.appendChild(el("span", null, archivo.name + " · " + kb + " KB"));
+      const quitar = el("button", null, "×");
+      quitar.type = "button";
+      quitar.setAttribute("aria-label", "Quitar comprobante");
+      quitar.addEventListener("click", limpiarArchivo);
+      previa.appendChild(quitar);
+    });
+
+    let esperaFiltro = null;
+    if ($("pg-filtro-ref")) {
+      $("pg-filtro-ref").addEventListener("input", () => {
+        clearTimeout(esperaFiltro);
+        esperaFiltro = setTimeout(cargarPagosRecientes, 350);
+      });
+    }
+
     let espera = null;
     $("pg-buscar").addEventListener("input", () => {
       clearTimeout(espera);
@@ -540,20 +673,37 @@
     form.addEventListener("submit", async (ev) => {
       ev.preventDefault();
       if (!inscripcionPago) return mensaje(form, "Busca y elige el estudiante.", "error");
+      const referencia = conSoporte() ? $("pg-ref").value.trim() : "";
+      if (exigeSoporte() && !referencia && !comprobante) {
+        return mensaje(form, "Para Nequi, Daviplata o transferencia escribe la referencia o adjunta el comprobante.", "error");
+      }
       const boton = form.querySelector('button[type="submit"]');
       boton.disabled = true;
-      mensaje(form, "Guardando…");
+      mensaje(form, comprobante ? "Subiendo comprobante…" : "Guardando…");
+      const cuerpo = sinVacios({
+        id_inscripcion: inscripcionPago.id_inscripcion,
+        monto_pagado: Number($("pg-monto").value),
+        metodo_pago: $("pg-metodo").value,
+        fecha_pago: $("pg-fecha").value,
+        descripcion: $("pg-nota").value.trim(),
+        referencia: referencia,
+        comprobante: conSoporte() ? comprobante : null,
+      });
       try {
-        const r = await api("/pagos", "POST", sinVacios({
-          id_inscripcion: inscripcionPago.id_inscripcion,
-          monto_pagado: Number($("pg-monto").value),
-          metodo_pago: $("pg-metodo").value,
-          fecha_pago: $("pg-fecha").value,
-          descripcion: $("pg-nota").value.trim(),
-        }));
+        let r;
+        try {
+          r = await api("/pagos", "POST", cuerpo);
+        } catch (e) {
+          // Referencia ya usada: puede ser un comprobante reutilizado. Se pide confirmar.
+          if (e.codigo !== "referencia_repetida" || !confirm(e.message + "\n\n¿Seguro que quieres registrar este pago con la misma referencia?")) throw e;
+          cuerpo.confirmar_referencia_repetida = true;
+          r = await api("/pagos", "POST", cuerpo);
+        }
         form.reset();
         $("pg-fecha").value = hoyIso();
         $("pg-elegido").hidden = true;
+        $("pg-soporte").hidden = true;
+        limpiarArchivo();
         inscripcionPago = null;
         mensaje(form, "Pago de " + r.estudiante + " guardado. Saldo restante: " + dinero(r.saldo_restante) + ".", "ok");
         cargarCobros();
@@ -966,7 +1116,14 @@
       if (ruta === "/cursos" || ruta === "/grupos") return Promise.resolve({ id: 9 });
       const cuenta = { usuario: "juan@correo.com", contrasena_temporal: "Kp7mWq3xRa", aviso: "Entrega esta contraseña al estudiante. No se vuelve a mostrar." };
       if (ruta === "/inscripciones") return Promise.resolve({ curso: "Pre-ICFES Cal. B", grupo: "Grupo 2", cuotas: [{}, {}, {}], cuenta: cuerpo.crear_cuenta ? cuenta : null });
-      if (ruta === "/pagos") return Promise.resolve({ estudiante: "Juan Pérez", saldo_restante: 400000 });
+      if (ruta === "/pagos") {
+        if (cuerpo.referencia === "M1234567" && !cuerpo.confirmar_referencia_repetida) {
+          const e = new Error("La referencia M1234567 ya se usó en un pago de Isabella Tirado del 31/10/2026.");
+          e.codigo = "referencia_repetida";
+          return Promise.reject(e);
+        }
+        return Promise.resolve({ estudiante: "Juan Pérez", saldo_restante: 400000 });
+      }
       if (ruta === "/cuentas-estudiante") return Promise.resolve(Object.assign({ estudiante: "Juan Pérez" }, cuenta));
       return Promise.resolve({ registros: (cuerpo && cuerpo.registros || []).length });
     }
@@ -982,7 +1139,8 @@
       { id_inscripcion: 11, doc_identidad: "1002223334", estudiante: "Juan Pérez", curso: "Pre-ICFES Cal. B", nombre_grupo: "Grupo 2", saldo_pendiente: 600000, valor_en_mora: 200000 },
     ]);
     if (ruta === "/pagos/recientes") return Promise.resolve([
-      { fecha_pago: dia(-1), estudiante: "Isabella Tirado", curso: "Pre-ICFES Cal. B", metodo_pago: "nequi_daviplata", descripcion: "Ref. 88123", monto_pagado: 200000 },
+      { id_pago: 7, fecha_pago: dia(-1), estudiante: "Isabella Tirado", curso: "Pre-ICFES Cal. B", metodo_pago: "nequi_daviplata", referencia: "M1234567", descripcion: "cuota 1", monto_pagado: 200000, tiene_comprobante: true },
+      { id_pago: 6, fecha_pago: dia(-3), estudiante: "Ana Ruiz", curso: "Taller de Inglés", metodo_pago: "efectivo", referencia: null, descripcion: null, monto_pagado: 100000, tiene_comprobante: false },
     ]);
     if (ruta === "/cursos") return Promise.resolve([{ id_curso: 1, nombre_curso: "Pre-ICFES Cal. B" }, { id_curso: 2, nombre_curso: "Pre-ICFES Cal. A" }]);
     if (ruta === "/docentes") return Promise.resolve([{ id_docente: 1, nombre_completo: "Laura Gómez" }, { id_docente: 2, nombre_completo: "Carlos Ruiz" }]);
