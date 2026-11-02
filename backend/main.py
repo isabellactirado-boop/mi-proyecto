@@ -24,9 +24,13 @@ frontend_url = os.getenv("FRONTEND_URL")
 if frontend_url:
     origenes.append(frontend_url)
 
+# Vercel crea una direccion temporal en cada subida, con esta forma:
+# https://mi-proyecto-<codigo>-preicma.vercel.app  (equipo "preicma").
+# Se aceptan solo esas, ademas de las direcciones exactas de arriba.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origenes,
+    allow_origin_regex=r"^https://mi-proyecto-[a-z0-9]+-preicma\.vercel\.app$",
     allow_methods=["*"],
     allow_headers=["*"],
 )
