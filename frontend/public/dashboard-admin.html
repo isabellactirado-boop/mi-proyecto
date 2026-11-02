@@ -298,32 +298,122 @@
     </div>
   </section>
 
-  <!-- PESTAÑA 5: ACADÉMICO -->
+  <!-- PESTAÑA 5: ACADÉMICO (simulacros y resultados) -->
   <section id="tab-academico" class="tab-content">
     <div class="grid">
-      <div class="panel c6" style="--c:var(--violet)">
-        <h2><span>Último simulacro</span></h2>
-        <div class="score"><strong>—</strong><span>promedio global de 500</span><span class="up">—</span></div>
-        <div class="area" style="--c:var(--pink)"><svg><use href="#pl-pink"/></svg><span>Matemáticas</span><div class="meter"><i style="--p:0%"></i></div><b>—</b></div>
-        <small class="note">Datos pendientes de sincronización.</small>
+      <div class="panel c8" style="--c:var(--violet)">
+        <h2><span>Simulacros</span></h2>
+        <div class="tscroll">
+          <table>
+            <thead><tr><th>Simulacro</th><th>Fecha</th><th>Resultados</th><th>Promedio</th><th></th></tr></thead>
+            <tbody id="sim-tabla"><tr><td colspan="5" class="ac-vacio">Cargando…</td></tr></tbody>
+          </table>
+        </div>
       </div>
 
-      <div class="panel c6" style="--c:var(--yellow)">
-        <h2><span>Próximos Simulacros Programados</span></h2>
-        <ul class="todo">
-          <li><span class="n y">—</span><div>Simulacro Diagnóstico<small>Programado: —</small></div></li>
-        </ul>
+      <div class="panel c4" style="--c:var(--yellow)">
+        <h2><span>Nuevo simulacro</span></h2>
+        <form class="space-form ac-form" id="form-simulacro">
+          <label for="sim-nombre">Nombre</label>
+          <input id="sim-nombre" class="input-space" placeholder="Ej: Simulacro 3" maxlength="100" required>
+          <label for="sim-fecha">Fecha</label>
+          <input id="sim-fecha" type="date" class="input-space" required>
+          <label for="sim-desc">Descripción (opcional)</label>
+          <input id="sim-desc" class="input-space" placeholder="Ej: Simulacro completo tipo Saber 11">
+          <p class="ac-msg" role="status"></p>
+          <button class="btn main" type="submit">Crear simulacro</button>
+        </form>
+      </div>
+
+      <div class="panel c12" style="--c:var(--pink)" id="res-panel" hidden>
+        <h2><span id="res-titulo">Resultados</span>
+          <select id="res-grupo" class="input-space ac-select" aria-label="Filtrar por grupo"><option value="">Todos los grupos</option></select>
+        </h2>
+        <p class="note" style="margin:-6px 0 12px">Escribe las 5 áreas (0 a 100) y el puntaje global se calcula solo con la fórmula del Saber 11. Si ya tienes el global oficial, escríbelo y se respeta. Las filas vacías no se guardan.</p>
+        <div class="tscroll">
+          <table class="ac-res">
+            <thead><tr><th>Estudiante</th><th>Grupo</th><th>Lectura</th><th>Matem.</th><th>Sociales</th><th>Ciencias</th><th>Inglés</th><th>Global</th></tr></thead>
+            <tbody id="res-tabla"></tbody>
+          </table>
+        </div>
+        <p class="ac-msg" id="res-msg" role="status"></p>
+        <button class="btn main" id="res-guardar" type="button">Guardar resultados</button>
       </div>
     </div>
   </section>
 
   <!-- PESTAÑA 6: DOCENTES Y CLASES -->
   <section id="tab-docentes" class="tab-content">
-    <div class="panel c12" style="--c:var(--pink)">
-      <h2><span>Programación de Clases y Profesores</span><button class="btn sm main">+ Asignar Docente</button></h2>
-      <ul class="cls">
-        <li><svg><use href="#pl-pink"/></svg><time>—</time><div>—<small>—</small></div><span class="badge b-warn live">—</span></li>
-      </ul>
+    <div class="grid">
+      <div class="panel c12" style="--c:var(--pink)">
+        <h2><span>Clases programadas</span><small class="ac-rango">Última semana y próximas 3</small></h2>
+        <div class="tscroll">
+          <table>
+            <thead><tr><th>Fecha</th><th>Curso · Grupo</th><th>Docente</th><th>Tema</th><th>Asistencia</th><th></th></tr></thead>
+            <tbody id="clases-tabla"><tr><td colspan="6" class="ac-vacio">Cargando…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel c6" style="--c:var(--yellow)">
+        <h2><span>Programar clase</span></h2>
+        <form class="space-form ac-form" id="form-clase">
+          <label for="cl-grupo">Grupo</label>
+          <select id="cl-grupo" class="input-space" required></select>
+          <label for="cl-fecha">Fecha</label>
+          <input id="cl-fecha" type="date" class="input-space" required>
+          <label for="cl-tema">Tema (opcional)</label>
+          <input id="cl-tema" class="input-space" maxlength="150" placeholder="Ej: Funciones y gráficas">
+          <label for="cl-enlace">Enlace de la reunión (opcional)</label>
+          <input id="cl-enlace" type="url" class="input-space" placeholder="Si se deja vacío, usa el del grupo">
+          <label for="cl-semanas">Repetir</label>
+          <select id="cl-semanas" class="input-space">
+            <option value="1">Solo esta fecha</option>
+            <option value="4">4 semanas seguidas</option>
+            <option value="8">8 semanas seguidas</option>
+            <option value="12">12 semanas seguidas</option>
+          </select>
+          <p class="ac-msg" role="status"></p>
+          <button class="btn main" type="submit">Programar</button>
+        </form>
+      </div>
+
+      <div class="panel c6" style="--c:var(--orange)">
+        <h2><span>Nuevo grupo</span></h2>
+        <form class="space-form ac-form" id="form-grupo">
+          <label for="gr-curso">Curso</label>
+          <select id="gr-curso" class="input-space" required></select>
+          <label for="gr-nombre">Nombre del grupo</label>
+          <input id="gr-nombre" class="input-space" maxlength="30" placeholder="Ej: Grupo 2" required>
+          <label for="gr-dia">Día</label>
+          <select id="gr-dia" class="input-space" required>
+            <option value="lunes">Lunes</option><option value="martes">Martes</option><option value="miercoles">Miércoles</option>
+            <option value="jueves">Jueves</option><option value="viernes">Viernes</option><option value="sabado">Sábado</option><option value="domingo">Domingo</option>
+          </select>
+          <div class="ac-dos">
+            <div><label for="gr-inicio">Desde</label><input id="gr-inicio" type="time" class="input-space" required></div>
+            <div><label for="gr-fin">Hasta</label><input id="gr-fin" type="time" class="input-space" required></div>
+          </div>
+          <label for="gr-docente">Docente</label>
+          <select id="gr-docente" class="input-space"><option value="">Sin asignar</option></select>
+          <label for="gr-cupo">Cupo máximo</label>
+          <input id="gr-cupo" type="number" class="input-space" min="20" max="150" value="40" required>
+          <label for="gr-enlace">Enlace fijo de Meet (opcional)</label>
+          <input id="gr-enlace" type="url" class="input-space" placeholder="https://meet.google.com/…">
+          <p class="ac-msg" role="status"></p>
+          <button class="btn main" type="submit">Crear grupo</button>
+        </form>
+      </div>
+
+      <div class="panel c12" style="--c:var(--teal)">
+        <h2><span>Grupos</span></h2>
+        <div class="tscroll">
+          <table>
+            <thead><tr><th>Curso · Grupo</th><th>Horario</th><th>Docente</th><th>Inscritos</th></tr></thead>
+            <tbody id="grupos-tabla"><tr><td colspan="4" class="ac-vacio">Cargando…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -345,5 +435,6 @@
 
 <script src="dashboard-admin.js"></script>
 <script src="api.js"></script>
+<script src="academico.js"></script>
 </body>
 </html>

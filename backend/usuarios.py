@@ -89,8 +89,10 @@ def listar_usuarios(usuario: dict = Depends(requiere_permiso("gestionar_usuarios
             cursor.execute(
                 "SELECT u.id_usuario, u.nombre_usuario, u.rol, u.activo, "
                 "       u.debe_cambiar_contrasena, u.fecha_ultima_sesion, "
-                "       d.nombre_completo AS nombre_docente "
+                "       d.nombre_completo AS nombre_docente, "
+                "       e.nombre_completo AS nombre_estudiante "
                 "FROM usuarios u LEFT JOIN docentes d ON d.id_docente = u.id_docente "
+                "LEFT JOIN estudiantes e ON e.id_estudiante = u.id_estudiante "
                 "ORDER BY u.id_usuario"
             )
             return cursor.fetchall()
@@ -98,8 +100,9 @@ def listar_usuarios(usuario: dict = Depends(requiere_permiso("gestionar_usuarios
 
 class NuevoUsuario(BaseModel):
     correo: str
-    rol: Literal["administrador", "profesor"]
-    # Solo para profesores (se crea tambien su ficha de docente):
+    rol: Literal["administrador", "profesor", "estudiante"]
+    # Para profesores (se crea tambien su ficha de docente) y para
+    # estudiantes (solo doc_identidad: se liga a su ficha ya registrada):
     nombre_completo: str | None = None
     tipo_documento: Literal["TI", "CC", "CE", "PPT", "OTRO"] | None = None
     doc_identidad: str | None = None
@@ -122,12 +125,32 @@ def crear_usuario(
             raise HTTPException(
                 status_code=400, detail="Faltan el tipo y el numero de documento del profesor"
             )
+    if datos.rol == "estudiante" and not (datos.doc_identidad and datos.doc_identidad.strip()):
+        raise HTTPException(status_code=400, detail="Falta el numero de documento del estudiante")
 
     temporal = contrasena_temporal()
     try:
         with obtener_conexion() as conexion:
             with conexion.cursor() as cursor:
                 id_docente = None
+                id_estudiante = None
+                if datos.rol == "estudiante":
+                    cursor.execute(
+                        "SELECT e.id_estudiante, u.id_usuario "
+                        "FROM estudiantes e "
+                        "LEFT JOIN usuarios u ON u.id_estudiante = e.id_estudiante "
+                        "WHERE e.doc_identidad = %s",
+                        (datos.doc_identidad.strip(),),
+                    )
+                    ficha = cursor.fetchone()
+                    if not ficha:
+                        raise HTTPException(
+                            status_code=404, detail="No hay un estudiante registrado con ese documento"
+                        )
+                    if ficha["id_usuario"] is not None:
+                        raise HTTPException(status_code=409, detail="Ese estudiante ya tiene cuenta")
+                    id_estudiante = ficha["id_estudiante"]
+
                 if datos.rol == "profesor":
                     cursor.execute(
                         "INSERT INTO docentes (nombre_completo, tipo_documento, doc_identidad, "
@@ -146,9 +169,9 @@ def crear_usuario(
 
                 cursor.execute(
                     "INSERT INTO usuarios (nombre_usuario, contrasena_hash, rol, id_docente, "
-                    "                      debe_cambiar_contrasena) "
-                    "VALUES (%s, %s, %s, %s, TRUE) RETURNING id_usuario",
-                    (correo, generar_hash(temporal), datos.rol, id_docente),
+                    "                      id_estudiante, debe_cambiar_contrasena) "
+                    "VALUES (%s, %s, %s, %s, %s, TRUE) RETURNING id_usuario",
+                    (correo, generar_hash(temporal), datos.rol, id_docente, id_estudiante),
                 )
                 id_usuario = cursor.fetchone()["id_usuario"]
     except psycopg.errors.UniqueViolation as error:

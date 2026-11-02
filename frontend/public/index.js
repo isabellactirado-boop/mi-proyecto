@@ -331,6 +331,14 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             const datos = resultado.datos;
+            // Las cuentas de estudiante solo entran por la app movil
+            if (datos.rol === "estudiante") {
+                ocultarCarga();
+                mostrar("Las cuentas de estudiante se usan en la app móvil.", "error");
+                boton.disabled = false;
+                return;
+            }
+
             // Cada persona entra solo por la tarjeta de su propio rol
             if (datos.rol !== rolElegido) {
                 ocultarCarga();

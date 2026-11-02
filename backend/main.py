@@ -11,6 +11,8 @@ from db import obtener_conexion
 from estudiantes import router as router_estudiantes
 from resumen import router as router_resumen
 from usuarios import router as router_usuarios
+from estudiante import router as router_estudiante
+from academico import router as router_academico
 
 load_dotenv()
 
@@ -19,6 +21,9 @@ app = FastAPI()
 origenes = [
     "http://localhost:3000",
     "https://mi-proyecto-preicma.vercel.app",
+    # App movil (Capacitor): Android sirve la app desde https://localhost
+    "https://localhost",
+    "capacitor://localhost",
 ]
 frontend_url = os.getenv("FRONTEND_URL")
 if frontend_url:
@@ -38,6 +43,8 @@ app.add_middleware(
 app.include_router(router_resumen)
 app.include_router(router_estudiantes)
 app.include_router(router_usuarios)
+app.include_router(router_estudiante)
+app.include_router(router_academico)
 
 
 @app.get("/")

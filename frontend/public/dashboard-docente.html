@@ -16,34 +16,59 @@
   })();
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-<style>
-  :root{ --navy:#1b2f6b; --cream:#f6f1e7; --yellow:#ffd23f; --orange:#ff7a3d; --ink:#1a1f36; --muted:#666b80; }
-  *{ box-sizing:border-box; margin:0; padding:0 }
-  body{ font-family:'DM Sans',sans-serif; color:var(--ink); background:var(--cream); min-height:100vh; display:grid; place-items:center; padding:24px }
-  .card{ width:100%; max-width:480px; background:#fffdf8; border:3px solid var(--ink); border-radius:24px; padding:36px 30px; box-shadow:10px 10px 0 var(--yellow); text-align:center }
-  .brand{ font-family:'Bricolage Grotesque',sans-serif; font-weight:800; color:var(--navy); letter-spacing:.02em; margin-bottom:18px }
-  h1{ font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:1.7rem; letter-spacing:-.02em }
-  p{ color:var(--muted); margin:10px 0 }
-  strong#nombre{ color:var(--ink) }
-  button{ margin-top:22px; font:inherit; font-weight:700; color:#fff; background:var(--navy); border:2px solid var(--ink); border-radius:12px; padding:12px 22px; cursor:pointer; box-shadow:4px 4px 0 var(--ink) }
-  button:hover{ background:var(--orange) }
-</style>
+<link rel="stylesheet" href="dashboard-admin.css">
 </head>
 <body>
-  <main class="card">
-    <div class="brand">PRE-ICMA</div>
-    <h1>Panel de profesores</h1>
-    <p>Hola, <strong id="nombre">profesor</strong>.</p>
-    <p>Este panel está en construcción. Pronto podrás tomar asistencia y consultar los puntajes de los estudiantes.</p>
-    <button type="button" id="salir">Cerrar sesión</button>
-  </main>
-  <script>
-    var usuario = sessionStorage.getItem('currentUser');
-    if (usuario) document.getElementById('nombre').textContent = usuario;
-    document.getElementById('salir').addEventListener('click', function () {
-      sessionStorage.clear();
-      window.location.replace('index.html');
-    });
-  </script>
+
+<aside class="side">
+  <div class="me">
+    <div class="av" id="av">P</div>
+    <div><strong id="uname">Profesor</strong><small>Panel docente</small></div>
+  </div>
+  <ul class="nav">
+    <li><a href="#" class="on">Mis clases</a></li>
+  </ul>
+  <div class="moonbox">
+    <div class="disk"><i></i><i></i><i></i></div>
+    <a class="logout" href="#" id="salir">Cerrar sesión</a>
+  </div>
+</aside>
+
+<main>
+  <header class="hero">
+    <div class="hero-txt">
+      <h1>Hola, <em id="display-user">profesor</em></h1>
+      <p id="today"></p>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div class="panel c12" style="--c:var(--yellow)">
+      <h2><span>Mis clases</span><small class="ac-rango">Última semana y próximas 3</small></h2>
+      <div class="tscroll">
+        <table>
+          <thead><tr><th>Fecha</th><th>Curso · Grupo</th><th>Tema</th><th>Asistencia</th><th></th></tr></thead>
+          <tbody id="clases-tabla"><tr><td colspan="5" class="ac-vacio">Cargando…</td></tr></tbody>
+        </table>
+      </div>
+      <small class="note">Toca "Asistencia" para marcar a cada estudiante como presente, tarde, ausente o con excusa. Puedes corregirla después.</small>
+    </div>
+  </div>
+</main>
+
+<script>
+  var usuario = sessionStorage.getItem('currentUser') || 'profesor';
+  document.getElementById('uname').textContent = usuario;
+  document.getElementById('display-user').textContent = usuario.split('@')[0];
+  document.getElementById('av').textContent = usuario.charAt(0).toUpperCase();
+  var hoy = new Date().toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  document.getElementById('today').textContent = hoy.charAt(0).toUpperCase() + hoy.slice(1);
+  document.getElementById('salir').addEventListener('click', function (e) {
+    e.preventDefault();
+    sessionStorage.clear();
+    window.location.replace('index.html');
+  });
+</script>
+<script src="academico.js"></script>
 </body>
 </html>

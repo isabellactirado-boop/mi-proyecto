@@ -70,7 +70,7 @@ def usuario_actual(
     with obtener_conexion() as conexion:
         with conexion.cursor() as cursor:
             cursor.execute(
-                "SELECT id_usuario, nombre_usuario, rol, id_docente, "
+                "SELECT id_usuario, nombre_usuario, rol, id_docente, id_estudiante, "
                 "       contrasena_hash, debe_cambiar_contrasena "
                 "FROM usuarios WHERE id_usuario = %s AND activo",
                 (id_usuario,),
@@ -108,3 +108,21 @@ def requiere_permiso(nombre_permiso: str):
         return usuario
 
     return dependencia
+
+
+def es_admin(usuario: dict) -> bool:
+    return usuario["rol"] in ("propietario", "administrador")
+
+
+def requiere_admin(usuario: dict = Depends(usuario_actual)) -> dict:
+    """Solo propietario y administradores (programar clases, crear grupos)."""
+    if not es_admin(usuario):
+        raise HTTPException(status_code=403, detail="No tienes permiso para esta accion")
+    return usuario
+
+
+def requiere_estudiante(usuario: dict = Depends(usuario_actual)) -> dict:
+    """Solo deja pasar cuentas con rol estudiante (las de la app movil)."""
+    if usuario["rol"] != "estudiante" or usuario["id_estudiante"] is None:
+        raise HTTPException(status_code=403, detail="Esta seccion es solo para estudiantes")
+    return usuario
