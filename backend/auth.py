@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 
 import bcrypt
 import jwt
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from db import obtener_conexion
@@ -47,7 +47,12 @@ def crear_token(id_usuario: int, usuario: str, rol: str, contrasena_hash: str) -
     return jwt.encode(datos, _secreto(), algorithm=ALGORITMO)
 
 
+# Mientras la contrasena sea temporal solo se puede cambiarla (y ver quien soy)
+RUTAS_CON_CONTRASENA_TEMPORAL = ("/cambiar-contrasena", "/yo")
+
+
 def usuario_actual(
+    request: Request,
     credenciales: HTTPAuthorizationCredentials | None = Depends(esquema),
 ) -> dict:
     """Devuelve quien hace la peticion, con sus permisos reales de la BD.
@@ -96,6 +101,13 @@ def usuario_actual(
             usuario["permisos"] = {fila["nombre_permiso"] for fila in cursor.fetchall()}
 
     del usuario["contrasena_hash"]  # el hash no sale de esta funcion
+
+    # Contrasena temporal: el servidor no deja usar nada mas hasta que la cambie
+    if usuario["debe_cambiar_contrasena"] and request.url.path not in RUTAS_CON_CONTRASENA_TEMPORAL:
+        raise HTTPException(
+            status_code=403,
+            detail="Debes cambiar tu contraseña temporal antes de continuar",
+        )
     return usuario
 
 

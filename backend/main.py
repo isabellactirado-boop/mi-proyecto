@@ -14,6 +14,8 @@ from usuarios import router as router_usuarios
 from estudiante import router as router_estudiante
 from academico import router as router_academico
 from inscripciones import router as router_inscripciones
+from reportes import router as router_reportes
+from usuarios_admin import router as router_usuarios_admin
 from pagos import router as router_pagos
 
 load_dotenv()
@@ -48,6 +50,8 @@ app.include_router(router_usuarios)
 app.include_router(router_estudiante)
 app.include_router(router_academico)
 app.include_router(router_inscripciones)
+app.include_router(router_reportes)
+app.include_router(router_usuarios_admin)
 app.include_router(router_pagos)
 
 
