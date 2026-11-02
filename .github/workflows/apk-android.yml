@@ -1,0 +1,67 @@
+# Compila el APK de la app de estudiantes (PRE ICMA) en GitHub.
+# Corre solo cuando cambia la app (frontend/public/app) o la carpeta mobile,
+# y tambien a mano desde la pestaña Actions -> "APK Android" -> Run workflow.
+# El APK queda en el resumen de cada ejecucion, en "Artifacts".
+name: APK Android
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "frontend/public/app/**"
+      - "mobile/**"
+      - ".github/workflows/apk-android.yml"
+  workflow_dispatch:
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Instalar Capacitor
+        run: npm install --no-audit --no-fund
+
+      - name: Crear el proyecto Android
+        run: npx cap add android
+
+      - name: Icono y pantalla de inicio con el logo
+        run: |
+          sudo apt-get install -y -qq imagemagick > /dev/null
+          mkdir -p assets
+          # el logo no es cuadrado: se centra sobre el azul de la app
+          convert ../frontend/public/app/logo.jpeg -resize 880x880 \
+            -background '#140b4f' -gravity center -extent 1024x1024 assets/logo.png
+          npx @capacitor/assets generate --android \
+            --iconBackgroundColor '#140b4f' --iconBackgroundColorDark '#140b4f' \
+            --splashBackgroundColor '#140b4f' --splashBackgroundColorDark '#140b4f'
+
+      - name: Copiar la app al proyecto Android
+        run: npx cap sync android
+
+      - name: Compilar el APK
+        working-directory: mobile/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Nombrar el APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk PRE-ICMA.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PRE-ICMA-apk
+          path: mobile/PRE-ICMA.apk
+          retention-days: 30

@@ -24,19 +24,25 @@ para ver la app con datos de ejemplo, sin backend.
 
 ## Generar el APK
 
-Requisitos: [Node.js LTS](https://nodejs.org) y
-[Android Studio](https://developer.android.com/studio).
+**Automático (recomendado):** GitHub lo compila solo cada vez que cambia
+`frontend/public/app/` o `mobile/` (workflow `.github/workflows/apk-android.yml`).
+También se puede lanzar a mano: pestaña **Actions → APK Android → Run workflow**.
+El APK queda en la ejecución, sección **Artifacts → PRE-ICMA-apk** (hay que
+iniciar sesión en GitHub para descargarlo; dura 30 días).
+
+Es un APK de prueba (firmado con llave de depuración): sirve para instalarlo
+directo en el celular activando "Instalar apps de origen desconocido".
+Para Play Store hace falta firmarlo con una llave propia.
+
+**En tu PC (opcional):** requiere Node.js 22, Java 21 y Android Studio.
 
 ```bash
 cd mobile
 npm install
 npm run android:agregar   # solo la primera vez: crea la carpeta android/
 npm run android:sync      # cada vez que cambies algo en frontend/public/app/
-npm run android:abrir     # abre Android Studio
+npm run android:abrir     # abre Android Studio -> Build -> Build APK(s)
 ```
-
-En Android Studio: **Build → Build App Bundle(s) / APK(s) → Build APK(s)**.
-El APK queda en `android/app/build/outputs/apk/debug/app-debug.apk`.
 
 ## El propietario (CEO) en la app
 

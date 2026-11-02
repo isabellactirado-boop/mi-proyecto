@@ -11,6 +11,9 @@ from db import obtener_conexion
 
 ALGORITMO = "HS256"
 HORAS_SESION = 8
+# En la app movil el estudiante no deberia iniciar sesion cada dia. Igual se
+# invalida al cambiar la contrasena (huella) o al desactivar la cuenta.
+HORAS_SESION_ESTUDIANTE = 24 * 30
 
 esquema = HTTPBearer(auto_error=False)
 
@@ -42,7 +45,8 @@ def crear_token(id_usuario: int, usuario: str, rol: str, contrasena_hash: str) -
         "usuario": usuario,
         "rol": rol,
         "h": huella_contrasena(contrasena_hash),
-        "exp": datetime.now(timezone.utc) + timedelta(hours=HORAS_SESION),
+        "exp": datetime.now(timezone.utc)
+        + timedelta(hours=HORAS_SESION_ESTUDIANTE if rol == "estudiante" else HORAS_SESION),
     }
     return jwt.encode(datos, _secreto(), algorithm=ALGORITMO)
 

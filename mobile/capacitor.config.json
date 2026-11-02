@@ -1,8 +1,10 @@
 {
   "appId": "com.preicma.estudiantes",
-  "appName": "Preicma Estudiantes",
+  "appName": "PRE ICMA",
   "webDir": "../frontend/public/app",
+  "backgroundColor": "#140b4f",
   "android": {
-    "backgroundColor": "#140b4f"
+    "backgroundColor": "#140b4f",
+    "adjustMarginsForEdgeToEdge": "force"
   }
 }

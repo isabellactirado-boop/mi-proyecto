@@ -857,6 +857,19 @@ document.querySelectorAll(".bottom button").forEach((b) => {
   b.addEventListener("click", () => mostrarTab(b.dataset.tab));
 });
 
+/* ---------- boton "atras" de Android (solo dentro del APK) ---------- */
+
+const appNativa = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
+if (appNativa) {
+  appNativa.addListener("backButton", () => {
+    const tabActiva = document.querySelector(".bottom button.on");
+    if (document.body.classList.contains("perfil-open")) cerrarPerfil();
+    else if (!$("pantalla-app").hidden && tabActiva && tabActiva.dataset.tab !== "inicio") mostrarTab("inicio");
+    else if (!$("pantalla-clave").hidden) cerrarSesion();
+    else appNativa.exitApp();
+  });
+}
+
 /* ---------- arranque ---------- */
 
 // El panel web abre la app con ?desde=panel despues de copiar la sesion del CEO
