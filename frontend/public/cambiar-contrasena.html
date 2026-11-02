@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PRE-ICMA - Cambiar contraseña</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="index.css">
+<!-- Solo entra quien ya inició sesión -->
+<script>
+  if (sessionStorage.getItem('isLoggedIn') !== 'true' || !sessionStorage.getItem('token')) {
+    window.location.replace('index.html');
+  }
+</script>
+</head>
+<body>
+  <aside class="side">
+    <div class="brand">PRE<span>-</span>ICMA</div>
+
+    <div class="hero">
+      <h2>Cuida tu <em>cuenta</em> antes de despegar.</h2>
+    </div>
+
+    <div class="moon"><i></i><i></i><i></i></div>
+    <img class="mascot" src="logo.jpeg" alt="Astronauta PRE-ICMA">
+  </aside>
+
+  <main class="form-side">
+    <form class="box" id="form-cambio" novalidate>
+      <h1>Crea tu contraseña</h1>
+      <p class="sub">Entraste con una contraseña temporal. Elige una nueva para continuar.</p>
+
+      <div class="field">
+        <label for="actual">Contraseña temporal</label>
+        <div class="pw">
+          <input id="actual" type="password" placeholder="La que te dio el propietario" autocomplete="current-password" required>
+          <button type="button" data-target="actual">Mostrar</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="nueva">Contraseña nueva</label>
+        <div class="pw">
+          <input id="nueva" type="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password" required>
+          <button type="button" data-target="nueva">Mostrar</button>
+        </div>
+        <small style="display:block;margin-top:6px;color:var(--muted);font-size:.78rem">De 8 a 72 caracteres, con al menos una letra y un número.</small>
+      </div>
+
+      <div class="field">
+        <label for="confirmar">Repite la contraseña nueva</label>
+        <div class="pw">
+          <input id="confirmar" type="password" placeholder="Escríbela otra vez" autocomplete="new-password" required>
+          <button type="button" data-target="confirmar">Mostrar</button>
+        </div>
+      </div>
+
+      <button class="btn" type="submit" id="btn-cambio"><span>Guardar contraseña</span></button>
+      <div id="mensaje" class="mensaje" role="status"></div>
+
+      <div class="links">
+        <a href="#" id="salir">Cerrar sesión</a>
+      </div>
+    </form>
+  </main>
+
+  <script src="cambiar-contrasena.js"></script>
+</body>
+</html>

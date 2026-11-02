@@ -56,7 +56,7 @@ function toggleComprobante() {
   const metodo = document.getElementById('metodo-pago').value;
   const cajaComprobante = document.getElementById('seccion-comprobante');
   if (cajaComprobante) {
-    cajaComprobante.style.display = (metodo === 'nequi' || metodo === 'transferencia') ? 'block' : 'none';
+    cajaComprobante.style.display = (metodo === 'nequi_daviplata' || metodo === 'transferencia') ? 'block' : 'none';
   }
 }
 
