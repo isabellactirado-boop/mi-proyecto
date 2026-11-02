@@ -486,24 +486,117 @@ function escaparHtml(texto) {
     .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
-// Usa el informe imprimible que ya existe en dashboard-admin.js
+// Informe del estudiante con la misma estetica de los informes de pagos y
+// asistencias (usa el molde de informes.js). Respeta lo que el rol puede ver.
 function generarInformeDesdeDetalle(d) {
+  const inf = window.PreicmaInformes;
+  if (!inf) { window.alert("No se pudo preparar el informe. Recarga la página e intenta de nuevo."); return; }
+  const esc = inf.escapar;
   const e = d.estudiante;
-  const i = d.inscripciones.find((x) => x.estado === "activa") || d.inscripciones[0] || {};
-  const p = d.acudientes.find((a) => a.es_principal) || d.acudientes[0] || {};
-  const mejor = i.resultados && i.resultados.length ? i.resultados[0].puntaje_global + " / 500" : "Sin simulacros";
-  const asist = i.asistencia && Number(i.asistencia.total_clases) > 0
-    ? String(i.asistencia.porcentaje_asistencia).replace(".", ",") + "%" : "Sin clases registradas";
-  const estado = i.estado === "activa" ? "ESTUDIANTE ACTIVO" : (i.estado ? "INSCRIPCIÓN " + i.estado.toUpperCase() : "SIN INSCRIPCIÓN");
-  let pagos = "—";
-  if (d.permisos.pagos && i.pagos) {
-    pagos = Number(i.pagos.valor_en_mora) > 0 ? "En mora (" + dinero(i.pagos.valor_en_mora) + ")" : "Al día";
+  const activas = d.inscripciones.filter((x) => x.estado === "activa");
+  const pct = (v) => String(v).replace(".", ",") + " %";
+  const dato = (etiqueta, valor) => `<div><b>${esc(etiqueta)}:</b>${esc(vacio(valor))}</div>`;
+  const pill = (texto, tono) => `<span class="pill ${tono}">${esc(texto)}</span>`;
+
+  // --- tarjetas de resumen (de las inscripciones activas) ---
+  const resumen = [["Cursos activos", activas.length]];
+  if (d.permisos.asistencias) {
+    let tot = 0, pres = 0;
+    activas.forEach((i) => { if (i.asistencia) { tot += Number(i.asistencia.total_clases) || 0; pres += Number(i.asistencia.presentes) || 0; } });
+    const p = tot ? Math.round(1000 * pres / tot) / 10 : null;
+    resumen.push(["Asistencia", p === null ? "—" : pct(p), p === null ? "" : p < 70 ? "mal" : "bien"]);
   }
-  const grupo = i.nombre_grupo ? i.curso + " · " + i.nombre_grupo : (i.curso || "Sin grupo");
-  const limpio = (v) => escaparHtml(vacio(v));
-  generarInformePDF(limpio(e.nombre_completo), limpio(e.doc_identidad), limpio(grupo),
-    limpio(p.nombre_completo ? p.nombre_completo + " (" + p.parentesco + ")" : null),
-    limpio(p.telefono), limpio(p.correo_electronico), escaparHtml(estado), asist, escaparHtml(pagos), mejor);
+  if (d.permisos.resultados) {
+    const ultimos = activas.concat(d.inscripciones).map((i) => (i.resultados || [])[0]).filter(Boolean)
+      .sort((x, y) => String(y.fecha_simulacro).localeCompare(String(x.fecha_simulacro)));
+    resumen.push(["Último simulacro", ultimos.length ? ultimos[0].puntaje_global + " / 500" : "—"]);
+  }
+  if (d.permisos.pagos) {
+    let saldo = 0, mora = 0;
+    activas.forEach((i) => { if (i.pagos) { saldo += Number(i.pagos.saldo_pendiente) || 0; mora += Number(i.pagos.valor_en_mora) || 0; } });
+    resumen.push(mora > 0 ? ["En mora", dinero(mora), "mal"] : ["Saldo pendiente", dinero(saldo), saldo > 0 ? "" : "bien"]);
+  }
+
+  // --- secciones ---
+  const secciones = [];
+  secciones.push({
+    titulo: "Datos del estudiante",
+    html: `<div class="datos">${dato("Documento", e.tipo_documento + " " + e.doc_identidad)}${dato("Teléfono", e.telefono_celular)}` +
+      `${dato("Correo", e.correo_electronico)}${dato("Nacimiento", fechaLarga(e.fecha_nacimiento))}` +
+      `${dato("Dirección", e.direccion)}${dato("Matrícula", e.estado_matricula)}</div>`,
+  });
+
+  secciones.push({
+    titulo: "Acudientes",
+    html: d.acudientes.length
+      ? d.acudientes.map((a) => `<div class="tarjeta"><strong>${esc(a.nombre_completo)}</strong> ${pill(a.parentesco, "gris")}` +
+          `${a.es_principal ? " " + pill("Principal", "amarillo") : ""}` +
+          `<div class="datos">${dato("Teléfono", a.telefono)}${dato("Correo", a.correo_electronico)}</div></div>`).join("")
+      : `<p class="nota">Este estudiante no tiene acudiente registrado.</p>`,
+  });
+
+  if (!d.inscripciones.length) {
+    secciones.push({ titulo: "Cursos", html: `<p class="nota">Todavía no tiene inscripciones.</p>` });
+  }
+  d.inscripciones.forEach((i) => {
+    const tono = i.estado === "activa" ? "verde" : "gris";
+    const dia = DIAS_CORTOS[i.dia_semana] || i.dia_semana;
+    let h = `<div class="datos">${dato("Horario", i.hora_inicio ? dia + " " + hora12(i.hora_inicio) + " a " + hora12(i.hora_fin) : null)}` +
+      `${dato("Docente", i.docente)}${dato("Inscrito", fechaLarga(i.fecha_inscripcion))}` +
+      (d.permisos.pagos ? dato("Forma de pago", i.modalidad_pago === "cuotas" ? i.numero_cuotas + " cuotas" : "Pago único") : "") +
+      `</div>`;
+
+    if (d.permisos.asistencias) {
+      h += `<div class="sub-t">Asistencia</div>`;
+      const a = i.asistencia;
+      if (a && Number(a.total_clases) > 0) {
+        const p = Number(a.porcentaje_asistencia);
+        h += `<div class="asis">${inf.celdaHTML({ t: pct(a.porcentaje_asistencia), barra: p })}` +
+          `<span>${esc(a.presentes)} presente · ${esc(a.tardes)} tarde · ${esc(a.ausentes)} ausente · ${esc(a.excusas)} excusa ` +
+          `(de ${esc(a.total_clases)} clases)</span></div>`;
+      } else h += `<p class="nota">Sin clases registradas.</p>`;
+    }
+
+    if (d.permisos.pagos && i.pagos) {
+      const enMora = Number(i.pagos.valor_en_mora) > 0;
+      h += `<div class="sub-t">Pagos ${enMora ? pill("En mora", "rojo") : pill("Al día", "verde")}</div>` +
+        `<div class="datos">${dato("Valor acordado", dinero(i.valor_acordado))}${dato("Pagado", dinero(i.pagos.total_pagado))}` +
+        `${dato("Saldo pendiente", dinero(i.pagos.saldo_pendiente))}` +
+        (enMora ? dato("Vencido", dinero(i.pagos.valor_en_mora) + " (" + i.pagos.cuotas_en_mora + " " +
+          plural(Number(i.pagos.cuotas_en_mora), "cuota", "cuotas") + ")") : "") + `</div>`;
+    }
+
+    if (d.permisos.resultados) {
+      h += `<div class="sub-t">Simulacros</div>`;
+      if (i.resultados && i.resultados.length) {
+        const nota = (v) => (v === null || v === undefined ? "—" : v);
+        h += `<table><thead><tr><th>Simulacro</th><th>Fecha</th><th>Global</th><th>Matemáticas</th><th>Lectura</th>` +
+          `<th>Sociales</th><th>Naturales</th><th>Inglés</th></tr></thead><tbody>` +
+          i.resultados.map((x) => `<tr><td>${inf.celdaHTML({ t: x.simulacro || "Simulacro" })}</td><td>${esc(fechaLarga(x.fecha_simulacro))}</td>` +
+            `<td>${inf.celdaHTML({ t: x.puntaje_global + " / 500", barra: Number(x.puntaje_global) / 5 })}</td>` +
+            `<td>${esc(nota(x.matematicas))}</td><td>${esc(nota(x.lectura_critica))}</td><td>${esc(nota(x.sociales_ciudadanas))}</td>` +
+            `<td>${esc(nota(x.ciencias_naturales))}</td><td>${esc(nota(x.ingles))}</td></tr>`).join("") +
+          `</tbody></table>`;
+      } else h += `<p class="nota">Todavía no tiene resultados de simulacros.</p>`;
+    }
+
+    secciones.push({
+      titulo: i.curso + (i.nombre_grupo ? " · " + i.nombre_grupo : ""),
+      etiqueta: pill(i.estado ? i.estado.charAt(0).toUpperCase() + i.estado.slice(1) : "Sin estado", tono),
+      html: h,
+    });
+  });
+
+  const activo = activas.length > 0;
+  inf.imprimir({
+    titulo: "Informe del estudiante",
+    subtitulo: e.nombre_completo + " · " + e.tipo_documento + " " + e.doc_identidad,
+    etiqueta: e.nombre_completo,
+    etiqueta2: activo ? { t: "Estudiante activo", tono: "verde" }
+      : { t: d.inscripciones.length ? "Sin inscripción activa" : "Sin inscripción", tono: "gris" },
+    resumen,
+    secciones,
+  });
 }
 
 document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") cerrarDetalle(); });

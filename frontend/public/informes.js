@@ -142,6 +142,15 @@
     const v = window.open("", "_blank");
     if (!v) { alert("El navegador bloqueó la ventana. Permite las ventanas emergentes para esta página."); return; }
     const logo = logoListo || new URL("logo.jpeg", location.href).href;
+    // Cuerpo: una tabla (informes de grupo) o secciones libres (informe de un estudiante)
+    const cuerpo = informe.secciones
+      ? informe.secciones.map((x) => `<div class="section"><h2>${escapar(x.titulo)}${x.etiqueta || ""}</h2>${x.html}</div>`).join("")
+      : `<div class="section"><h2>${escapar(informe.seccion)}</h2>
+<table><thead><tr>${informe.columnas.map((c) => `<th>${escapar(c)}</th>`).join("")}</tr></thead>
+<tbody>${informe.filas.length
+      ? informe.filas.map((f) => `<tr>${f.map((c) => `<td>${celdaHTML(c)}</td>`).join("")}</tr>`).join("")
+      : `<tr><td colspan="${informe.columnas.length}" style="text-align:center;padding:18px">Sin registros</td></tr>`}</tbody></table>
+</div>`;
     v.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
 <title>${escapar(informe.titulo)} · PRE-ICMA</title>
 <style>
@@ -170,23 +179,29 @@
   .barra{display:block;width:90px;height:9px;margin-top:3px;background:#fff;border:1.5px solid #1a1240;border-radius:99px;overflow:hidden}
   .barra i{display:block;height:100%;background:#5bc8e8} .barra i.amarillo{background:#ffd23f} .barra i.rojo{background:#e8322f}
   .footer{margin-top:26px;text-align:center;font-size:11px;color:#6b6790}
+  .pill.gris{background:#ece9f5;color:#4a4670} .section h2 .pill{margin-left:8px;vertical-align:2px}
+  .datos{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;font-size:12.5px}
+  .datos b{color:#5b5788;font-weight:bold;margin-right:4px}
+  .tarjeta{background:#fff;border:1.5px solid #1a1240;border-radius:10px;padding:10px 12px;margin-top:10px;page-break-inside:avoid}
+  .tarjeta:first-child{margin-top:0}
+  .tarjeta>strong{font-size:13.5px} .tarjeta .datos{margin-top:6px}
+  .sub-t{font-size:12px;font-weight:bold;margin:12px 0 6px;color:#1a1240}
+  .asis{display:flex;align-items:center;gap:12px;font-size:12px}
+  .asis .barra{width:160px;height:11px;margin:0}
+  .nota{font-size:12px;color:#6b6790;margin:0}
+  .section{page-break-inside:avoid}
   @media print{body{margin:10mm}}
 </style></head><body>
 <div class="header">
   <img src="${escapar(logo)}" alt="">
   <div class="txt"><h1>PRE-ICMA | ${escapar(informe.titulo)}</h1>
     <p>${escapar(informe.subtitulo)} · Generado el ${escapar(hoyTexto())}</p>
-    <span class="badge">${escapar(informe.etiqueta)}</span></div>
+    <span class="badge">${escapar(informe.etiqueta)}</span>${informe.etiqueta2 ? ` <span class="pill ${informe.etiqueta2.tono}">${escapar(informe.etiqueta2.t)}</span>` : ""}</div>
   ${PLANETAS}
 </div>
 <div class="res">${informe.resumen.map(([e, val, tono], i) =>
       `<div class="${tono || ""}" style="box-shadow:4px 4px 0 ${SOMBRAS[i % SOMBRAS.length]}"><strong>${escapar(val)}</strong><span>${escapar(e)}</span></div>`).join("")}</div>
-<div class="section"><h2>${escapar(informe.seccion)}</h2>
-<table><thead><tr>${informe.columnas.map((c) => `<th>${escapar(c)}</th>`).join("")}</tr></thead>
-<tbody>${informe.filas.length
-      ? informe.filas.map((f) => `<tr>${f.map((c) => `<td>${celdaHTML(c)}</td>`).join("")}</tr>`).join("")
-      : `<tr><td colspan="${informe.columnas.length}" style="text-align:center;padding:18px">Sin registros</td></tr>`}</tbody></table>
-</div>
+${cuerpo}
 <div class="footer">✦ Generado desde el panel de PRE-ICMA ✦</div>
 <script>window.onload=function(){setTimeout(function(){window.print()},400)}<\/script>
 </body></html>`);
@@ -514,8 +529,11 @@
     return Promise.resolve([]);
   }
 
+  // Para otros archivos (el informe de un estudiante en api.js)
+  window.PreicmaInformes = { imprimir, escapar, celdaHTML };
+
   document.addEventListener("DOMContentLoaded", () => {
-    if ($("inf-pagos") || $("inf-asis")) precargarLogo();
+    precargarLogo();
     iniciarPagos();
     iniciarAsistencias();
   });
