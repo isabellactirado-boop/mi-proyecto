@@ -352,13 +352,11 @@ def ver_resultados(
     id_grupo: int | None = None,
     usuario: dict = Depends(requiere_permiso("ver_resultados")),
 ):
-    """Todos los estudiantes activos (o los de un grupo) con su resultado, si ya lo tienen."""
+    """Todos los estudiantes activos (o los de un grupo) con su resultado, si ya lo tienen.
+    Todos los profesores ven los puntajes de todos los estudiantes (regla de la empresa)."""
     extra, params = "", []
     if id_grupo:
         extra, params = " AND i.id_grupo = %s", [id_grupo]
-    if not es_admin(usuario):
-        extra += " AND g.id_docente = %s"
-        params.append(usuario["id_docente"])
 
     with obtener_conexion() as conexion:
         with conexion.cursor() as cursor:
@@ -370,8 +368,8 @@ def ver_resultados(
             if not simulacro:
                 raise HTTPException(status_code=404, detail="Simulacro no encontrado")
             cursor.execute(
-                "SELECT i.id_inscripcion, e.nombre_completo, e.doc_identidad, c.nombre_curso, "
-                "       g.nombre_grupo, r.puntaje_global, r.lectura_critica, r.matematicas, "
+                "SELECT i.id_inscripcion, e.id_estudiante, e.nombre_completo, e.doc_identidad, c.nombre_curso, "
+                "       g.id_grupo, g.nombre_grupo, r.puntaje_global, r.lectura_critica, r.matematicas, "
                 "       r.sociales_ciudadanas, r.ciencias_naturales, r.ingles "
                 "FROM inscripciones i "
                 "JOIN estudiantes e ON e.id_estudiante = i.id_estudiante "

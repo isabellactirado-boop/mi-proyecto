@@ -43,7 +43,10 @@ def listar_estudiantes(usuario: dict = Depends(requiere_permiso("ver_estudiantes
                     des.promedio_global,
                     pag.estado_pago,
                     pag.saldo_pendiente,
-                    pag.valor_en_mora
+                    pag.valor_en_mora,
+                    ARRAY(SELECT i2.id_grupo FROM inscripciones i2
+                          WHERE i2.id_estudiante = e.id_estudiante AND i2.estado = 'activa'
+                            AND i2.id_grupo IS NOT NULL) AS grupos_activos
                 FROM estudiantes e
                 LEFT JOIN LATERAL (
                     SELECT i.id_inscripcion, i.estado AS estado_inscripcion,

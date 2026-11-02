@@ -267,27 +267,41 @@ function etiquetaPago(f, puedeVerPagos) {
   if (f.estado_inscripcion !== "activa") {
     return { texto: f.estado_inscripcion === "retirada" ? "Retirado" : "Finalizado", clase: "badge bx-gris" };
   }
-  if (!puedeVerPagos) return { texto: "—", clase: "" };
+  if (!puedeVerPagos) {
+    // Profesores: en lugar del estado de pago se muestra la asistencia
+    if (!Number(f.total_clases)) return { texto: "Sin clases", clase: "badge bx-gris" };
+    const p = Number(f.porcentaje_asistencia);
+    return { texto: String(f.porcentaje_asistencia).replace(".", ",") + " %", clase: "badge " + (p < 60 ? "b-red" : p < 80 ? "b-warn" : "b-ok") };
+  }
   if (f.estado_pago === "en_mora") return { texto: "En mora", clase: "badge b-red" };
   return { texto: "Al día", clase: "badge b-ok" };
 }
+
+let ESTUDIANTES_DATOS = null;
+
+// El panel del profesor puede definir window.filtroEstudiantes(f) (buscador y "Solo mis grupos")
+// y llamar a window.repintarEstudiantes() cuando cambie el filtro.
+window.repintarEstudiantes = function () { if (ESTUDIANTES_DATOS) pintarEstudiantes(ESTUDIANTES_DATOS); };
 
 function pintarEstudiantes(datos) {
   const cuerpo = document.getElementById("tbody-estudiantes");
   if (!cuerpo) return;
   cuerpo.textContent = "";
+  ESTUDIANTES_DATOS = datos;
   ESTUDIANTES_CACHE = datos.estudiantes;
+  const lista = typeof window.filtroEstudiantes === "function"
+    ? datos.estudiantes.filter(window.filtroEstudiantes) : datos.estudiantes;
 
-  if (datos.estudiantes.length === 0) {
+  if (lista.length === 0) {
     const fila = crear("tr");
-    const celda = crear("td", "Todavía no hay estudiantes registrados.");
+    const celda = crear("td", datos.estudiantes.length ? "Ningún estudiante coincide con el filtro." : "Todavía no hay estudiantes registrados.");
     celda.colSpan = 6;
     fila.appendChild(celda);
     cuerpo.appendChild(fila);
     return;
   }
 
-  datos.estudiantes.forEach((f) => {
+  lista.forEach((f) => {
     const fila = crear("tr");
     fila.appendChild(crear("td", f.doc_identidad));
     fila.appendChild(crear("td", f.nombre_completo));
@@ -750,7 +764,9 @@ async function cargarPerfil() {
     if (window.PreicmaEditar) window.PreicmaEditar.ponerPermisos(yo.permisos);
 
     // Etiqueta bajo el nombre
-    poner("urol", yo.rol === "propietario" ? "Superadmin" : "Panel de gestión");
+    if (document.getElementById("kpi-estudiantes")) {   // solo en el panel admin
+      poner("urol", yo.rol === "propietario" ? "Superadmin" : "Panel de gestión");
+    }
 
     // La pestaña Usuarios solo la ve quien puede gestionar usuarios
     if (yo.permisos.indexOf("gestionar_usuarios") === -1) {
@@ -767,7 +783,7 @@ async function cargarPerfil() {
 document.addEventListener("DOMContentLoaded", () => {
   inyectarEstilos();
   cargarPerfil();
-  cargarResumen();
+  if (document.getElementById("kpi-estudiantes")) cargarResumen();   // solo el panel admin
   cargarEstudiantes();
 
   // Al volver a la pestaña Estudiantes se refresca la lista

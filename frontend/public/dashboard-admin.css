@@ -343,3 +343,32 @@ td .ac-acciones .btn.sm{padding:4px 10px;text-align:center}
 td .ac-acciones .badge{text-align:center}
 #cursos-tabla tr.ed-inactivo td{opacity:1}#cursos-tabla tr.ed-inactivo td:not(:last-child){opacity:.55}
 #cursos-tabla .ac-acciones{min-width:70px}#cursos-tabla td{padding-left:8px;padding-right:8px}
+
+/* ---------- panel del profesor ---------- */
+a.btn{text-decoration:none;display:inline-block;text-align:center}
+.dk-etiqueta{font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.dk-clase{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;align-items:center;background:#fff;border:2.5px solid var(--ink);border-radius:16px;padding:14px;margin-bottom:14px;box-shadow:4px 4px 0 var(--teal)}
+.dk-clase.hoy{background:#fff8dc;box-shadow:4px 4px 0 var(--pink)}
+.dk-cuando{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:86px;padding:8px 10px;border-radius:12px;background:var(--ink);color:#fff;text-align:center}
+.dk-cuando strong{font-family:'Bricolage Grotesque',sans-serif;font-size:1.15rem;text-transform:capitalize}
+.dk-cuando span{font-size:.72rem;color:#cfcdf0}
+.dk-info strong{display:block;font-size:1rem}
+.dk-info small{color:var(--muted);font-size:.82rem}
+.dk-botones{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.todo li.dk-click{cursor:pointer}
+.todo li.dk-click:hover,.todo li.dk-click:focus-visible{outline:none;box-shadow:3px 3px 0 var(--yellow)}
+.dk-lista{list-style:none;display:flex;flex-direction:column;gap:10px}
+.dk-lista li{display:flex;align-items:center;gap:12px;padding:10px 12px;background:#fff;border:2px solid var(--ink);border-radius:14px}
+.dk-lista li.ac-vacio{justify-content:center;border-style:dashed}
+.dk-num{flex:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;background:var(--red);color:#fff;border:2px solid var(--ink)}
+.dk-quien{flex:1;min-width:0}
+.dk-quien strong{display:block;font-size:.92rem}
+.dk-quien small{color:var(--muted);font-size:.76rem}
+.dk-switch{display:flex;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:700;cursor:pointer}
+.dk-switch input{width:18px;height:18px;accent-color:var(--pink)}
+.panel h2 .dk-switch::before{content:none}
+.dk-res-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:24px;align-items:center;margin-bottom:18px;padding:16px;background:#fff;border:2px solid var(--ink);border-radius:16px}
+.dk-dato{color:var(--muted);font-size:.84rem;margin-top:4px}
+.dk-areas .area:last-child{margin-bottom:0}
+tr.dk-mio td:first-child{box-shadow:inset 4px 0 0 var(--yellow)}
+@media (max-width:760px){.dk-res-top{grid-template-columns:1fr}}

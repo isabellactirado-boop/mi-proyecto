@@ -1095,6 +1095,22 @@
       tomar.type = "button";
       tomar.addEventListener("click", () => abrirAsistencia(c.id_clase));
       tdB.appendChild(tomar);
+      if (!esAdmin) {
+        // Panel del profesor: entrar a Meet y escribir el tema de la clase
+        if (c.enlace_reunion) {
+          const meet = el("a", "btn sm", "Meet");
+          meet.href = c.enlace_reunion;
+          meet.target = "_blank";
+          meet.rel = "noopener";
+          tdB.appendChild(meet);
+        }
+        if (window.PreicmaEditar) {
+          const tema = el("button", "btn sm", "Tema");
+          tema.type = "button";
+          tema.addEventListener("click", () => editarTemaClase(c));
+          tdB.appendChild(tema);
+        }
+      }
       if (esAdmin && c.registradas === 0) {
         const borrar = el("button", "btn sm", "Borrar");
         borrar.type = "button";
@@ -1107,7 +1123,26 @@
       tr.appendChild(tdB);
       tabla.appendChild(tr);
     });
+    // El Resumen del profesor se arma con estas mismas clases
+    document.dispatchEvent(new CustomEvent("preicma:clases", { detail: clases }));
   }
+
+  function editarTemaClase(c) {
+    window.PreicmaEditar.formulario({
+      titulo: "Tema y enlace de la clase",
+      sub: c.nombre_curso + " · " + c.nombre_grupo + " · " + fechaCorta(c.fecha_clase),
+      campos: [
+        { nombre: "tema", etiqueta: "Tema", valor: c.tema, maxlength: 150, placeholder: "Ej: Funciones y gráficas" },
+        { nombre: "enlace_reunion", etiqueta: "Enlace de Meet", tipo: "url", valor: c.enlace_reunion, maxlength: 500,
+          ayuda: "Si lo dejas vacío se usa el enlace fijo del grupo." },
+      ],
+      guardar: async (v) => (await api("/clases/" + c.id_clase, "PATCH", v)).mensaje,
+      alGuardar: (texto) => { window.PreicmaEditar.aviso(texto); cargarClases(); },
+    });
+  }
+
+  // Para el Resumen del profesor
+  window.PreicmaAcademico = { abrirAsistencia: (id) => abrirAsistencia(id), recargarClases: () => cargarClases() };
 
   function prepararFormClase() {
     const form = $("form-clase");
