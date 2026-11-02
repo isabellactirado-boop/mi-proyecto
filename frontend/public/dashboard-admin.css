@@ -221,3 +221,14 @@ tr:last-child td{border-bottom:0}
 .ac-ausente[aria-pressed="true"]{background:var(--red);color:#fff}
 .ac-excusa[aria-pressed="true"]{background:var(--teal)}
 .ac-caja > .btn{margin-top:10px}
+.ac-paso{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:1rem;margin:18px 0 6px;padding-top:14px;border-top:2px dashed var(--line)}
+.ac-paso:first-child{margin-top:0;padding-top:0;border-top:0}
+.ac-paso small{font-family:'DM Sans',sans-serif;font-weight:500;font-size:.78rem;color:var(--muted);margin-left:6px}
+.ac-plan{min-height:1.1em;font-size:.84rem;font-weight:600;color:var(--ink);margin-top:10px;padding:8px 12px;border-radius:10px;background:var(--cream)}
+.ac-plan:empty{display:none}
+.ac-check{display:flex!important;align-items:center;gap:8px;margin-top:14px!important;font-weight:600!important;cursor:pointer}
+.ac-check input{width:18px;height:18px;accent-color:var(--pink)}
+.ac-resultado{margin-top:14px;padding:14px;border-radius:14px;background:var(--ok-bg);border:2px solid var(--ok);display:flex;flex-direction:column;gap:6px;font-size:.88rem}
+.ac-resultado small{color:var(--muted)}
+.ac-clave{display:flex;align-items:center;gap:10px}
+.ac-clave code{font-size:1.15rem;font-weight:800;letter-spacing:.06em;padding:6px 12px;border-radius:10px;background:#fff;border:2px dashed var(--ink)}

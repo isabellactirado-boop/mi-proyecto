@@ -217,40 +217,63 @@
   <!-- PESTAÑA 3: INSCRIPCIONES -->
   <section id="tab-inscripciones" class="tab-content">
     <div class="grid">
-      <div class="panel c7" style="--c:var(--orange)">
-        <h2><span>Formulario de Misión (Inscripción)</span></h2>
-        <form class="space-form" onsubmit="event.preventDefault(); alert('Estudiante registrado con éxito.');">
+      <div class="panel c8" style="--c:var(--orange)">
+        <h2><span>Nueva inscripción</span></h2>
+        <form class="space-form ac-form" id="form-inscripcion">
+          <p class="ac-paso">1 · Estudiante <small>Si el documento ya existe se usa su ficha.</small></p>
           <div class="form-grid">
-            <div>
-              <label>Nombre del Estudiante</label>
-              <input type="text" class="input-space" placeholder="Ej: Juan Pérez" required>
-            </div>
-            <div>
-              <label>Documento de Identidad</label>
-              <input type="text" class="input-space" placeholder="Número de Documento" required>
-            </div>
-            <div>
-              <label>Teléfono / WhatsApp</label>
-              <input type="tel" class="input-space" placeholder="Ej: 3001234567" required>
-            </div>
-            <div>
-              <label>Nombre del Acudiente</label>
-              <input type="text" class="input-space" placeholder="Ej: María Pérez" required>
-            </div>
-            <div style="grid-column: span 2;">
-              <label>Programa / Grupo Asignado</label>
-              <select class="input-space">
-                <option>Calendario A · Sábado 8:00 am (96/100 cupos)</option>
-              </select>
-            </div>
+            <div><label for="in-tipo">Tipo de documento</label>
+              <select id="in-tipo" class="input-space"><option value="TI">Tarjeta de identidad</option><option value="CC">Cédula</option><option value="CE">Cédula de extranjería</option><option value="PPT">PPT</option><option value="OTRO">Otro</option></select></div>
+            <div><label for="in-doc">Número de documento</label><input id="in-doc" class="input-space" maxlength="20" required></div>
+            <div><label for="in-nombre">Nombre completo</label><input id="in-nombre" class="input-space" maxlength="120" placeholder="Ej: Juan Pérez Gómez" required></div>
+            <div><label for="in-nac">Fecha de nacimiento</label><input id="in-nac" type="date" class="input-space" required></div>
+            <div><label for="in-cel">Celular / WhatsApp</label><input id="in-cel" type="tel" class="input-space" maxlength="20" placeholder="Ej: 3001234567"></div>
+            <div><label for="in-correo">Correo</label><input id="in-correo" type="email" class="input-space" maxlength="100" placeholder="Para la app de estudiantes"></div>
           </div>
-          <button type="submit" class="btn main" style="margin-top: 18px; width: 100%;">Lanzar Misión (Inscribir)</button>
+
+          <p class="ac-paso">2 · Acudiente <small>Opcional. Recomendado para menores de edad.</small></p>
+          <div class="form-grid">
+            <div><label for="ac-nombre">Nombre del acudiente</label><input id="ac-nombre" class="input-space" maxlength="120" placeholder="Ej: María Gómez"></div>
+            <div><label for="ac-parentesco">Parentesco</label>
+              <select id="ac-parentesco" class="input-space"><option>Madre</option><option>Padre</option><option>Abuelo(a)</option><option>Tío(a)</option><option>Hermano(a)</option><option>Otro</option></select></div>
+            <div><label for="ac-doc">Cédula del acudiente</label><input id="ac-doc" class="input-space" maxlength="20"></div>
+            <div><label for="ac-tel">Teléfono del acudiente</label><input id="ac-tel" type="tel" class="input-space" maxlength="20"></div>
+          </div>
+
+          <p class="ac-paso">3 · Grupo y pago</p>
+          <div class="form-grid">
+            <div style="grid-column:1/-1"><label for="in-grupo">Grupo</label><select id="in-grupo" class="input-space" required></select></div>
+            <div><label for="in-valor">Valor acordado</label><input id="in-valor" type="number" min="0" step="1000" class="input-space" placeholder="Valor del curso"></div>
+            <div><label for="in-cuotas">Forma de pago</label>
+              <select id="in-cuotas" class="input-space"><option value="1">Pago único</option><option value="2">2 cuotas</option><option value="3">3 cuotas</option><option value="4">4 cuotas</option><option value="5">5 cuotas</option><option value="6">6 cuotas</option></select></div>
+            <div><label for="in-primera">Primera cuota vence</label><input id="in-primera" type="date" class="input-space"></div>
+          </div>
+          <p class="ac-plan" id="in-plan"></p>
+
+          <label class="ac-check"><input type="checkbox" id="in-cuenta" checked> Crear su cuenta para la app de estudiantes (necesita correo)</label>
+          <p class="ac-msg" role="status"></p>
+          <button class="btn main" type="submit">Inscribir estudiante</button>
         </form>
+        <div class="ac-resultado" id="in-resultado" hidden></div>
       </div>
 
-      <div class="panel c5 rk" style="--c:var(--orange)">
+      <div class="panel c4 rk" style="--c:var(--orange)">
         <h2><span>Ocupación de grupos</span></h2>
-        <div class="grp"><div><span>Cal. A · Sábado 8:00 am</span><small>—</small></div><div class="meter"><i class="full" style="--p:0%"></i></div></div>
+        <div id="ocupacion"><p class="note">Cargando…</p></div>
+      </div>
+
+      <div class="panel c4" style="--c:var(--teal)">
+        <h2><span>Cuenta para la app</span></h2>
+        <form class="space-form ac-form" id="form-cuenta">
+          <p class="note" style="margin:0 0 4px">Para estudiantes ya inscritos que aún no tienen cuenta.</p>
+          <label for="cu-doc">Documento del estudiante</label>
+          <input id="cu-doc" class="input-space" maxlength="20" required>
+          <label for="cu-correo">Correo (opcional)</label>
+          <input id="cu-correo" type="email" class="input-space" placeholder="Si se deja vacío usa el de su ficha">
+          <p class="ac-msg" role="status"></p>
+          <button class="btn main" type="submit">Crear cuenta</button>
+        </form>
+        <div class="ac-resultado" id="cu-resultado" hidden></div>
       </div>
     </div>
   </section>
@@ -405,7 +428,7 @@
         </form>
       </div>
 
-      <div class="panel c12" style="--c:var(--teal)">
+      <div class="panel c8" style="--c:var(--teal)">
         <h2><span>Grupos</span></h2>
         <div class="tscroll">
           <table>
@@ -413,6 +436,24 @@
             <tbody id="grupos-tabla"><tr><td colspan="4" class="ac-vacio">Cargando…</td></tr></tbody>
           </table>
         </div>
+      </div>
+
+      <div class="panel c4" style="--c:var(--violet)">
+        <h2><span>Nuevo curso</span></h2>
+        <form class="space-form ac-form" id="form-curso">
+          <label for="cu-nombre">Nombre del curso</label>
+          <input id="cu-nombre" class="input-space" maxlength="100" placeholder="Ej: Pre-ICFES Calendario B 2027" required>
+          <div class="ac-dos">
+            <div><label for="cu-inicio">Inicia</label><input id="cu-inicio" type="date" class="input-space" required></div>
+            <div><label for="cu-fin">Termina</label><input id="cu-fin" type="date" class="input-space" required></div>
+          </div>
+          <label for="cu-valor">Valor total del curso</label>
+          <input id="cu-valor" type="number" min="0" step="1000" class="input-space" placeholder="Ej: 600000" required>
+          <label for="cu-desc">Descripción (opcional)</label>
+          <input id="cu-desc" class="input-space" placeholder="Ej: Preparación completa, 5 áreas">
+          <p class="ac-msg" role="status"></p>
+          <button class="btn main" type="submit">Crear curso</button>
+        </form>
       </div>
     </div>
   </section>

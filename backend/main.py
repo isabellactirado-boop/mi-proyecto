@@ -13,6 +13,7 @@ from resumen import router as router_resumen
 from usuarios import router as router_usuarios
 from estudiante import router as router_estudiante
 from academico import router as router_academico
+from inscripciones import router as router_inscripciones
 
 load_dotenv()
 
@@ -45,6 +46,7 @@ app.include_router(router_estudiantes)
 app.include_router(router_usuarios)
 app.include_router(router_estudiante)
 app.include_router(router_academico)
+app.include_router(router_inscripciones)
 
 
 @app.get("/")

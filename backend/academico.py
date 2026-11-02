@@ -59,7 +59,7 @@ def listar_grupos(usuario: dict = Depends(requiere_permiso("ver_asistencias"))):
             cursor.execute(
                 "SELECT g.id_grupo, g.nombre_grupo, g.dia_semana, g.hora_inicio, g.hora_fin, "
                 "       g.plataforma, g.enlace_reunion, g.capacidad_maxima, "
-                "       c.id_curso, c.nombre_curso, d.id_docente, d.nombre_completo AS docente, "
+                "       c.id_curso, c.nombre_curso, c.valor_total, d.id_docente, d.nombre_completo AS docente, "
                 "       (SELECT COUNT(*) FROM inscripciones i "
                 "        WHERE i.id_grupo = g.id_grupo AND i.estado = 'activa') AS inscritos "
                 "FROM grupos g "

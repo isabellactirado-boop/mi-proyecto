@@ -130,25 +130,94 @@
       }
     }
 
-    [$("cl-grupo"), $("res-grupo")].forEach((select) => {
+    [$("cl-grupo"), $("res-grupo"), $("in-grupo")].forEach((select) => {
       if (!select) return;
-      const primera = select.id === "res-grupo" ? "Todos los grupos" : "Elige un grupo";
+      const anterior = select.value;
+      const primera = select.id === "res-grupo" ? "Todos los grupos"
+        : grupos.length ? "Elige un grupo" : "Primero crea un grupo en Docentes y clases";
       select.textContent = "";
       opcion(select, "", primera);
-      grupos.forEach((g) => opcion(select, g.id_grupo, g.nombre_curso + " · " + g.nombre_grupo +
-        " (" + DIA_SEMANA[g.dia_semana] + " " + hora12(g.hora_inicio) + ")"));
+      grupos.forEach((g) => {
+        const lleno = select.id === "in-grupo" && g.inscritos >= g.capacidad_maxima;
+        opcion(select, g.id_grupo, g.nombre_curso + " · " + g.nombre_grupo +
+          " (" + DIA_SEMANA[g.dia_semana] + " " + hora12(g.hora_inicio) + ")" + (lleno ? " — lleno" : ""));
+        if (lleno) select.lastChild.disabled = true;
+      });
+      select.value = anterior;
+    });
+
+    pintarOcupacion();
+  }
+
+  function pintarOcupacion() {
+    const caja = $("ocupacion");
+    if (!caja) return;
+    caja.textContent = "";
+    if (!grupos.length) { caja.appendChild(el("p", "note", "Aún no hay grupos.")); return; }
+    grupos.forEach((g) => {
+      const pct = g.capacidad_maxima ? Math.round((g.inscritos / g.capacidad_maxima) * 100) : 0;
+      const fila = el("div", "grp");
+      const top = el("div");
+      top.appendChild(el("span", null, g.nombre_curso + " · " + g.nombre_grupo));
+      top.appendChild(el("small", null, g.inscritos + " / " + g.capacidad_maxima));
+      fila.appendChild(top);
+      const medidor = el("div", "meter");
+      const relleno = el("i", pct >= 100 ? "full" : pct >= 80 ? "warn" : "");
+      relleno.style.setProperty("--p", Math.min(100, pct) + "%");
+      medidor.appendChild(relleno);
+      fila.appendChild(medidor);
+      caja.appendChild(fila);
+    });
+  }
+
+  /* ---------- cursos (admin) ---------- */
+
+  async function cargarCursos() {
+    const sc = $("gr-curso");
+    if (!sc) return;
+    try {
+      const cursos = await api("/cursos");
+      sc.textContent = "";
+      opcion(sc, "", cursos.length ? "Elige un curso" : "Primero crea un curso");
+      cursos.forEach((c) => opcion(sc, c.id_curso, c.nombre_curso));
+    } catch (e) {
+      mensaje($("form-grupo"), e.message, "error");
+    }
+  }
+
+  function prepararFormCurso() {
+    const form = $("form-curso");
+    if (!form) return;
+    form.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const boton = form.querySelector("button");
+      boton.disabled = true;
+      mensaje(form, "Guardando…");
+      try {
+        await api("/cursos", "POST", sinVacios({
+          nombre_curso: $("cu-nombre").value.trim(),
+          fecha_inicio: $("cu-inicio").value,
+          fecha_fin: $("cu-fin").value,
+          valor_total: Number($("cu-valor").value),
+          descripcion: $("cu-desc").value.trim(),
+        }));
+        form.reset();
+        mensaje(form, "Curso creado. Ahora crea su grupo.", "ok");
+        cargarCursos();
+      } catch (e) {
+        mensaje(form, e.message, "error");
+      } finally {
+        boton.disabled = false;
+      }
     });
   }
 
   async function prepararFormGrupo() {
     const form = $("form-grupo");
     if (!form) return;
+    cargarCursos();
     try {
-      const [cursos, docentes] = await Promise.all([api("/cursos"), api("/docentes")]);
-      const sc = $("gr-curso");
-      sc.textContent = "";
-      opcion(sc, "", cursos.length ? "Elige un curso" : "No hay cursos activos");
-      cursos.forEach((c) => opcion(sc, c.id_curso, c.nombre_curso));
+      const docentes = await api("/docentes");
       docentes.forEach((d) => opcion($("gr-docente"), d.id_docente, d.nombre_completo));
     } catch (e) {
       mensaje(form, e.message, "error");
@@ -173,6 +242,148 @@
         form.reset();
         mensaje(form, "Grupo creado.", "ok");
         cargarGrupos();
+      } catch (e) {
+        mensaje(form, e.message, "error");
+      } finally {
+        boton.disabled = false;
+      }
+    });
+  }
+
+  /* ---------- inscripciones (admin) ---------- */
+
+  function dinero(valor) {
+    return "$ " + Math.round(Number(valor) || 0).toLocaleString("es-CO");
+  }
+
+  // Caja con la contrasena temporal: se muestra una sola vez
+  function mostrarCuenta(caja, cuenta, titulo) {
+    caja.textContent = "";
+    caja.hidden = false;
+    caja.appendChild(el("strong", null, titulo));
+    if (cuenta) {
+      const p = el("p", null, "Usuario: ");
+      p.appendChild(el("b", null, cuenta.usuario));
+      caja.appendChild(p);
+      const clave = el("div", "ac-clave");
+      clave.appendChild(el("code", null, cuenta.contrasena_temporal));
+      const copiar = el("button", "btn sm", "Copiar");
+      copiar.type = "button";
+      copiar.addEventListener("click", () => {
+        const texto = "App PRE ICMA\nUsuario: " + cuenta.usuario + "\nContraseña temporal: " + cuenta.contrasena_temporal;
+        (navigator.clipboard ? navigator.clipboard.writeText(texto) : Promise.reject())
+          .then(() => { copiar.textContent = "Copiado"; })
+          .catch(() => { copiar.textContent = "Cópiala a mano"; });
+      });
+      clave.appendChild(copiar);
+      caja.appendChild(clave);
+      caja.appendChild(el("small", null, cuenta.aviso));
+    }
+  }
+
+  function planCuotas(valor, numero, primera) {   // vista previa, igual que el backend
+    if (!(valor > 0)) return [];
+    let base = Math.round(valor / numero / 100) * 100;
+    if (base <= 0) { base = valor; numero = 1; }
+    const f = primera ? fecha(primera) : new Date();
+    const plan = [];
+    for (let n = 1; n <= numero; n++) {
+      const vence = new Date(f.getFullYear(), f.getMonth() + n - 1, 1);
+      vence.setDate(Math.min(f.getDate(), new Date(vence.getFullYear(), vence.getMonth() + 1, 0).getDate()));
+      plan.push({ valor: n < numero ? base : valor - base * (numero - 1), vence });
+    }
+    return plan;
+  }
+
+  function prepararFormInscripcion() {
+    const form = $("form-inscripcion");
+    if (!form) return;
+    $("in-primera").value = hoyIso();
+
+    const grupoElegido = () => grupos.find((g) => String(g.id_grupo) === $("in-grupo").value);
+    const actualizarPlan = () => {
+      const g = grupoElegido();
+      if (g && document.activeElement !== $("in-valor") && !$("in-valor").dataset.tocado) {
+        $("in-valor").value = Math.round(Number(g.valor_total) || 0);
+      }
+      const valor = Number($("in-valor").value);
+      const plan = planCuotas(valor, Number($("in-cuotas").value), $("in-primera").value);
+      $("in-plan").textContent = !plan.length ? (g ? "Sin cobro." : "")
+        : plan.length === 1 ? "Un pago de " + dinero(plan[0].valor) + " que vence el " + plan[0].vence.toLocaleDateString("es-CO") + "."
+          : plan.length + " cuotas: " + plan.map((c) => dinero(c.valor) + " (" + c.vence.getDate() + " " + MESES[c.vence.getMonth()] + ")").join(" · ");
+    };
+    $("in-valor").addEventListener("input", () => { $("in-valor").dataset.tocado = "1"; actualizarPlan(); });
+    $("in-grupo").addEventListener("change", () => { delete $("in-valor").dataset.tocado; actualizarPlan(); });
+    ["in-cuotas", "in-primera"].forEach((id) => $(id).addEventListener("change", actualizarPlan));
+
+    form.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const acudienteNombre = $("ac-nombre").value.trim();
+      if (acudienteNombre && (!$("ac-doc").value.trim() || !$("ac-tel").value.trim())) {
+        return mensaje(form, "Del acudiente faltan la cédula o el teléfono.", "error");
+      }
+      if ($("in-cuenta").checked && !$("in-correo").value.trim()) {
+        return mensaje(form, "Para crear la cuenta de la app escribe el correo del estudiante, o desmarca la casilla.", "error");
+      }
+      const boton = form.querySelector('button[type="submit"]');
+      boton.disabled = true;
+      mensaje(form, "Inscribiendo…");
+      try {
+        const r = await api("/inscripciones", "POST", sinVacios({
+          estudiante: sinVacios({
+            tipo_documento: $("in-tipo").value,
+            doc_identidad: $("in-doc").value.trim(),
+            nombre_completo: $("in-nombre").value.trim(),
+            fecha_nacimiento: $("in-nac").value,
+            telefono_celular: $("in-cel").value.trim(),
+            correo_electronico: $("in-correo").value.trim(),
+          }),
+          acudiente: acudienteNombre ? {
+            nombre_completo: acudienteNombre,
+            doc_identidad: $("ac-doc").value.trim(),
+            telefono: $("ac-tel").value.trim(),
+            parentesco: $("ac-parentesco").value,
+          } : null,
+          id_grupo: Number($("in-grupo").value),
+          valor_acordado: $("in-valor").value === "" ? null : Number($("in-valor").value),
+          numero_cuotas: Number($("in-cuotas").value),
+          primera_cuota: $("in-primera").value,
+          crear_cuenta: $("in-cuenta").checked,
+        }));
+        const nombre = $("in-nombre").value.trim();
+        form.reset();
+        delete $("in-valor").dataset.tocado;
+        $("in-primera").value = hoyIso();
+        $("in-plan").textContent = "";
+        mensaje(form, "", "");
+        mostrarCuenta($("in-resultado"), r.cuenta,
+          "✓ " + nombre + " quedó inscrito en " + r.curso + " · " + r.grupo +
+          (r.cuotas.length ? " con " + r.cuotas.length + (r.cuotas.length === 1 ? " pago." : " cuotas.") : "."));
+        cargarGrupos();
+      } catch (e) {
+        mensaje(form, e.message, "error");
+      } finally {
+        boton.disabled = false;
+      }
+    });
+  }
+
+  function prepararFormCuenta() {
+    const form = $("form-cuenta");
+    if (!form) return;
+    form.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const boton = form.querySelector("button");
+      boton.disabled = true;
+      mensaje(form, "Creando…");
+      try {
+        const r = await api("/cuentas-estudiante", "POST", sinVacios({
+          doc_identidad: $("cu-doc").value.trim(),
+          correo: $("cu-correo").value.trim(),
+        }));
+        form.reset();
+        mensaje(form, "", "");
+        mostrarCuenta($("cu-resultado"), r, "✓ Cuenta creada para " + r.estudiante);
       } catch (e) {
         mensaje(form, e.message, "error");
       } finally {
@@ -555,8 +766,11 @@
   /* ---------- arranque ---------- */
 
   document.addEventListener("DOMContentLoaded", () => {
-    if ($("grupos-tabla") || $("cl-grupo")) cargarGrupos();
+    if ($("grupos-tabla") || $("cl-grupo") || $("in-grupo")) cargarGrupos();
+    prepararFormCurso();
     prepararFormGrupo();
+    prepararFormInscripcion();
+    prepararFormCuenta();
     prepararFormClase();
     cargarClases();
     prepararFormSimulacro();
@@ -572,11 +786,15 @@
       console.info("[demo]", metodo, ruta, cuerpo);
       if (ruta === "/clases") return Promise.resolve({ creadas: [cuerpo.fecha_clase], ya_existian: [] });
       if (ruta === "/simulacros") return Promise.resolve({ id_simulacro: 9 });
+      if (ruta === "/cursos" || ruta === "/grupos") return Promise.resolve({ id: 9 });
+      const cuenta = { usuario: "juan@correo.com", contrasena_temporal: "Kp7mWq3xRa", aviso: "Entrega esta contraseña al estudiante. No se vuelve a mostrar." };
+      if (ruta === "/inscripciones") return Promise.resolve({ curso: "Pre-ICFES Cal. B", grupo: "Grupo 2", cuotas: [{}, {}, {}], cuenta: cuerpo.crear_cuenta ? cuenta : null });
+      if (ruta === "/cuentas-estudiante") return Promise.resolve(Object.assign({ estudiante: "Juan Pérez" }, cuenta));
       return Promise.resolve({ registros: (cuerpo && cuerpo.registros || []).length });
     }
     if (ruta === "/grupos") return Promise.resolve([
-      { id_grupo: 1, nombre_curso: "Pre-ICFES Cal. B", nombre_grupo: "Grupo 2", dia_semana: "martes", hora_inicio: "18:00:00", hora_fin: "20:00:00", docente: "Laura Gómez", inscritos: 3, capacidad_maxima: 40 },
-      { id_grupo: 2, nombre_curso: "Pre-ICFES Cal. A", nombre_grupo: "Sábado AM", dia_semana: "sabado", hora_inicio: "08:00:00", hora_fin: "11:00:00", docente: null, inscritos: 40, capacidad_maxima: 40 },
+      { id_grupo: 1, valor_total: 600000, nombre_curso: "Pre-ICFES Cal. B", nombre_grupo: "Grupo 2", dia_semana: "martes", hora_inicio: "18:00:00", hora_fin: "20:00:00", docente: "Laura Gómez", inscritos: 3, capacidad_maxima: 40 },
+      { id_grupo: 2, valor_total: 750000, nombre_curso: "Pre-ICFES Cal. A", nombre_grupo: "Sábado AM", dia_semana: "sabado", hora_inicio: "08:00:00", hora_fin: "11:00:00", docente: null, inscritos: 40, capacidad_maxima: 40 },
     ]);
     if (ruta === "/cursos") return Promise.resolve([{ id_curso: 1, nombre_curso: "Pre-ICFES Cal. B" }, { id_curso: 2, nombre_curso: "Pre-ICFES Cal. A" }]);
     if (ruta === "/docentes") return Promise.resolve([{ id_docente: 1, nombre_completo: "Laura Gómez" }, { id_docente: 2, nombre_completo: "Carlos Ruiz" }]);
