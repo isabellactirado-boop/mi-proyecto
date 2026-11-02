@@ -17,6 +17,7 @@ from inscripciones import router as router_inscripciones
 from reportes import router as router_reportes
 from usuarios_admin import router as router_usuarios_admin
 from pagos import router as router_pagos
+from edicion import router as router_edicion
 
 load_dotenv()
 
@@ -53,6 +54,8 @@ app.include_router(router_inscripciones)
 app.include_router(router_reportes)
 app.include_router(router_usuarios_admin)
 app.include_router(router_pagos)
+# despues de pagos: /pagos/buscar y /pagos/recientes deben ganarle a /pagos/{id_pago}
+app.include_router(router_edicion)
 
 
 @app.get("/")

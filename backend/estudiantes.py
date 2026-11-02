@@ -115,7 +115,7 @@ def detalle_estudiante(
             acudientes = cursor.fetchall()
 
             cursor.execute(
-                "SELECT i.id_inscripcion, i.estado, i.fecha_inscripcion, i.modalidad_pago, "
+                "SELECT i.id_inscripcion, i.id_curso, i.id_grupo, i.estado, i.fecha_inscripcion, i.modalidad_pago, "
                 "       i.numero_cuotas, i.valor_acordado, "
                 "       c.nombre_curso AS curso, g.nombre_grupo, g.dia_semana, "
                 "       g.hora_inicio, g.hora_fin, d.nombre_completo AS docente "

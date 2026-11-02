@@ -52,21 +52,26 @@ def listar_cursos(usuario: dict = Depends(requiere_admin)):
 
 
 @router.get("/grupos")
-def listar_grupos(usuario: dict = Depends(requiere_permiso("ver_asistencias"))):
+def listar_grupos(
+    incluir_inactivos: bool = False,
+    usuario: dict = Depends(requiere_permiso("ver_asistencias")),
+):
+    """Grupos activos. Con incluir_inactivos=true (solo admin) tambien los desactivados."""
     extra, params = _filtro_docente(usuario, "g")
+    ver_inactivos = incluir_inactivos and es_admin(usuario)
     with obtener_conexion() as conexion:
         with conexion.cursor() as cursor:
             cursor.execute(
                 "SELECT g.id_grupo, g.nombre_grupo, g.dia_semana, g.hora_inicio, g.hora_fin, "
                 "       g.plataforma, g.enlace_reunion, g.capacidad_maxima, "
-                "       c.id_curso, c.nombre_curso, c.valor_total, d.id_docente, d.nombre_completo AS docente, "
+                "       c.id_curso, c.nombre_curso, c.valor_total, d.id_docente, d.nombre_completo AS docente, g.activo, "
                 "       (SELECT COUNT(*) FROM inscripciones i "
                 "        WHERE i.id_grupo = g.id_grupo AND i.estado = 'activa') AS inscritos "
                 "FROM grupos g "
                 "JOIN cursos c ON c.id_curso = g.id_curso "
                 "LEFT JOIN docentes d ON d.id_docente = g.id_docente "
-                "WHERE g.activo" + extra + " "
-                "ORDER BY c.nombre_curso, g.nombre_grupo",
+                "WHERE " + ("TRUE" if ver_inactivos else "g.activo") + extra + " "
+                "ORDER BY g.activo DESC, c.nombre_curso, g.nombre_grupo",
                 params,
             )
             return cursor.fetchall()

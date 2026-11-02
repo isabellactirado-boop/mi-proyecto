@@ -381,7 +381,10 @@ function pintarDetalle(d) {
   caja.appendChild(crear("h3", e.nombre_completo));
   caja.appendChild(crear("p", e.tipo_documento + " " + e.doc_identidad + " · matrícula " + e.estado_matricula, "sub"));
 
-  caja.appendChild(crear("h4", "Datos del estudiante"));
+  const ed = window.PreicmaEditar;
+  const editaEst = ed && ed.puede("editar_estudiantes");
+  const editaIns = ed && ed.puede("editar_inscripciones");
+  caja.appendChild(tituloConBoton("Datos del estudiante", editaEst && "Editar", () => editarEstudiante(d)));
   const rej = crear("div", null, "rejilla");
   rej.appendChild(fila2("Teléfono", e.telefono_celular));
   rej.appendChild(fila2("Correo", e.correo_electronico));
@@ -389,7 +392,7 @@ function pintarDetalle(d) {
   rej.appendChild(fila2("Dirección", e.direccion));
   caja.appendChild(rej);
 
-  caja.appendChild(crear("h4", "Acudientes"));
+  caja.appendChild(tituloConBoton("Acudientes", editaEst && "+ Agregar", () => formAcudiente(d, null)));
   if (d.acudientes.length === 0) {
     caja.appendChild(crear("p", "Este estudiante no tiene acudiente registrado.", "sub"));
   }
@@ -403,6 +406,7 @@ function pintarDetalle(d) {
     r.appendChild(fila2("Teléfono", a.telefono));
     r.appendChild(fila2("Correo", a.correo_electronico));
     t.appendChild(r);
+    if (editaEst) t.appendChild(botonera([["Editar", () => formAcudiente(d, a)]]));
     caja.appendChild(t);
   });
 
@@ -447,6 +451,14 @@ function pintarDetalle(d) {
       caja2.appendChild(tablaSimple(["Simulacro", "Fecha", "Global", "Mat.", "Lect.", "Soc.", "Nat.", "Ing."], filas));
       t.appendChild(caja2);
     }
+    if (editaIns) {
+      const acciones = i.estado === "activa"
+        ? [["Cambiar de grupo", () => cambiarGrupo(d, i)],
+           ["Finalizar", () => cambiarEstado(d, i, "finalizada")],
+           ["Retirar", () => cambiarEstado(d, i, "retirada"), "peligro"]]
+        : [["Reactivar", () => cambiarEstado(d, i, "activa")]];
+      t.appendChild(botonera(acciones));
+    }
     caja.appendChild(t);
   });
 
@@ -464,6 +476,135 @@ function pintarDetalle(d) {
   modal.appendChild(caja);
   modal.classList.add("open");
   cierre.focus();
+}
+
+/* ---------- Editar desde Detalles (usa edicion.js) ---------- */
+
+function tituloConBoton(texto, textoBoton, accion) {
+  const h = crear("h4", null, "h4-acc");
+  h.appendChild(crear("span", texto));
+  if (textoBoton) {
+    const b = crear("button", textoBoton, "btn sm");
+    b.type = "button";
+    b.addEventListener("click", accion);
+    h.appendChild(b);
+  }
+  return h;
+}
+
+function botonera(lista) {
+  const div = crear("div", null, "ed-acciones");
+  lista.forEach(([texto, accion, tono]) => {
+    const b = crear("button", texto, "btn sm" + (tono === "peligro" ? " ed-peligro" : ""));
+    b.type = "button";
+    b.addEventListener("click", accion);
+    div.appendChild(b);
+  });
+  return div;
+}
+
+// Despues de guardar: se vuelve a abrir el detalle con los datos nuevos y se refresca la lista
+function refrescarDetalle(d, texto) {
+  if (texto) window.PreicmaEditar.aviso(texto);
+  abrirDetalleEstudiante(d.estudiante.id_estudiante);
+  cargarEstudiantes();
+}
+
+const TIPOS_DOC = [["TI", "TI"], ["CC", "CC"], ["CE", "CE"], ["PPT", "PPT"], ["OTRO", "Otro"]];
+
+function editarEstudiante(d) {
+  const e = d.estudiante;
+  window.PreicmaEditar.formulario({
+    titulo: "Editar estudiante",
+    sub: e.nombre_completo,
+    campos: [
+      { nombre: "nombre_completo", etiqueta: "Nombre completo", valor: e.nombre_completo, requerido: true, maxlength: 120 },
+      { nombre: "tipo_documento", etiqueta: "Tipo de documento", tipo: "select", opciones: TIPOS_DOC, valor: e.tipo_documento, requerido: true, ancho: "medio" },
+      { nombre: "doc_identidad", etiqueta: "Número de documento", valor: e.doc_identidad, requerido: true, maxlength: 20, ancho: "medio" },
+      { nombre: "telefono_celular", etiqueta: "Celular", tipo: "tel", valor: e.telefono_celular, requerido: true, maxlength: 20, ancho: "medio" },
+      { nombre: "fecha_nacimiento", etiqueta: "Fecha de nacimiento", tipo: "date", valor: e.fecha_nacimiento, requerido: true, ancho: "medio" },
+      { nombre: "correo_electronico", etiqueta: "Correo", tipo: "email", valor: e.correo_electronico, maxlength: 100 },
+      { nombre: "direccion", etiqueta: "Dirección", valor: e.direccion, maxlength: 150 },
+      { nombre: "estado_matricula", etiqueta: "Matrícula", tipo: "select", opciones: [["activo", "Activo"], ["inactivo", "Inactivo"]], valor: e.estado_matricula, requerido: true },
+    ],
+    guardar: async (v) => (await window.PreicmaEditar.api("/estudiantes/" + e.id_estudiante, "PUT", v)).mensaje,
+    alGuardar: (texto) => refrescarDetalle(d, texto),
+  });
+}
+
+function formAcudiente(d, a) {
+  const nuevo = !a;
+  const compartido = !nuevo ? " Si este acudiente también está ligado a otro estudiante (por ejemplo, un hermano), el cambio de nombre, teléfono o correo se ve en los dos." : "";
+  window.PreicmaEditar.formulario({
+    titulo: nuevo ? "Agregar acudiente" : "Editar acudiente",
+    sub: d.estudiante.nombre_completo,
+    aviso: (nuevo ? "Si ya existe un acudiente con ese documento (por ejemplo, de un hermano), se reutiliza." : "") + compartido,
+    campos: [
+      { nombre: "nombre_completo", etiqueta: "Nombre completo", valor: a && a.nombre_completo, requerido: true, maxlength: 120 },
+      { nombre: "tipo_documento", etiqueta: "Tipo de documento", tipo: "select", opciones: TIPOS_DOC, valor: (a && a.tipo_documento) || "CC", requerido: true, ancho: "medio" },
+      { nombre: "doc_identidad", etiqueta: "Número de documento", valor: a && a.doc_identidad, requerido: true, maxlength: 20, ancho: "medio" },
+      { nombre: "telefono", etiqueta: "Teléfono", tipo: "tel", valor: a && a.telefono, requerido: true, maxlength: 20, ancho: "medio" },
+      { nombre: "parentesco", etiqueta: "Parentesco", valor: a && a.parentesco, requerido: true, maxlength: 30, placeholder: "Ej: Madre", ancho: "medio" },
+      { nombre: "correo_electronico", etiqueta: "Correo", tipo: "email", valor: a && a.correo_electronico, maxlength: 100 },
+      { nombre: "es_principal", etiqueta: "Es el acudiente principal (el que sale en cobros y WhatsApp)", tipo: "check", valor: a ? a.es_principal : d.acudientes.length === 0 },
+    ],
+    textoBoton: nuevo ? "Agregar acudiente" : "Guardar cambios",
+    guardar: async (v) => {
+      const ruta = "/estudiantes/" + d.estudiante.id_estudiante + "/acudientes" + (nuevo ? "" : "/" + a.id_acudiente);
+      return (await window.PreicmaEditar.api(ruta, nuevo ? "POST" : "PUT", v)).mensaje;
+    },
+    alGuardar: (texto) => refrescarDetalle(d, texto),
+  });
+}
+
+const TEXTO_ESTADO = {
+  retirada: ["Retirar del curso", "Retirar", "deja de aparecer en cobros, asistencia y simulacros, y libera su cupo. No se borra nada: lo pagado y la asistencia quedan guardados y la puedes reactivar después."],
+  finalizada: ["Finalizar curso", "Finalizar", "se marca como terminada (el estudiante completó el curso). Deja de aparecer en cobros y asistencia y libera su cupo. La puedes reactivar después."],
+  activa: ["Reactivar inscripción", "Reactivar", "vuelve a quedar activa en su grupo, siempre que el grupo tenga cupo."],
+};
+
+function cambiarEstado(d, i, estado) {
+  const [titulo, boton, texto] = TEXTO_ESTADO[estado];
+  window.PreicmaEditar.confirmar({
+    titulo,
+    texto: d.estudiante.nombre_completo + " en " + i.curso + (i.nombre_grupo ? " · " + i.nombre_grupo : "") + ": la inscripción " + texto,
+    textoBoton: boton,
+    peligro: estado === "retirada",
+    aceptar: async () => (await window.PreicmaEditar.api("/inscripciones/" + i.id_inscripcion, "PATCH", { estado })).mensaje,
+    alTerminar: () => refrescarDetalle(d, estado === "activa" ? "Inscripción reactivada" : estado === "retirada" ? "Estudiante retirado del curso" : "Curso finalizado"),
+  });
+}
+
+async function cambiarGrupo(d, i) {
+  let lista;
+  try { lista = await window.PreicmaEditar.api("/grupos"); } catch (e) { window.alert(e.message); return; }
+  const opciones = lista.filter((g) => g.id_curso === i.id_curso && g.id_grupo !== i.id_grupo).map((g) => {
+    const lleno = g.inscritos >= g.capacidad_maxima;
+    return [g.id_grupo, g.nombre_grupo + " · " + (DIAS_CORTOS[g.dia_semana] || g.dia_semana) + " " + hora12(g.hora_inicio) +
+      " · " + g.inscritos + "/" + g.capacidad_maxima + (lleno ? " (lleno)" : "")];
+  });
+  if (!opciones.length) {
+    window.PreicmaEditar.confirmar({
+      titulo: "Cambiar de grupo",
+      texto: "El curso " + i.curso + " no tiene otro grupo activo. Crea uno en Docentes y clases y vuelve a intentar.",
+      textoBoton: "Entendido",
+      soloAceptar: true,
+      aceptar: async () => null,
+    });
+    return;
+  }
+  window.PreicmaEditar.formulario({
+    titulo: "Cambiar de grupo",
+    sub: d.estudiante.nombre_completo + " · " + i.curso,
+    aviso: "Ahora está en " + (i.nombre_grupo || "sin grupo") + ". Su asistencia y pagos se conservan.",
+    campos: [{ nombre: "id_grupo", etiqueta: "Nuevo grupo", tipo: "select", opciones, requerido: true }],
+    textoBoton: "Cambiar de grupo",
+    guardar: async (v) => {
+      await window.PreicmaEditar.api("/inscripciones/" + i.id_inscripcion, "PATCH", { id_grupo: Number(v.id_grupo) });
+      return "Grupo cambiado";
+    },
+    alGuardar: (texto) => refrescarDetalle(d, texto),
+  });
 }
 
 async function abrirDetalleEstudiante(id, boton) {
@@ -606,6 +747,7 @@ document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") cerrarDe
 async function cargarPerfil() {
   try {
     const yo = await pedirAlBackend("/yo");
+    if (window.PreicmaEditar) window.PreicmaEditar.ponerPermisos(yo.permisos);
 
     // Etiqueta bajo el nombre
     poner("urol", yo.rol === "propietario" ? "Superadmin" : "Panel de gestión");

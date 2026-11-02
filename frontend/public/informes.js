@@ -242,6 +242,8 @@ ${cuerpo}
 
   const ESTADO_PAGO = { todos: "Todos", en_mora: "En mora", al_dia: "Al día" };
 
+  let recargarPagos = null;
+
   function iniciarPagos() {
     const panel = $("inf-pagos");
     if (!panel) return;
@@ -334,6 +336,7 @@ ${cuerpo}
       };
     }
 
+    recargarPagos = cargar;
     filtro.addEventListener("change", cargar);
     bImprimir.addEventListener("click", () => ultimo && imprimir(armar()));
     bExcel.addEventListener("click", () => ultimo && descargarExcel(armar(), "informe_pagos_" + filtro.value));
@@ -530,7 +533,11 @@ ${cuerpo}
   }
 
   // Para otros archivos (el informe de un estudiante en api.js)
-  window.PreicmaInformes = { imprimir, escapar, celdaHTML };
+  window.PreicmaInformes = {
+    imprimir, escapar, celdaHTML,
+    // tras corregir o eliminar un pago (si el informe ya se habia cargado)
+    recargarPagos() { if (recargarPagos && document.getElementById("ip-resumen").children.length) recargarPagos(); },
+  };
 
   document.addEventListener("DOMContentLoaded", () => {
     precargarLogo();

@@ -121,28 +121,50 @@
   let grupos = [];
 
   async function cargarGrupos() {
+    const tabla = $("grupos-tabla");
+    const editor = window.PreicmaEditar;
+    const conInactivos = !!(tabla && editor && editor.esAdmin());
+    let todos;
     try {
-      grupos = await api("/grupos");
+      todos = await api("/grupos" + (conInactivos ? "?incluir_inactivos=true" : ""));
     } catch (e) {
       grupos = [];
-      if ($("grupos-tabla")) filaVacia($("grupos-tabla"), 4, e.message);
+      if (tabla) filaVacia(tabla, 5, e.message);
       return;
     }
+    // Los selectores solo ofrecen grupos activos; la tabla muestra todos para poder reactivarlos
+    grupos = todos.filter((g) => g.activo !== false);
 
-    const tabla = $("grupos-tabla");
     if (tabla) {
-      if (!grupos.length) filaVacia(tabla, 4, "Aún no hay grupos. Crea el primero con el formulario.");
+      if (!todos.length) filaVacia(tabla, 5, "Aún no hay grupos. Crea el primero con el formulario.");
       else {
         tabla.textContent = "";
-        grupos.forEach((g) => {
-          const tr = el("tr");
-          tr.appendChild(el("td", null, g.nombre_curso + " · " + g.nombre_grupo));
+        todos.forEach((g) => {
+          const activo = g.activo !== false;
+          const tr = el("tr", activo ? null : "ed-inactivo");
+          const tdN = el("td", null, g.nombre_curso + " · " + g.nombre_grupo);
+          if (g.enlace_reunion) tdN.appendChild(el("small", "ac-sub", "Meet fijo"));
+          tr.appendChild(tdN);
           tr.appendChild(el("td", null, DIA_SEMANA[g.dia_semana] + " " + hora12(g.hora_inicio) + " – " + hora12(g.hora_fin)));
           tr.appendChild(el("td", null, g.docente || "Sin asignar"));
           const td = el("td");
           const lleno = g.inscritos >= g.capacidad_maxima;
-          td.appendChild(el("span", "badge " + (lleno ? "b-red" : "b-ok"), g.inscritos + " / " + g.capacidad_maxima));
+          td.appendChild(activo
+            ? el("span", "badge " + (lleno ? "b-red" : "b-ok"), g.inscritos + " / " + g.capacidad_maxima)
+            : el("span", "badge bx-gris", "Inactivo"));
           tr.appendChild(td);
+          const tdA = el("td");
+          if (conInactivos) {
+            const caja = el("div", "ac-acciones");
+            if (activo) {
+              caja.appendChild(botonAccion("Editar", () => editarGrupo(g)));
+              caja.appendChild(botonAccion("Desactivar", () => activarGrupo(g, false), "ed-peligro"));
+            } else {
+              caja.appendChild(botonAccion("Activar", () => activarGrupo(g, true)));
+            }
+            tdA.appendChild(caja);
+          }
+          tr.appendChild(tdA);
           tabla.appendChild(tr);
         });
       }
@@ -188,6 +210,111 @@
     });
   }
 
+  /* ---------- editar grupos y cursos (usa edicion.js) ---------- */
+
+  function botonAccion(texto, accion, clase) {
+    const b = el("button", "btn sm" + (clase ? " " + clase : ""), texto);
+    b.type = "button";
+    b.addEventListener("click", accion);
+    return b;
+  }
+
+  const DIAS_FORM = [["lunes", "Lunes"], ["martes", "Martes"], ["miercoles", "Miércoles"], ["jueves", "Jueves"],
+    ["viernes", "Viernes"], ["sabado", "Sábado"], ["domingo", "Domingo"]];
+  const horaCorta = (t) => String(t || "").slice(0, 5);
+
+  async function editarGrupo(g) {
+    let docentes = [];
+    try { docentes = await api("/docentes"); } catch (e) { /* sin lista: solo "Sin asignar" */ }
+    window.PreicmaEditar.formulario({
+      titulo: "Editar grupo",
+      sub: g.nombre_curso + " · " + g.nombre_grupo + " · " + g.inscritos + " inscrito(s)",
+      campos: [
+        { nombre: "nombre_grupo", etiqueta: "Nombre del grupo", valor: g.nombre_grupo, requerido: true, maxlength: 30, ancho: "medio" },
+        { nombre: "dia_semana", etiqueta: "Día", tipo: "select", opciones: DIAS_FORM, valor: g.dia_semana, requerido: true, ancho: "medio" },
+        { nombre: "hora_inicio", etiqueta: "Desde", tipo: "time", valor: horaCorta(g.hora_inicio), requerido: true, ancho: "medio" },
+        { nombre: "hora_fin", etiqueta: "Hasta", tipo: "time", valor: horaCorta(g.hora_fin), requerido: true, ancho: "medio" },
+        { nombre: "id_docente", etiqueta: "Docente", tipo: "select", requerido: true,
+          opciones: [["", "Sin asignar"]].concat(docentes.map((d) => [d.id_docente, d.nombre_completo])),
+          valor: g.id_docente || "", ancho: "medio" },
+        { nombre: "capacidad_maxima", etiqueta: "Cupo máximo", tipo: "number", valor: g.capacidad_maxima,
+          min: Math.max(20, g.inscritos), max: 150, requerido: true, ancho: "medio",
+          ayuda: "Entre 20 y 150, y no menos que los inscritos." },
+        { nombre: "enlace_reunion", etiqueta: "Enlace fijo de Meet", tipo: "url", valor: g.enlace_reunion, maxlength: 500,
+          placeholder: "https://meet.google.com/…" },
+      ],
+      guardar: async (v) => {
+        v.id_docente = v.id_docente ? Number(v.id_docente) : null;
+        return (await api("/grupos/" + g.id_grupo, "PUT", v)).mensaje;
+      },
+      alGuardar: (texto) => { window.PreicmaEditar.aviso(texto); cargarGrupos(); cargarClases(); },
+    });
+  }
+
+  function activarGrupo(g, activo) {
+    window.PreicmaEditar.confirmar({
+      titulo: activo ? "Activar grupo" : "Desactivar grupo",
+      texto: activo
+        ? g.nombre_curso + " · " + g.nombre_grupo + " vuelve a aparecer para inscribir estudiantes y programar clases."
+        : g.nombre_curso + " · " + g.nombre_grupo + " dejará de aparecer para inscribir y programar clases. " +
+          "Solo se puede si no tiene estudiantes activos. No se borra nada y lo puedes activar después.",
+      textoBoton: activo ? "Activar" : "Desactivar",
+      peligro: !activo,
+      aceptar: async () => (await api("/grupos/" + g.id_grupo + "/activo", "PATCH", { activo })).mensaje,
+      alTerminar: (texto) => { window.PreicmaEditar.aviso(texto); cargarGrupos(); cargarTablaCursos(); },
+    });
+  }
+
+  async function cargarTablaCursos() {
+    const tabla = $("cursos-tabla");
+    if (!tabla) return;
+    let cursos;
+    try { cursos = await api("/cursos/todos"); } catch (e) { return filaVacia(tabla, 4, e.message); }
+    if (!cursos.length) return filaVacia(tabla, 4, "Aún no hay cursos. Crea el primero con el formulario.");
+    tabla.textContent = "";
+    cursos.forEach((c) => {
+      const tr = el("tr", c.activo ? null : "ed-inactivo");
+      const tdN = el("td");
+      tdN.appendChild(el("strong", null, c.nombre_curso));
+      tdN.appendChild(el("small", "ac-sub", fechaCorta(c.fecha_inicio) + " – " + fechaCorta(c.fecha_fin)));
+      tr.appendChild(tdN);
+      tr.appendChild(el("td", null, dinero(c.valor_total)));
+      const tdI = el("td", null, c.inscritos + (c.inscritos === 1 ? " estudiante" : " estudiantes"));
+      tdI.appendChild(el("small", "ac-sub", c.grupos + (c.grupos === 1 ? " grupo activo" : " grupos activos")));
+      tr.appendChild(tdI);
+      const tdE = el("td");
+      const caja = el("div", "ac-acciones");
+      caja.appendChild(el("span", "badge " + (c.activo ? "b-ok" : "bx-gris"), c.activo ? "Activo" : "Inactivo"));
+      caja.appendChild(botonAccion("Editar", () => editarCurso(c)));
+      tdE.appendChild(caja);
+      tr.appendChild(tdE);
+      tabla.appendChild(tr);
+    });
+  }
+
+  function editarCurso(c) {
+    window.PreicmaEditar.formulario({
+      titulo: "Editar curso",
+      sub: c.nombre_curso,
+      aviso: c.inscritos ? "Tiene " + c.inscritos + " estudiante(s) activo(s): si cambias el valor, ellos conservan el valor que se les acordó." : "",
+      campos: [
+        { nombre: "nombre_curso", etiqueta: "Nombre del curso", valor: c.nombre_curso, requerido: true, maxlength: 100 },
+        { nombre: "fecha_inicio", etiqueta: "Inicia", tipo: "date", valor: c.fecha_inicio, requerido: true, ancho: "medio" },
+        { nombre: "fecha_fin", etiqueta: "Termina", tipo: "date", valor: c.fecha_fin, requerido: true, ancho: "medio" },
+        { nombre: "valor_total", etiqueta: "Valor total", tipo: "number", valor: Math.round(Number(c.valor_total)), min: 0, requerido: true, ancho: "medio" },
+        { nombre: "activo", etiqueta: "Curso activo", tipo: "select", opciones: [["true", "Activo"], ["false", "Inactivo"]],
+          valor: String(c.activo), requerido: true, ancho: "medio",
+          ayuda: "Solo se puede desactivar si no tiene estudiantes activos." },
+        { nombre: "descripcion", etiqueta: "Descripción", tipo: "textarea", valor: c.descripcion, maxlength: 500 },
+      ],
+      guardar: async (v) => {
+        v.activo = v.activo === "true";
+        return (await api("/cursos/" + c.id_curso, "PUT", v)).mensaje;
+      },
+      alGuardar: (texto) => { window.PreicmaEditar.aviso(texto); cargarTablaCursos(); cargarCursos(); cargarGrupos(); },
+    });
+  }
+
   /* ---------- cursos (admin) ---------- */
 
   async function cargarCursos() {
@@ -222,6 +349,7 @@
         form.reset();
         mensaje(form, "Curso creado. Ahora crea su grupo.", "ok");
         cargarCursos();
+        cargarTablaCursos();
       } catch (e) {
         mensaje(form, e.message, "error");
       } finally {
@@ -487,9 +615,9 @@
     try {
       lista = await api("/pagos/recientes" + (ref ? "?ref=" + encodeURIComponent(ref) : ""));
     } catch (e) {
-      return filaVacia(tabla, 7, e.message);
+      return filaVacia(tabla, 8, e.message);
     }
-    if (!lista.length) return filaVacia(tabla, 7, ref ? "Ningún pago tiene una referencia parecida a «" + ref + "»." : "Aún no hay pagos registrados.");
+    if (!lista.length) return filaVacia(tabla, 8, ref ? "Ningún pago tiene una referencia parecida a «" + ref + "»." : "Aún no hay pagos registrados.");
     tabla.textContent = "";
     lista.forEach((p) => {
       const tr = el("tr");
@@ -512,7 +640,54 @@
         tdC.appendChild(el("span", "ac-sub", "—"));
       }
       tr.appendChild(tdC);
+      const tdA = el("td");
+      if (window.PreicmaEditar && window.PreicmaEditar.puede("editar_pagos")) {
+        const caja = el("div", "ac-acciones");
+        caja.appendChild(botonAccion("Corregir", () => corregirPago(p)));
+        caja.appendChild(botonAccion("Eliminar", () => eliminarPago(p), "ed-peligro"));
+        tdA.appendChild(caja);
+      }
+      tr.appendChild(tdA);
       tabla.appendChild(tr);
+    });
+  }
+
+  function refrescarPagos(texto) {
+    window.PreicmaEditar.aviso(texto);
+    cargarPagosRecientes();
+    cargarCobros();
+    if (typeof window.cargarResumen === "function") window.cargarResumen();
+    if (window.PreicmaInformes) window.PreicmaInformes.recargarPagos();
+  }
+
+  function corregirPago(p) {
+    window.PreicmaEditar.formulario({
+      titulo: "Corregir pago",
+      sub: p.estudiante + " · " + p.curso,
+      aviso: p.tiene_comprobante ? "El comprobante adjunto se conserva." : "",
+      campos: [
+        { nombre: "monto_pagado", etiqueta: "Monto", tipo: "number", valor: Math.round(Number(p.monto_pagado)), min: 1, requerido: true, ancho: "medio" },
+        { nombre: "fecha_pago", etiqueta: "Fecha del pago", tipo: "date", valor: p.fecha_pago, max: hoyIso(), requerido: true, ancho: "medio" },
+        { nombre: "metodo_pago", etiqueta: "Método de pago", tipo: "select", requerido: true, valor: p.metodo_pago,
+          opciones: Object.keys(METODOS).map((k) => [k, METODOS[k]]), ancho: "medio" },
+        { nombre: "referencia", etiqueta: "Referencia", valor: p.referencia, maxlength: 60, ancho: "medio" },
+        { nombre: "descripcion", etiqueta: "Nota", valor: p.descripcion, maxlength: 200 },
+      ],
+      guardar: async (v) => (await api("/pagos/" + p.id_pago, "PUT", v)).mensaje,
+      alGuardar: refrescarPagos,
+    });
+  }
+
+  function eliminarPago(p) {
+    window.PreicmaEditar.confirmar({
+      titulo: "Eliminar pago",
+      texto: "Vas a eliminar el pago de " + dinero(p.monto_pagado) + " de " + p.estudiante + " (" + fechaCorta(p.fecha_pago) +
+        (p.referencia ? ", ref. " + p.referencia : "") + ")" + (p.tiene_comprobante ? " y su comprobante" : "") +
+        ". Úsalo solo si se registró por error. No se puede deshacer y el saldo del estudiante vuelve a subir.",
+      textoBoton: "Sí, eliminar",
+      peligro: true,
+      aceptar: async () => (await api("/pagos/" + p.id_pago, "DELETE")).mensaje,
+      alTerminar: refrescarPagos,
     });
   }
 
@@ -1256,6 +1431,7 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     if ($("grupos-tabla") || $("cl-grupo") || $("in-grupo")) cargarGrupos();
+    cargarTablaCursos();
     prepararFormCurso();
     prepararFormGrupo();
     prepararFormInscripcion();

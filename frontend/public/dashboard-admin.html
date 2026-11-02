@@ -381,8 +381,8 @@
         </h2>
         <div class="tscroll">
           <table>
-            <thead><tr><th>Fecha</th><th>Estudiante</th><th>Curso</th><th>Método</th><th>Referencia</th><th>Monto</th><th>Comprobante</th></tr></thead>
-            <tbody id="pagos-tabla"><tr><td colspan="7" class="ac-vacio">Cargando…</td></tr></tbody>
+            <thead><tr><th>Fecha</th><th>Estudiante</th><th>Curso</th><th>Método</th><th>Referencia</th><th>Monto</th><th>Comprobante</th><th></th></tr></thead>
+            <tbody id="pagos-tabla"><tr><td colspan="8" class="ac-vacio">Cargando…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -516,12 +516,12 @@
         </form>
       </div>
 
-      <div class="panel c8" style="--c:var(--teal)">
-        <h2><span>Grupos</span></h2>
+      <div class="panel c12" style="--c:var(--teal)">
+        <h2><span>Grupos</span><small class="ac-rango">Activos e inactivos</small></h2>
         <div class="tscroll">
           <table>
-            <thead><tr><th>Curso · Grupo</th><th>Horario</th><th>Docente</th><th>Inscritos</th></tr></thead>
-            <tbody id="grupos-tabla"><tr><td colspan="4" class="ac-vacio">Cargando…</td></tr></tbody>
+            <thead><tr><th>Curso · Grupo</th><th>Horario</th><th>Docente</th><th>Inscritos</th><th></th></tr></thead>
+            <tbody id="grupos-tabla"><tr><td colspan="5" class="ac-vacio">Cargando…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -542,6 +542,16 @@
           <p class="ac-msg" role="status"></p>
           <button class="btn main" type="submit">Crear curso</button>
         </form>
+      </div>
+      <div class="panel c8" style="--c:var(--violet)">
+        <h2><span>Cursos</span><small class="ac-rango">Activos e inactivos</small></h2>
+        <div class="tscroll">
+          <table>
+            <thead><tr><th>Curso</th><th>Valor</th><th>Activos</th><th>Estado</th></tr></thead>
+            <tbody id="cursos-tabla"><tr><td colspan="4" class="ac-vacio">Cargando…</td></tr></tbody>
+          </table>
+        </div>
+        <small class="note">Cambiar el valor de un curso aplica a las inscripciones nuevas; las que ya existen conservan su valor acordado.</small>
       </div>
       <div class="panel c12" id="inf-asis" style="--c:var(--teal)">
         <h2><span>Informe de asistencias</span>
@@ -628,6 +638,7 @@
 </main>
 
 <script src="dashboard-admin.js"></script>
+<script src="edicion.js"></script>
 <script src="api.js"></script>
 <script src="academico.js"></script>
 <script src="informes.js"></script>
