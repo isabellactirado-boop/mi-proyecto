@@ -34,26 +34,34 @@
     return { antes: m[1], valor: Number(m[2].replace(/\./g, "")), despues: m[3] };
   }
 
+  // Guarda el ultimo texto que escribio la animacion: el observador lo ignora.
+  // (El aviso del observador llega despues del cambio, asi que una marca que se
+  // borra al terminar no sirve: el ultimo cuadro volvia a arrancar el conteo.)
+  const escrito = new WeakMap();
+
   function contar(nodo) {
-    const p = partes(nodo.textContent);
+    const final = nodo.textContent;
+    const p = partes(final);
     if (!p || p.valor === 0 || reducido) return;
     const inicio = performance.now();
     const duracion = 900;
-    nodo.dataset.animando = "1";
     function paso(t) {
+      if (nodo.dataset.objetivo !== final) return;  // llego un valor nuevo: esta animacion se detiene
       const avance = Math.min(1, (t - inicio) / duracion);
       const suave = 1 - Math.pow(1 - avance, 3);
-      nodo.textContent = p.antes + Math.round(p.valor * suave).toLocaleString("es-CO") + p.despues;
+      const texto = avance < 1 ? p.antes + Math.round(p.valor * suave).toLocaleString("es-CO") + p.despues : final;
+      escrito.set(nodo, texto);
+      nodo.textContent = texto;
       if (avance < 1) requestAnimationFrame(paso);
-      else delete nodo.dataset.animando;
     }
+    nodo.dataset.objetivo = final;
     requestAnimationFrame(paso);
   }
 
   function observarKpis() {
     document.querySelectorAll(".kpi strong").forEach((nodo) => {
       new MutationObserver(() => {
-        if (nodo.dataset.animando) return;   // cambios hechos por la propia animacion
+        if (nodo.textContent === escrito.get(nodo)) return;   // lo escribio la propia animacion
         const kpi = nodo.closest(".kpi");
         if (kpi.classList.contains("bad")) {
           const p = partes(nodo.textContent);
