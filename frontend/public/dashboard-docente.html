@@ -20,25 +20,34 @@
 </head>
 <body>
 
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+</svg>
+
 <aside class="side">
-  <div class="me">
-    <div class="av" id="av">P</div>
-    <div><strong id="uname">Profesor</strong><small>Panel docente</small></div>
+  <div class="brand">
+    <img src="logo.jpeg" alt="">
+    <div><b>PRE <span>ICMA</span></b><small>Panel docente</small></div>
   </div>
   <ul class="nav">
-    <li><a href="#" class="on">Mis clases</a></li>
+    <li><a href="#" class="on"><svg class="ico"><use href="#i-calendar"/></svg>Mis clases</a></li>
   </ul>
-  <div class="moonbox">
-    <div class="disk"><i></i><i></i><i></i></div>
-    <a class="logout" href="#" id="salir">Cerrar sesión</a>
+  <div class="side-foot">
+    <div class="me">
+      <div class="av" id="av">P</div>
+      <div><strong id="uname">Profesor</strong><small>Docente</small></div>
+    </div>
+    <a class="logout" href="#" id="salir" aria-label="Cerrar sesión" title="Cerrar sesión"><svg class="ico"><use href="#i-logout"/></svg></a>
   </div>
 </aside>
 
 <main>
   <header class="hero">
     <div class="hero-txt">
-      <h1>Hola, <em id="display-user">profesor</em></h1>
-      <p id="today"></p>
+      <p class="eyebrow" id="today"></p>
+      <h1><span id="saludo-hora">Hola</span>, <em id="display-user">profesor</em></h1>
+      <p class="hero-sub">Estas son tus clases. Toma la asistencia desde aquí.</p>
     </div>
   </header>
 
@@ -59,7 +68,7 @@
 <script>
   var usuario = sessionStorage.getItem('currentUser') || 'profesor';
   document.getElementById('uname').textContent = usuario;
-  document.getElementById('display-user').textContent = usuario.split('@')[0];
+  document.getElementById('display-user').textContent = usuario;
   document.getElementById('av').textContent = usuario.charAt(0).toUpperCase();
   var hoy = new Date().toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   document.getElementById('today').textContent = hoy.charAt(0).toUpperCase() + hoy.slice(1);
@@ -70,5 +79,6 @@
   });
 </script>
 <script src="academico.js"></script>
+<script src="diseno.js"></script>
 </body>
 </html>
