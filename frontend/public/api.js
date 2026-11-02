@@ -6,7 +6,7 @@
    Se carga despues de dashboard-admin.js.
    ===================================================================== */
 
-const API_URL = "https://preicma.onrender.com";
+const API_URL = window.PREICMA_API;   // se define en config.js
 
 /* ---------- sesion y peticiones ---------- */
 

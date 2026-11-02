@@ -7,6 +7,8 @@
    El contenido de tips y preguntas esta en tips.js (PLANES).
    ===================================================================== */
 
+// La app del celular no lee config.js (el APK solo lleva la carpeta app/).
+// Si el backend cambia de direccion, cambialo aqui y en config.js.
 const API_URL = "https://preicma.onrender.com";
 const DEMO = new URLSearchParams(location.search).has("demo");
 

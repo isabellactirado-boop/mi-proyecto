@@ -11,7 +11,7 @@
    ===================================================================== */
 
 (function () {
-  const API = "https://preicma.onrender.com";
+  const API = window.PREICMA_API;   // se define en config.js
   const DEMO = new URLSearchParams(location.search).has("demo");
   const $ = (id) => document.getElementById(id);
 

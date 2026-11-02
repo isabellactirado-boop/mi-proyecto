@@ -1,5 +1,5 @@
 // Dirección del backend en Render
-const API_URL = "https://preicma.onrender.com";
+const API_URL = window.PREICMA_API;   // se define en config.js
 
 document.addEventListener("DOMContentLoaded", () => {
     const $ = (id) => document.getElementById(id);
