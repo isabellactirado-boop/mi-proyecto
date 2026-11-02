@@ -386,6 +386,26 @@
           </table>
         </div>
       </div>
+      <div class="panel c12" id="inf-pagos" style="--c:var(--orange)">
+        <h2><span>Informe de pagos</span>
+          <span class="ac-filtros">
+            <select id="ip-estado" class="input-space ac-select" aria-label="Qué inscripciones mostrar">
+              <option value="todos">Todos</option>
+              <option value="en_mora">Solo en mora</option>
+              <option value="al_dia">Solo al día</option>
+            </select>
+            <button class="btn sm" id="ip-imprimir" type="button" disabled>Imprimir / PDF</button>
+            <button class="btn sm main" id="ip-excel" type="button" disabled>Descargar Excel</button>
+          </span>
+        </h2>
+        <div class="inf-resumen" id="ip-resumen"></div>
+        <div class="tscroll">
+          <table>
+            <thead><tr><th>Estudiante</th><th>Curso · Grupo</th><th>Pagado</th><th>Saldo</th><th>Vencido</th><th>Estado</th><th>Contacto</th></tr></thead>
+            <tbody id="ip-tabla"><tr><td colspan="7" class="ac-vacio">Cargando…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -523,6 +543,29 @@
           <button class="btn main" type="submit">Crear curso</button>
         </form>
       </div>
+      <div class="panel c12" id="inf-asis" style="--c:var(--teal)">
+        <h2><span>Informe de asistencias</span>
+          <span class="ac-filtros">
+            <button class="btn sm" id="ia-imprimir" type="button" disabled>Imprimir / PDF</button>
+            <button class="btn sm main" id="ia-excel" type="button" disabled>Descargar Excel</button>
+          </span>
+        </h2>
+        <div class="inf-filtros">
+          <div><label for="ia-grupo">Grupo</label>
+            <select id="ia-grupo" class="input-space"><option value="">Todos los grupos</option></select></div>
+          <div><label for="ia-desde">Desde</label><input id="ia-desde" type="date" class="input-space"></div>
+          <div><label for="ia-hasta">Hasta</label><input id="ia-hasta" type="date" class="input-space"></div>
+          <button class="btn main" id="ia-ver" type="button">Ver informe</button>
+        </div>
+        <p class="ac-msg error" id="ia-msg" role="status"></p>
+        <div class="inf-resumen" id="ia-resumen"></div>
+        <div class="tscroll">
+          <table>
+            <thead><tr><th>Estudiante</th><th>Curso · Grupo</th><th>Detalle</th><th>Asistencia</th><th>Faltas</th><th>Contacto</th></tr></thead>
+            <tbody id="ia-tabla"><tr><td colspan="6" class="ac-vacio">Cargando…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -587,6 +630,7 @@
 <script src="dashboard-admin.js"></script>
 <script src="api.js"></script>
 <script src="academico.js"></script>
+<script src="informes.js"></script>
 <script src="diseno.js"></script>
 </body>
 </html>

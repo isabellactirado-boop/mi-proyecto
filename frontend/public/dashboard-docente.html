@@ -143,6 +143,29 @@
       </div>
       <small class="note">Toca "Asistencia" para marcar a cada estudiante como presente, tarde, ausente o con excusa. Puedes corregirla después.</small>
     </div>
+    <div class="panel c12" id="inf-asis" style="--c:var(--teal)">
+      <h2><span>Informe de asistencias</span>
+        <span class="ac-filtros">
+          <button class="btn sm" id="ia-imprimir" type="button" disabled>Imprimir / PDF</button>
+          <button class="btn sm main" id="ia-excel" type="button" disabled>Descargar Excel</button>
+        </span>
+      </h2>
+      <div class="inf-filtros">
+        <div><label for="ia-grupo">Grupo</label>
+          <select id="ia-grupo" class="input-space"><option value="">Todos los grupos</option></select></div>
+        <div><label for="ia-desde">Desde</label><input id="ia-desde" type="date" class="input-space"></div>
+        <div><label for="ia-hasta">Hasta</label><input id="ia-hasta" type="date" class="input-space"></div>
+        <button class="btn main" id="ia-ver" type="button">Ver informe</button>
+      </div>
+      <p class="ac-msg error" id="ia-msg" role="status"></p>
+      <div class="inf-resumen" id="ia-resumen"></div>
+      <div class="tscroll">
+        <table>
+          <thead><tr><th>Estudiante</th><th>Curso · Grupo</th><th>Detalle</th><th>Asistencia</th><th>Faltas</th><th>Contacto</th></tr></thead>
+          <tbody id="ia-tabla"><tr><td colspan="6" class="ac-vacio">Cargando…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </main>
 
@@ -160,6 +183,7 @@
   });
 </script>
 <script src="academico.js"></script>
+<script src="informes.js"></script>
 <script src="diseno.js"></script>
 </body>
 </html>

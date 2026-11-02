@@ -296,3 +296,18 @@ tr:last-child td{border-bottom:0}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 .ac-filtros{display:flex;gap:8px;flex-wrap:wrap}
 .ac-acciones .btn.peligro{color:var(--bad)}
+
+/* ---------- informes ---------- */
+.inf-resumen{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:14px}
+.inf-resumen:empty{display:none}
+.inf-dato{background:#fff;border:2px solid var(--ink);border-radius:14px;padding:10px 14px;box-shadow:3px 3px 0 var(--c,var(--violet))}
+.inf-dato strong{display:block;font-family:'Bricolage Grotesque',sans-serif;font-size:1.3rem;font-weight:800}
+.inf-dato span{font-size:.78rem;color:var(--muted);font-weight:600}
+.inf-dato.mal strong{color:var(--bad)} .inf-dato.bien strong{color:var(--ok)}
+.inf-filtros{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:12px;align-items:end;margin-bottom:6px}
+.inf-filtros label{display:block;font-size:.8rem;font-weight:700;margin-bottom:4px}
+.inf-filtros .btn{white-space:nowrap}
+#inf-asis .meter{margin-top:4px;min-width:90px}
+.ac-wa{display:inline-block;margin-top:2px;font-size:.78rem;font-weight:700}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
+@media (max-width:760px){.inf-filtros{grid-template-columns:1fr 1fr}.inf-filtros>div:first-child,.inf-filtros .btn{grid-column:1/-1}}
