@@ -232,3 +232,12 @@ tr:last-child td{border-bottom:0}
 .ac-resultado small{color:var(--muted)}
 .ac-clave{display:flex;align-items:center;gap:10px}
 .ac-clave code{font-size:1.15rem;font-weight:800;letter-spacing:.06em;padding:6px 12px;border-radius:10px;background:#fff;border:2px dashed var(--ink)}
+.ac-sugerencias{list-style:none;margin-top:4px;border:2px solid var(--ink);border-radius:12px;background:#fff;overflow:hidden}
+.ac-sugerencias li{padding:9px 12px;cursor:pointer;font-size:.86rem;border-bottom:1px solid var(--line)}
+.ac-sugerencias li:last-child{border-bottom:0}
+.ac-sugerencias li:hover,.ac-sugerencias li:focus{background:var(--warn-bg);outline:none}
+.ac-sugerencias small{display:block;color:var(--muted);font-size:.76rem}
+.ac-elegido{margin-top:6px;padding:10px 12px;border-radius:12px;background:var(--cream);border:2px dashed var(--ink);font-size:.85rem;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.ac-elegido small{display:block;color:var(--muted)}
+.ac-elegido button{flex:none;border:0;background:none;font-size:1.2rem;cursor:pointer}
+.ac-wa{color:var(--ok);font-weight:700;text-decoration:none}

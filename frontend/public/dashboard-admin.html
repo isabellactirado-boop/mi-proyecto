@@ -243,7 +243,7 @@
           <p class="ac-paso">3 · Grupo y pago</p>
           <div class="form-grid">
             <div style="grid-column:1/-1"><label for="in-grupo">Grupo</label><select id="in-grupo" class="input-space" required></select></div>
-            <div><label for="in-valor">Valor acordado</label><input id="in-valor" type="number" min="0" step="1000" class="input-space" placeholder="Valor del curso"></div>
+            <div><label for="in-valor">Valor acordado</label><input id="in-valor" type="number" min="0" step="1" class="input-space" placeholder="Valor del curso"></div>
             <div><label for="in-cuotas">Forma de pago</label>
               <select id="in-cuotas" class="input-space"><option value="1">Pago único</option><option value="2">2 cuotas</option><option value="3">3 cuotas</option><option value="4">4 cuotas</option><option value="5">5 cuotas</option><option value="6">6 cuotas</option></select></div>
             <div><label for="in-primera">Primera cuota vence</label><input id="in-primera" type="date" class="input-space"></div>
@@ -282,41 +282,49 @@
   <section id="tab-pagos" class="tab-content">
     <div class="grid">
       <div class="panel c8" style="--c:var(--red)">
-        <h2><span>Cuotas más atrasadas y por cobrar</span></h2>
+        <h2><span>Cuotas por cobrar</span><small class="ac-rango">Vencidas y próximas 15 días</small></h2>
         <div class="tscroll">
           <table>
-            <thead><tr><th>Estudiante</th><th>Cuota</th><th>Valor</th><th>Mora</th><th>Acción</th></tr></thead>
-            <tbody>
-              <tr><td>—</td><td>—</td><td>—</td><td><span class="badge b-red">—</span></td><td><button class="btn sm main">Registrar pago</button></td></tr>
-            </tbody>
+            <thead><tr><th>Estudiante</th><th>Cuota</th><th>Pendiente</th><th>Estado</th><th>Contacto</th><th></th></tr></thead>
+            <tbody id="cobro-tabla"><tr><td colspan="6" class="ac-vacio">Cargando…</td></tr></tbody>
           </table>
         </div>
       </div>
 
       <div class="panel c4" style="--c:var(--yellow)">
-        <h2><span>Registrar Pago Rápido</span></h2>
-        <form class="space-form" onsubmit="event.preventDefault(); alert('Pago guardado y comprobante procesado exitosamente.');">
-          <label>Estudiante</label>
-          <input type="text" class="input-space" placeholder="Buscar por documento o nombre" style="margin-bottom:12px;" required>
-          
-          <label>Monto Recibido</label>
-          <input type="text" class="input-space" placeholder="$ 0" style="margin-bottom:12px;" required>
-          
-          <label>Método de Pago</label>
-          <select id="metodo-pago" class="input-space" style="margin-bottom:16px;" onchange="toggleComprobante()">
+        <h2><span>Registrar pago</span></h2>
+        <form class="space-form ac-form" id="form-pago" autocomplete="off">
+          <label for="pg-buscar">Estudiante</label>
+          <input id="pg-buscar" class="input-space" placeholder="Buscar por nombre o documento">
+          <ul class="ac-sugerencias" id="pg-sugerencias" hidden></ul>
+          <div class="ac-elegido" id="pg-elegido" hidden></div>
+          <label for="pg-monto">Monto recibido</label>
+          <input id="pg-monto" type="number" min="1" step="1" class="input-space" placeholder="$ 0" required>
+          <label for="pg-metodo">Método de pago</label>
+          <select id="pg-metodo" class="input-space">
             <option value="efectivo">Efectivo</option>
             <option value="nequi_daviplata">Nequi / Daviplata</option>
-            <option value="transferencia">Transferencia Bancaria</option>
+            <option value="transferencia">Transferencia bancaria</option>
+            <option value="tarjeta">Tarjeta</option>
+            <option value="otro">Otro</option>
           </select>
-
-          <div id="seccion-comprobante" class="comprobante-box" style="display:none; margin-bottom:16px;">
-            <label>Adjuntar Comprobante (Captura / PDF)</label>
-            <input type="file" class="input-space file-input" accept="image/*,application/pdf">
-            <small style="color:var(--muted); font-size:0.75rem; display:block; margin-top:4px;">Formatos permitidos: JPG, PNG o PDF</small>
-          </div>
-
-          <button class="btn main" style="width:100%;">Confirmar Transacción</button>
+          <label for="pg-fecha">Fecha del pago</label>
+          <input id="pg-fecha" type="date" class="input-space" required>
+          <label for="pg-nota">Referencia o nota (opcional)</label>
+          <input id="pg-nota" class="input-space" maxlength="200" placeholder="Ej: Nequi ref. 123456 · cuota 2">
+          <p class="ac-msg" role="status"></p>
+          <button class="btn main" type="submit">Confirmar pago</button>
         </form>
+      </div>
+
+      <div class="panel c12" style="--c:var(--teal)">
+        <h2><span>Últimos pagos</span></h2>
+        <div class="tscroll">
+          <table>
+            <thead><tr><th>Fecha</th><th>Estudiante</th><th>Curso</th><th>Método</th><th>Nota</th><th>Monto</th></tr></thead>
+            <tbody id="pagos-tabla"><tr><td colspan="6" class="ac-vacio">Cargando…</td></tr></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </section>
@@ -448,7 +456,7 @@
             <div><label for="cu-fin">Termina</label><input id="cu-fin" type="date" class="input-space" required></div>
           </div>
           <label for="cu-valor">Valor total del curso</label>
-          <input id="cu-valor" type="number" min="0" step="1000" class="input-space" placeholder="Ej: 600000" required>
+          <input id="cu-valor" type="number" min="0" step="1" class="input-space" placeholder="Ej: 600000" required>
           <label for="cu-desc">Descripción (opcional)</label>
           <input id="cu-desc" class="input-space" placeholder="Ej: Preparación completa, 5 áreas">
           <p class="ac-msg" role="status"></p>

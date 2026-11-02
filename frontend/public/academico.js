@@ -1,5 +1,6 @@
 /* =====================================================================
-   academico.js - clases, asistencia y simulacros.
+   academico.js - cursos, grupos, inscripciones, pagos, clases,
+   asistencia y simulacros.
    Lo usan los dos paneles:
    - dashboard-admin.html: programa grupos y clases, toma asistencia y
      carga resultados de simulacros.
@@ -392,6 +393,179 @@
     });
   }
 
+  /* ---------- pagos (admin) ---------- */
+
+  const METODOS = { efectivo: "Efectivo", nequi_daviplata: "Nequi / Daviplata", transferencia: "Transferencia",
+    tarjeta: "Tarjeta", otro: "Otro" };
+  let inscripcionPago = null;
+
+  function enlaceWhatsApp(telefono, texto) {
+    const numero = String(telefono || "").replace(/\D/g, "");
+    if (numero.length < 10) return null;
+    const a = el("a", "ac-wa", "WhatsApp");
+    a.href = "https://wa.me/" + (numero.length === 10 ? "57" + numero : numero) + "?text=" + encodeURIComponent(texto);
+    a.target = "_blank";
+    a.rel = "noopener";
+    return a;
+  }
+
+  async function cargarCobros() {
+    const tabla = $("cobro-tabla");
+    if (!tabla) return;
+    let lista;
+    try {
+      lista = await api("/cuotas-por-cobrar");
+    } catch (e) {
+      return filaVacia(tabla, 6, e.message);
+    }
+    if (!lista.length) return filaVacia(tabla, 6, "¡Todo al día! No hay cuotas vencidas ni por vencer en 15 días.");
+    tabla.textContent = "";
+    lista.forEach((c) => {
+      const tr = el("tr");
+      const tdE = el("td");
+      tdE.appendChild(el("strong", null, c.estudiante));
+      tdE.appendChild(el("small", "ac-sub", c.curso));
+      tr.appendChild(tdE);
+      tr.appendChild(el("td", null, c.numero_cuota + " de " + c.numero_cuotas));
+      tr.appendChild(el("td", null, dinero(c.pendiente)));
+      const tdS = el("td");
+      tdS.appendChild(c.dias_mora > 0
+        ? el("span", "badge b-red", c.dias_mora + (c.dias_mora === 1 ? " día de mora" : " días de mora"))
+        : el("span", "badge b-warn", c.dias_mora === 0 ? "Vence hoy" : "Vence " + fechaCorta(c.fecha_vencimiento)));
+      tr.appendChild(tdS);
+
+      const tdC = el("td");
+      const telefono = c.telefono_acudiente || c.telefono_estudiante;
+      tdC.appendChild(el("span", null, c.acudiente || "Sin acudiente"));
+      const texto = "Hola" + (c.acudiente ? " " + c.acudiente.split(" ")[0] : "") + ", te escribimos de PRE ICMA. " +
+        (c.dias_mora > 0 ? "La cuota " + c.numero_cuota + " de " + c.estudiante + " está vencida" : "La cuota " + c.numero_cuota + " de " + c.estudiante + " vence el " + fechaCorta(c.fecha_vencimiento)) +
+        " (" + dinero(c.pendiente) + "). ¡Gracias!";
+      const wa = enlaceWhatsApp(telefono, texto);
+      if (wa) { tdC.appendChild(el("br")); tdC.appendChild(wa); }
+      tr.appendChild(tdC);
+
+      const tdB = el("td");
+      const b = el("button", "btn sm main", "Registrar pago");
+      b.type = "button";
+      b.addEventListener("click", async () => {
+        try {
+          const encontrados = await api("/pagos/buscar?q=" + encodeURIComponent(c.doc_identidad));
+          const ins = encontrados.find((x) => x.id_inscripcion === c.id_inscripcion) || encontrados[0];
+          if (ins) elegirInscripcion(ins, c.pendiente);
+          $("form-pago").scrollIntoView({ behavior: "smooth", block: "center" });
+          $("pg-monto").focus({ preventScroll: true });
+        } catch (e) { alert(e.message); }
+      });
+      tdB.appendChild(b);
+      tr.appendChild(tdB);
+      tabla.appendChild(tr);
+    });
+  }
+
+  async function cargarPagosRecientes() {
+    const tabla = $("pagos-tabla");
+    if (!tabla) return;
+    let lista;
+    try {
+      lista = await api("/pagos/recientes");
+    } catch (e) {
+      return filaVacia(tabla, 6, e.message);
+    }
+    if (!lista.length) return filaVacia(tabla, 6, "Aún no hay pagos registrados.");
+    tabla.textContent = "";
+    lista.forEach((p) => {
+      const tr = el("tr");
+      tr.appendChild(el("td", null, fechaCorta(p.fecha_pago)));
+      tr.appendChild(el("td", null, p.estudiante));
+      tr.appendChild(el("td", null, p.curso));
+      tr.appendChild(el("td", null, METODOS[p.metodo_pago] || p.metodo_pago));
+      tr.appendChild(el("td", "ac-tema", p.descripcion || "—"));
+      tr.appendChild(el("td", null, dinero(p.monto_pagado)));
+      tabla.appendChild(tr);
+    });
+  }
+
+  function elegirInscripcion(ins, montoSugerido) {
+    inscripcionPago = ins;
+    $("pg-sugerencias").hidden = true;
+    $("pg-buscar").value = "";
+    const caja = $("pg-elegido");
+    caja.textContent = "";
+    caja.hidden = false;
+    const info = el("div");
+    info.appendChild(el("strong", null, ins.estudiante));
+    info.appendChild(el("small", null, ins.curso + (ins.nombre_grupo ? " · " + ins.nombre_grupo : "")));
+    info.appendChild(el("small", null, "Saldo pendiente: " + dinero(ins.saldo_pendiente) +
+      (Number(ins.valor_en_mora) > 0 ? " · en mora " + dinero(ins.valor_en_mora) : "")));
+    caja.appendChild(info);
+    const quitar = el("button", null, "×");
+    quitar.type = "button";
+    quitar.setAttribute("aria-label", "Quitar estudiante");
+    quitar.addEventListener("click", () => { inscripcionPago = null; caja.hidden = true; $("pg-buscar").focus(); });
+    caja.appendChild(quitar);
+    $("pg-monto").max = Math.round(Number(ins.saldo_pendiente));
+    if (montoSugerido) $("pg-monto").value = Math.round(Number(montoSugerido));
+  }
+
+  function prepararFormPago() {
+    const form = $("form-pago");
+    if (!form) return;
+    $("pg-fecha").value = hoyIso();
+
+    let espera = null;
+    $("pg-buscar").addEventListener("input", () => {
+      clearTimeout(espera);
+      const q = $("pg-buscar").value.trim();
+      const lista = $("pg-sugerencias");
+      if (q.length < 2) { lista.hidden = true; return; }
+      espera = setTimeout(async () => {
+        let encontrados = [];
+        try { encontrados = await api("/pagos/buscar?q=" + encodeURIComponent(q)); } catch (e) { /* sin resultados */ }
+        lista.textContent = "";
+        if (!encontrados.length) lista.appendChild(el("li", null, "Sin inscripciones activas con ese nombre o documento"));
+        encontrados.forEach((ins) => {
+          const li = el("li");
+          li.tabIndex = 0;
+          li.appendChild(document.createTextNode(ins.estudiante));
+          li.appendChild(el("small", null, ins.doc_identidad + " · " + ins.curso + " · saldo " + dinero(ins.saldo_pendiente)));
+          const elegir = () => elegirInscripcion(ins);
+          li.addEventListener("click", elegir);
+          li.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); elegir(); } });
+          lista.appendChild(li);
+        });
+        lista.hidden = false;
+      }, 300);
+    });
+
+    form.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      if (!inscripcionPago) return mensaje(form, "Busca y elige el estudiante.", "error");
+      const boton = form.querySelector('button[type="submit"]');
+      boton.disabled = true;
+      mensaje(form, "Guardando…");
+      try {
+        const r = await api("/pagos", "POST", sinVacios({
+          id_inscripcion: inscripcionPago.id_inscripcion,
+          monto_pagado: Number($("pg-monto").value),
+          metodo_pago: $("pg-metodo").value,
+          fecha_pago: $("pg-fecha").value,
+          descripcion: $("pg-nota").value.trim(),
+        }));
+        form.reset();
+        $("pg-fecha").value = hoyIso();
+        $("pg-elegido").hidden = true;
+        inscripcionPago = null;
+        mensaje(form, "Pago de " + r.estudiante + " guardado. Saldo restante: " + dinero(r.saldo_restante) + ".", "ok");
+        cargarCobros();
+        cargarPagosRecientes();
+      } catch (e) {
+        mensaje(form, e.message, "error");
+      } finally {
+        boton.disabled = false;
+      }
+    });
+  }
+
   /* ---------- clases ---------- */
 
   async function cargarClases() {
@@ -771,6 +945,9 @@
     prepararFormGrupo();
     prepararFormInscripcion();
     prepararFormCuenta();
+    prepararFormPago();
+    cargarCobros();
+    cargarPagosRecientes();
     prepararFormClase();
     cargarClases();
     prepararFormSimulacro();
@@ -789,12 +966,23 @@
       if (ruta === "/cursos" || ruta === "/grupos") return Promise.resolve({ id: 9 });
       const cuenta = { usuario: "juan@correo.com", contrasena_temporal: "Kp7mWq3xRa", aviso: "Entrega esta contraseña al estudiante. No se vuelve a mostrar." };
       if (ruta === "/inscripciones") return Promise.resolve({ curso: "Pre-ICFES Cal. B", grupo: "Grupo 2", cuotas: [{}, {}, {}], cuenta: cuerpo.crear_cuenta ? cuenta : null });
+      if (ruta === "/pagos") return Promise.resolve({ estudiante: "Juan Pérez", saldo_restante: 400000 });
       if (ruta === "/cuentas-estudiante") return Promise.resolve(Object.assign({ estudiante: "Juan Pérez" }, cuenta));
       return Promise.resolve({ registros: (cuerpo && cuerpo.registros || []).length });
     }
     if (ruta === "/grupos") return Promise.resolve([
       { id_grupo: 1, valor_total: 600000, nombre_curso: "Pre-ICFES Cal. B", nombre_grupo: "Grupo 2", dia_semana: "martes", hora_inicio: "18:00:00", hora_fin: "20:00:00", docente: "Laura Gómez", inscritos: 3, capacidad_maxima: 40 },
       { id_grupo: 2, valor_total: 750000, nombre_curso: "Pre-ICFES Cal. A", nombre_grupo: "Sábado AM", dia_semana: "sabado", hora_inicio: "08:00:00", hora_fin: "11:00:00", docente: null, inscritos: 40, capacidad_maxima: 40 },
+    ]);
+    if (ruta === "/cuotas-por-cobrar") return Promise.resolve([
+      { id_inscripcion: 11, numero_cuota: 2, numero_cuotas: 3, fecha_vencimiento: dia(-8), dias_mora: 8, estudiante: "Juan Pérez", doc_identidad: "1002223334", curso: "Pre-ICFES Cal. B", pendiente: 200000, acudiente: "María Gómez", telefono_acudiente: "3001112233" },
+      { id_inscripcion: 12, numero_cuota: 1, numero_cuotas: 1, fecha_vencimiento: dia(4), dias_mora: -4, estudiante: "Ana Ruiz", doc_identidad: "1009998887", curso: "Taller de Inglés", pendiente: 250000, acudiente: null, telefono_estudiante: "NO REGISTRADO" },
+    ]);
+    if (ruta.indexOf("/pagos/buscar") === 0) return Promise.resolve([
+      { id_inscripcion: 11, doc_identidad: "1002223334", estudiante: "Juan Pérez", curso: "Pre-ICFES Cal. B", nombre_grupo: "Grupo 2", saldo_pendiente: 600000, valor_en_mora: 200000 },
+    ]);
+    if (ruta === "/pagos/recientes") return Promise.resolve([
+      { fecha_pago: dia(-1), estudiante: "Isabella Tirado", curso: "Pre-ICFES Cal. B", metodo_pago: "nequi_daviplata", descripcion: "Ref. 88123", monto_pagado: 200000 },
     ]);
     if (ruta === "/cursos") return Promise.resolve([{ id_curso: 1, nombre_curso: "Pre-ICFES Cal. B" }, { id_curso: 2, nombre_curso: "Pre-ICFES Cal. A" }]);
     if (ruta === "/docentes") return Promise.resolve([{ id_docente: 1, nombre_completo: "Laura Gómez" }, { id_docente: 2, nombre_completo: "Carlos Ruiz" }]);
