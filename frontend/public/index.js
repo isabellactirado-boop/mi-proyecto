@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
         mensaje.className = "mensaje " + tipo;
     }
 
-    const etiqueta = { profesor: "Docente", administrador: "Administrador" };
+    const etiqueta = { profesor: "Docente", administrador: "Administrador", propietario: "Propietario" };
     const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
     const rand = (a, b) => a + Math.random() * (b - a);
 
@@ -331,9 +331,8 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             const datos = resultado.datos;
-            const esAdmin = datos.rol === "administrador" || datos.rol === "propietario";
-
-            if ((rolElegido === "administrador") !== esAdmin) {
+            // Cada persona entra solo por la tarjeta de su propio rol
+            if (datos.rol !== rolElegido) {
                 ocultarCarga();
                 mostrar("Correo o contraseña incorrectos", "error");
                 boton.disabled = false;
@@ -357,7 +356,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             $("loader-status").textContent = "¡Bienvenida! Entrando al panel…";
             await esperar(600);
-            window.location.href = esAdmin ? "dashboard-admin.html" : "dashboard-docente.html";
+            window.location.href = datos.rol === "profesor" ? "dashboard-docente.html" : "dashboard-admin.html";
         });
     }
 });
