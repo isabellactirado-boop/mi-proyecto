@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
         mensaje.className = "mensaje " + tipo;
     }
 
-    const etiqueta = { docente: "Docente", administrador: "Administrador" };
+    const etiqueta = { profesor: "Docente", administrador: "Administrador" };
     const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
     const rand = (a, b) => a + Math.random() * (b - a);
 
@@ -163,7 +163,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const W = window.innerWidth;
         const alcance = Math.min(W, 900) * 0.5;
 
-        // Puntajes y palabras del ICFES
         const total = W < 600 ? 16 : 24;
         for (let i = 0; i < total; i++) {
             const el = document.createElement("div");
@@ -192,7 +191,6 @@ document.addEventListener("DOMContentLoaded", () => {
             a.onfinish = () => el.remove();
         }
 
-        // Chispas
         for (let i = 0; i < 46; i++) {
             const d = document.createElement("div");
             d.className = "dot";
@@ -214,14 +212,12 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Un ciclo completo: despegue → explosión → puntajes
     async function cicloCohete(numero) {
         rocket.style.visibility = "visible";
         rocket.style.transform = "none";
         estado.textContent = numero > 1 ? "Despertando el servidor…" : "Encendiendo motores…";
         scoreNum.textContent = "0";
 
-        // Temblor en la plataforma
         const vib = rocket.animate([
             { transform: "translate(0,0)" }, { transform: "translate(-3px,1px)" },
             { transform: "translate(3px,-1px)" }, { transform: "translate(-2px,0)" },
@@ -244,7 +240,6 @@ document.addEventListener("DOMContentLoaded", () => {
         await vuelo.finished.catch(() => {});
         clearInterval(intervaloHumo);
 
-        // Boom
         const r = rocket.getBoundingClientRect();
         const cx = r.left + r.width / 2;
         const cy = r.top + r.height / 2;
@@ -336,10 +331,8 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             const datos = resultado.datos;
-            const esAdmin = datos.rol === "administrador";
+            const esAdmin = datos.rol === "administrador" || datos.rol === "propietario";
 
-            // El rol elegido debe coincidir con el de la cuenta.
-            // Si no coincide, se muestra el mismo error genérico para no revelar nada.
             if ((rolElegido === "administrador") !== esAdmin) {
                 ocultarCarga();
                 mostrar("Correo o contraseña incorrectos", "error");
@@ -347,14 +340,24 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            // Guardamos la sesión en sessionStorage de forma estricta
+            // Guardado estricto de sesión, token y marcas del backend
             sessionStorage.setItem("isLoggedIn", "true");
-            sessionStorage.setItem("usuario", datos.usuario);
+            sessionStorage.setItem("currentUser", datos.usuario);
             sessionStorage.setItem("rol", datos.rol);
+            sessionStorage.setItem("token", datos.token);
+            sessionStorage.setItem("debe_cambiar_contrasena", datos.debe_cambiar_contrasena);
+
+            // Si debe cambiar contraseña, redirigir a la pantalla de cambio
+            if (datos.debe_cambiar_contrasena) {
+                $("loader-status").textContent = "Debe cambiar su contraseña temporal…";
+                await esperar(600);
+                window.location.href = "cambiar-contrasena.html";
+                return;
+            }
 
             $("loader-status").textContent = "¡Bienvenida! Entrando al panel…";
             await esperar(600);
-            window.location.href = esAdmin ? "dashboard-admin.html" : "dashboard.html";
+            window.location.href = esAdmin ? "dashboard-admin.html" : "dashboard-docente.html";
         });
     }
 });

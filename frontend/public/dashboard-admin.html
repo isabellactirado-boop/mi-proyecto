@@ -87,7 +87,6 @@
 
 <!-- MENÚ LATERAL (SIDEBAR) -->
 <aside class="side">
-  <!-- Usuario arriba (reemplaza al bloque PRE-ICMA / Centro de misión) -->
   <div class="me">
     <div class="av" id="av">A</div>
     <div><strong id="uname">Administrador</strong><small id="urol">Panel de gestión</small></div>
@@ -168,32 +167,28 @@
   <!-- PESTAÑA 1: RESUMEN -->
   <section id="tab-resumen" class="tab-content active">
     <section class="kpis">
-      <div class="kpi" style="--c:var(--pink)"><svg><use href="#pl-pink"/></svg><span>Estudiantes activos</span><strong>128</strong><small>142 inscripciones activas</small></div>
-      <div class="kpi" style="--c:var(--teal)"><svg><use href="#pl-teal"/></svg><span>Recaudo de octubre</span><strong>$ 18.400.000</strong><small>+13% vs. septiembre</small></div>
-      <div class="kpi" style="--c:var(--orange)"><svg><use href="#pl-orange"/></svg><span>Saldo pendiente</span><strong>$ 4.850.000</strong><small>entre 41 inscripciones</small></div>
-      <div class="kpi bad" style="--c:var(--red)"><svg><use href="#pl-red"/></svg><span>Cuotas en mora</span><strong>12</strong><small>$ 1.620.000 vencidos</small></div>
-      <div class="kpi" style="--c:var(--violet)"><svg viewBox="0 0 70 60"><use href="#pl-ring"/></svg><span>Cupos disponibles</span><strong>37</strong><small>en 5 grupos abiertos</small></div>
+      <div class="kpi" style="--c:var(--pink)"><svg><use href="#pl-pink"/></svg><span>Estudiantes activos</span><strong id="kpi-estudiantes">—</strong><small id="kpi-estudiantes-sub">—</small></div>
+      <div class="kpi" style="--c:var(--teal)"><svg><use href="#pl-teal"/></svg><span>Recaudo de octubre</span><strong id="kpi-recaudo">—</strong><small id="kpi-recaudo-sub">—</small></div>
+      <div class="kpi" style="--c:var(--orange)"><svg><use href="#pl-orange"/></svg><span>Saldo pendiente</span><strong id="kpi-saldo">—</strong><small id="kpi-saldo-sub">—</small></div>
+      <div class="kpi bad" style="--c:var(--red)"><svg><use href="#pl-red"/></svg><span>Cuotas en mora</span><strong id="kpi-mora">—</strong><small id="kpi-mora-sub">—</small></div>
+      <div class="kpi" style="--c:var(--violet)"><svg viewBox="0 0 70 60"><use href="#pl-ring"/></svg><span>Cupos disponibles</span><strong id="kpi-cupos">—</strong><small id="kpi-cupos-sub">—</small></div>
     </section>
 
     <section class="grid">
       <div class="panel c4" style="--c:var(--yellow)">
         <h2><span>Misión de hoy</span></h2>
         <ul class="todo">
-          <li><span class="n r">12</span><div>Cuotas vencidas<small>Contactar a acudientes</small></div></li>
-          <li><span class="n y">8</span><div>Cuotas que vencen en 7 días<small>Enviar recordatorio</small></div></li>
-          <li><span class="n t">5</span><div>Estudiantes con inasistencias seguidas<small>3 o más clases sin asistir</small></div></li>
-          <li><span class="n y">1</span><div>Grupo sin docente asignado<small>Calendario B · Mié 6:00 pm</small></div></li>
+          <li><span class="n r" id="mision-vencidas">—</span><div>Cuotas vencidas<small id="mision-vencidas-sub">—</small></div></li>
+          <li><span class="n y" id="mision-por-vencer">—</span><div>Cuotas que vencen en 7 días<small id="mision-por-vencer-sub">—</small></div></li>
+          <li><span class="n t" id="mision-faltas">—</span><div>Estudiantes con inasistencias seguidas<small id="mision-faltas-sub">—</small></div></li>
+          <li><span class="n y" id="mision-sin-docente">—</span><div>Grupo sin docente asignado<small id="mision-sin-docente-sub">—</small></div></li>
         </ul>
       </div>
 
       <div class="panel c8" style="--c:var(--teal)">
         <h2><span>Ingresos por mes</span><a href="#" onclick="switchTab('pagos')">Ver pagos</a></h2>
-        <div class="bars">
-          <div class="bar"><em>$12,1M</em><i style="height:62%"></i><span>Jun</span></div>
-          <div class="bar"><em>$14,8M</em><i style="height:76%"></i><span>Jul</span></div>
-          <div class="bar"><em>$13,5M</em><i style="height:69%"></i><span>Ago</span></div>
-          <div class="bar"><em>$16,2M</em><i style="height:83%"></i><span>Sep</span></div>
-          <div class="bar cur"><em>$18,4M</em><i style="height:100%"></i><span>Oct</span></div>
+        <div class="bars" id="barras-ingresos">
+          <div class="bar"><em>—</em><i style="height:0%"></i><span>—</span></div>
         </div>
       </div>
     </section>
@@ -219,38 +214,6 @@
               <td>Pedro Ramírez</td>
               <td><span class="badge b-red">En mora</span></td>
               <td><button class="btn sm" onclick="generarInformePDF('Carlos Ramírez', '1098234123', 'Cal. A · Sábado AM', 'Pedro Ramírez', '3158901234', 'pedro.ramirez@gmail.com', 'En mora', '85%', '$ 150.000', '310 / 500')">Detalles</button></td>
-            </tr>
-            <tr>
-              <td>1098567890</td>
-              <td>María F. López</td>
-              <td>Cal. A · Domingo PM</td>
-              <td>Ana López</td>
-              <td><span class="badge b-warn">Pendiente</span></td>
-              <td><button class="btn sm" onclick="generarInformePDF('María F. López', '1098567890', 'Cal. A · Domingo PM', 'Ana López', '3104567890', 'ana.lopez@gmail.com', 'Pendiente', '92%', '$ 120.000', '335 / 500')">Detalles</button></td>
-            </tr>
-            <tr>
-              <td>1098112233</td>
-              <td>Juan J. Gómez</td>
-              <td>Cal. A · Sábado AM</td>
-              <td>Jorge Gómez</td>
-              <td><span class="badge b-warn">Pendiente</span></td>
-              <td><button class="btn sm" onclick="generarInformePDF('Juan J. Gómez', '1098112233', 'Cal. A · Sábado AM', 'Jorge Gómez', '3187654321', 'jorge.gomez@gmail.com', 'Pendiente', '78%', '$ 200.000', '290 / 500')">Detalles</button></td>
-            </tr>
-            <tr>
-              <td>1098445566</td>
-              <td>Laura Pardo</td>
-              <td>Cal. B · Miércoles PM</td>
-              <td>Martha Pardo</td>
-              <td><span class="badge b-ok">Al día</span></td>
-              <td><button class="btn sm" onclick="generarInformePDF('Laura Pardo', '1098445566', 'Cal. B · Miércoles PM', 'Martha Pardo', '3009876543', 'martha.pardo@gmail.com', 'Al día', '98%', '$ 0', '352 / 500')">Detalles</button></td>
-            </tr>
-            <tr>
-              <td>1098998877</td>
-              <td>Sofía Martínez</td>
-              <td>Vacacional · Lun a vie</td>
-              <td>Camilo Martínez</td>
-              <td><span class="badge b-ok">Al día</span></td>
-              <td><button class="btn sm" onclick="generarInformePDF('Sofía Martínez', '1098998877', 'Vacacional · Lun a vie', 'Camilo Martínez', '3123456789', 'camilo.martinez@gmail.com', 'Al día', '100%', '$ 0', '368 / 500')">Detalles</button></td>
             </tr>
           </tbody>
         </table>
@@ -285,9 +248,6 @@
               <label>Programa / Grupo Asignado</label>
               <select class="input-space">
                 <option>Calendario A · Sábado 8:00 am (96/100 cupos)</option>
-                <option>Calendario A · Domingo 2:00 pm (71/100 cupos)</option>
-                <option>Calendario B · Miércoles 6:00 pm (54/60 cupos)</option>
-                <option>Vacacional · Lunes a Viernes (22/40 cupos)</option>
               </select>
             </div>
           </div>
@@ -297,10 +257,7 @@
 
       <div class="panel c5 rk" style="--c:var(--orange)">
         <h2><span>Ocupación de grupos</span></h2>
-        <div class="grp"><div><span>Cal. A · Sábado 8:00 am</span><small>96 / 100</small></div><div class="meter"><i class="full" style="--p:96%"></i></div></div>
-        <div class="grp"><div><span>Cal. A · Domingo 2:00 pm</span><small>71 / 100</small></div><div class="meter"><i style="--p:71%"></i></div></div>
-        <div class="grp"><div><span>Cal. B · Miércoles 6:00 pm</span><small>54 / 60</small></div><div class="meter"><i class="warn" style="--p:90%"></i></div></div>
-        <div class="grp"><div><span>Vacacional · Lun a vie</span><small>22 / 40</small></div><div class="meter"><i style="--p:55%"></i></div></div>
+        <div class="grp"><div><span>Cal. A · Sábado 8:00 am</span><small>—</small></div><div class="meter"><i class="full" style="--p:0%"></i></div></div>
       </div>
     </div>
   </section>
@@ -314,10 +271,7 @@
           <table>
             <thead><tr><th>Estudiante</th><th>Cuota</th><th>Valor</th><th>Mora</th><th>Acción</th></tr></thead>
             <tbody>
-              <tr><td>Carlos Ramírez</td><td>2 de 4</td><td>$ 150.000</td><td><span class="badge b-red">18 días</span></td><td><button class="btn sm main">Registrar pago</button></td></tr>
-              <tr><td>María F. López</td><td>3 de 4</td><td>$ 120.000</td><td><span class="badge b-warn">10 días</span></td><td><button class="btn sm main">Registrar pago</button></td></tr>
-              <tr><td>Juan J. Gómez</td><td>1 de 3</td><td>$ 200.000</td><td><span class="badge b-warn">7 días</span></td><td><button class="btn sm main">Registrar pago</button></td></tr>
-              <tr><td>Laura Pardo</td><td>2 de 2</td><td>$ 175.000</td><td><span class="badge b-warn">4 días</span></td><td><button class="btn sm main">Registrar pago</button></td></tr>
+              <tr><td>—</td><td>—</td><td>—</td><td><span class="badge b-red">—</span></td><td><button class="btn sm main">Registrar pago</button></td></tr>
             </tbody>
           </table>
         </div>
@@ -356,20 +310,15 @@
     <div class="grid">
       <div class="panel c6" style="--c:var(--violet)">
         <h2><span>Último simulacro</span></h2>
-        <div class="score"><strong>312</strong><span>promedio global de 500</span><span class="up">+14 vs. anterior</span></div>
-        <div class="area" style="--c:var(--pink)"><svg><use href="#pl-pink"/></svg><span>Matemáticas</span><div class="meter"><i style="--p:58%"></i></div><b>58</b></div>
-        <div class="area" style="--c:var(--teal)"><svg><use href="#pl-teal"/></svg><span>Lectura crítica</span><div class="meter"><i style="--p:64%"></i></div><b>64</b></div>
-        <div class="area" style="--c:var(--orange)"><svg><use href="#pl-orange"/></svg><span>Sociales</span><div class="meter"><i style="--p:61%"></i></div><b>61</b></div>
-        <div class="area" style="--c:var(--violet)"><svg viewBox="0 0 70 60"><use href="#pl-ring"/></svg><span>Ciencias nat.</span><div class="meter"><i style="--p:59%"></i></div><b>59</b></div>
-        <div class="area" style="--c:var(--red)"><svg><use href="#pl-red"/></svg><span>Inglés</span><div class="meter"><i style="--p:52%"></i></div><b>52</b></div>
-        <small class="note">Inglés es el área con menor promedio: conviene reforzarla.</small>
+        <div class="score"><strong>—</strong><span>promedio global de 500</span><span class="up">—</span></div>
+        <div class="area" style="--c:var(--pink)"><svg><use href="#pl-pink"/></svg><span>Matemáticas</span><div class="meter"><i style="--p:0%"></i></div><b>—</b></div>
+        <small class="note">Datos pendientes de sincronización.</small>
       </div>
 
       <div class="panel c6" style="--c:var(--yellow)">
         <h2><span>Próximos Simulacros Programados</span></h2>
         <ul class="todo">
-          <li><span class="n y">1</span><div>Simulacro Diagnóstico Cal. A<small>Programado: Sábado 15 de Noviembre</small></div></li>
-          <li><span class="n t">2</span><div>Simulacro Final Intensivo<small>Programado: Domingo 29 de Noviembre</small></div></li>
+          <li><span class="n y">—</span><div>Simulacro Diagnóstico<small>Programado: —</small></div></li>
         </ul>
       </div>
     </div>
@@ -380,10 +329,7 @@
     <div class="panel c12" style="--c:var(--pink)">
       <h2><span>Programación de Clases y Profesores</span><button class="btn sm main">+ Asignar Docente</button></h2>
       <ul class="cls">
-        <li><svg><use href="#pl-pink"/></svg><time>Hoy 6:00 pm</time><div>Matemáticas · Cal. B<small>Prof. Andrea Ruiz · Google Meet</small></div><span class="badge b-warn live">Sin docente</span></li>
-        <li><svg><use href="#pl-teal"/></svg><time>Sáb 8:00 am</time><div>Lectura crítica · Cal. A<small>Prof. Daniel Castro · Google Meet</small></div></li>
-        <li><svg><use href="#pl-orange"/></svg><time>Sáb 10:00 am</time><div>Ciencias naturales · Cal. A<small>Prof. Sofía Mejía · Google Meet</small></div></li>
-        <li><svg><use href="#pl-red"/></svg><time>Dom 2:00 pm</time><div>Inglés · Cal. A<small>Prof. Camilo Torres · Google Meet</small></div></li>
+        <li><svg><use href="#pl-pink"/></svg><time>—</time><div>—<small>—</small></div><span class="badge b-warn live">—</span></li>
       </ul>
     </div>
   </section>
@@ -396,9 +342,7 @@
         <table>
           <thead><tr><th>Usuario / Email</th><th>Rol</th><th>Último Acceso</th><th>Estado</th></tr></thead>
           <tbody>
-            <tr><td id="table-user-email">Administrador</td><td>Superadmin</td><td>Hoy</td><td><span class="badge b-ok">Activo</span></td></tr>
-            <tr><td>coordinacion@preicma.edu.co</td><td>Coordinador</td><td>Ayer</td><td><span class="badge b-ok">Activo</span></td></tr>
-            <tr><td>docente.math@preicma.edu.co</td><td>Profesor</td><td>Hace 3 días</td><td><span class="badge b-ok">Activo</span></td></tr>
+            <tr><td id="table-user-email">—</td><td>—</td><td>—</td><td><span class="badge b-ok">—</span></td></tr>
           </tbody>
         </table>
       </div>
@@ -407,5 +351,6 @@
 </main>
 
 <script src="dashboard-admin.js"></script>
+<script src="api.js"></script>
 </body>
 </html>
