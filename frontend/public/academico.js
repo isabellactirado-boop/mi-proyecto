@@ -716,6 +716,146 @@
     });
   }
 
+  /* ---------- usuarios (solo el propietario) ---------- */
+
+  const ROLES = { propietario: "Propietario", administrador: "Admin", profesor: "Docente", estudiante: "Estudiante" };
+  let usuarios = [];
+
+  function fechaHora(texto) {        // "2026-11-02T21:15:00" -> "2 nov · 9:15 pm"
+    if (!texto) return "Nunca";
+    const f = new Date(texto);
+    if (isNaN(f)) return "—";
+    return f.getDate() + " " + MESES[f.getMonth()] + " · " + hora12(f.getHours() + ":" + String(f.getMinutes()).padStart(2, "0"));
+  }
+
+  function pintarUsuarios() {
+    const tabla = $("usuarios-tabla");
+    if (!tabla) return;
+    const rol = $("us-rol").value;
+    const q = $("us-buscar").value.trim().toLowerCase();
+    const yo = (sessionStorage.getItem("currentUser") || "").toLowerCase();
+    const lista = usuarios.filter((u) => (!rol || u.rol === rol) &&
+      (!q || u.nombre_usuario.toLowerCase().includes(q) ||
+        String(u.nombre_docente || u.nombre_estudiante || "").toLowerCase().includes(q)));
+    if (!lista.length) return filaVacia(tabla, 5, usuarios.length ? "Nadie coincide con ese filtro." : "Aún no hay usuarios.");
+
+    tabla.textContent = "";
+    lista.forEach((u) => {
+      const tr = el("tr");
+      const tdU = el("td");
+      tdU.appendChild(el("strong", null, u.nombre_docente || u.nombre_estudiante || u.nombre_usuario));
+      if (u.nombre_docente || u.nombre_estudiante) tdU.appendChild(el("small", "ac-sub", u.nombre_usuario));
+      tr.appendChild(tdU);
+      tr.appendChild(el("td", null, ROLES[u.rol] || u.rol));
+      tr.appendChild(el("td", null, fechaHora(u.fecha_ultima_sesion)));
+
+      const tdE = el("td");
+      tdE.appendChild(el("span", "badge " + (u.activo ? "b-ok" : "b-red"), u.activo ? "Activo" : "Desactivado"));
+      if (u.activo && u.debe_cambiar_contrasena) {
+        tdE.appendChild(document.createTextNode(" "));
+        tdE.appendChild(el("span", "badge b-warn", "Clave temporal"));
+      }
+      tr.appendChild(tdE);
+
+      const tdA = el("td", "ac-acciones");
+      const esYo = u.nombre_usuario.toLowerCase() === yo;
+      if (!esYo) {
+        const clave = el("button", "btn sm", "Nueva contraseña");
+        clave.type = "button";
+        clave.addEventListener("click", () => restablecer(u));
+        tdA.appendChild(clave);
+        const estado = el("button", "btn sm" + (u.activo ? " peligro" : ""), u.activo ? "Desactivar" : "Activar");
+        estado.type = "button";
+        estado.addEventListener("click", () => cambiarActivo(u, !u.activo));
+        tdA.appendChild(estado);
+      } else {
+        tdA.appendChild(el("span", "ac-sub", "Tu cuenta"));
+      }
+      tr.appendChild(tdA);
+      tabla.appendChild(tr);
+    });
+  }
+
+  async function cargarUsuarios() {
+    const tabla = $("usuarios-tabla");
+    if (!tabla) return;
+    try {
+      usuarios = await api("/usuarios");
+    } catch (e) {
+      if (!$("usuarios-tabla")) return;   // la pestaña se quito: no es propietario
+      return filaVacia(tabla, 5, e.message);
+    }
+    pintarUsuarios();
+  }
+
+  async function restablecer(u) {
+    const nombre = u.nombre_docente || u.nombre_estudiante || u.nombre_usuario;
+    if (!confirm("¿Generar una contraseña nueva para " + nombre + "?\nLa actual deja de funcionar y su sesión se cierra.")) return;
+    try {
+      const r = await api("/usuarios/" + u.id_usuario + "/restablecer-contrasena", "POST");
+      mostrarCuenta($("us-resultado"), r, "✓ Contraseña nueva para " + nombre);
+      $("us-resultado").scrollIntoView({ behavior: "smooth", block: "center" });
+      cargarUsuarios();
+    } catch (e) {
+      alert(e.message);
+    }
+  }
+
+  async function cambiarActivo(u, activo) {
+    const nombre = u.nombre_docente || u.nombre_estudiante || u.nombre_usuario;
+    const aviso = activo
+      ? "¿Activar de nuevo la cuenta de " + nombre + "?"
+      : "¿Desactivar la cuenta de " + nombre + "?\nNo podrá entrar" + (u.rol === "estudiante" ? " a la app" : " al panel") +
+        " y su sesión se cierra de inmediato. Sus datos no se borran.";
+    if (!confirm(aviso)) return;
+    try {
+      await api("/usuarios/" + u.id_usuario + "/activo", "PATCH", { activo });
+      cargarUsuarios();
+    } catch (e) {
+      alert(e.message);
+    }
+  }
+
+  function prepararUsuarios() {
+    if (!$("usuarios-tabla")) return;
+    $("us-rol").addEventListener("change", pintarUsuarios);
+    $("us-buscar").addEventListener("input", pintarUsuarios);
+
+    const form = $("form-usuario");
+    const esDocente = () => $("nu-rol").value === "profesor";
+    $("nu-rol").addEventListener("change", () => { $("nu-docente").hidden = !esDocente(); });
+    form.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      if (esDocente() && (!$("nu-nombre").value.trim() || !$("nu-doc").value.trim())) {
+        return mensaje(form, "Del docente faltan el nombre o el documento.", "error");
+      }
+      const boton = form.querySelector('button[type="submit"]');
+      boton.disabled = true;
+      mensaje(form, "Creando…");
+      try {
+        const r = await api("/usuarios", "POST", sinVacios(Object.assign(
+          { correo: $("nu-correo").value.trim(), rol: $("nu-rol").value },
+          esDocente() ? {
+            nombre_completo: $("nu-nombre").value.trim(),
+            tipo_documento: $("nu-tipo").value,
+            doc_identidad: $("nu-doc").value.trim(),
+            especialidad: $("nu-esp").value.trim(),
+            telefono: $("nu-tel").value.trim(),
+          } : {}
+        )));
+        form.reset();
+        $("nu-docente").hidden = false;
+        mensaje(form, "", "");
+        mostrarCuenta($("nu-resultado"), r, "✓ Cuenta creada (" + (ROLES[r.rol] || r.rol) + ")");
+        cargarUsuarios();
+      } catch (e) {
+        mensaje(form, e.message, "error");
+      } finally {
+        boton.disabled = false;
+      }
+    });
+  }
+
   /* ---------- clases ---------- */
 
   async function cargarClases() {
@@ -1095,6 +1235,8 @@
     prepararFormGrupo();
     prepararFormInscripcion();
     prepararFormCuenta();
+    prepararUsuarios();
+    cargarUsuarios();
     prepararFormPago();
     cargarCobros();
     cargarPagosRecientes();
@@ -1124,12 +1266,21 @@
         }
         return Promise.resolve({ estudiante: "Juan Pérez", saldo_restante: 400000 });
       }
+      if (/\/restablecer-contrasena$/.test(ruta)) return Promise.resolve({ usuario: "juan@correo.com", contrasena_temporal: "Rt8kPq2mWx", aviso: "Entrega esta contraseña a la persona. No se vuelve a mostrar y deberá cambiarla al entrar." });
+      if (ruta === "/usuarios") return Promise.resolve({ usuario: cuerpo.correo, rol: cuerpo.rol, contrasena_temporal: "Hm4tZq9pLa", aviso: "Entrega esta contraseña a la persona." });
+      if (/\/activo$/.test(ruta)) return Promise.resolve({ activo: cuerpo.activo });
       if (ruta === "/cuentas-estudiante") return Promise.resolve(Object.assign({ estudiante: "Juan Pérez" }, cuenta));
       return Promise.resolve({ registros: (cuerpo && cuerpo.registros || []).length });
     }
     if (ruta === "/grupos") return Promise.resolve([
       { id_grupo: 1, valor_total: 600000, nombre_curso: "Pre-ICFES Cal. B", nombre_grupo: "Grupo 2", dia_semana: "martes", hora_inicio: "18:00:00", hora_fin: "20:00:00", docente: "Laura Gómez", inscritos: 3, capacidad_maxima: 40 },
       { id_grupo: 2, valor_total: 750000, nombre_curso: "Pre-ICFES Cal. A", nombre_grupo: "Sábado AM", dia_semana: "sabado", hora_inicio: "08:00:00", hora_fin: "11:00:00", docente: null, inscritos: 40, capacidad_maxima: 40 },
+    ]);
+    if (ruta === "/usuarios") return Promise.resolve([
+      { id_usuario: 1, nombre_usuario: "dueno@prueba.com", rol: "propietario", activo: true, debe_cambiar_contrasena: false, fecha_ultima_sesion: new Date().toISOString() },
+      { id_usuario: 2, nombre_usuario: "laura@preicma.space", rol: "profesor", activo: true, debe_cambiar_contrasena: false, fecha_ultima_sesion: "2026-11-01T18:05:00", nombre_docente: "Laura Gómez" },
+      { id_usuario: 3, nombre_usuario: "juan@correo.com", rol: "estudiante", activo: true, debe_cambiar_contrasena: true, fecha_ultima_sesion: null, nombre_estudiante: "Juan Pérez" },
+      { id_usuario: 4, nombre_usuario: "ana@correo.com", rol: "estudiante", activo: false, debe_cambiar_contrasena: false, fecha_ultima_sesion: "2026-10-20T08:30:00", nombre_estudiante: "Ana Ruiz" },
     ]);
     if (ruta === "/cuotas-por-cobrar") return Promise.resolve([
       { id_inscripcion: 11, numero_cuota: 2, numero_cuotas: 3, fecha_vencimiento: dia(-8), dias_mora: 8, estudiante: "Juan Pérez", doc_identidad: "1002223334", curso: "Pre-ICFES Cal. B", pendiente: 200000, acudiente: "María Gómez", telefono_acudiente: "3001112233" },

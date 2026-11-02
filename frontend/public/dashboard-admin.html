@@ -421,17 +421,59 @@
     </div>
   </section>
 
-  <!-- PESTAÑA 7: USUARIOS -->
+  <!-- PESTAÑA 7: USUARIOS (solo el propietario) -->
   <section id="tab-usuarios" class="tab-content">
-    <div class="panel c12" style="--c:var(--pink)">
-      <h2><span>Usuarios del Sistema con Acceso</span><button class="btn sm main">+ Nuevo Usuario</button></h2>
-      <div class="tscroll">
-        <table>
-          <thead><tr><th>Usuario / Email</th><th>Rol</th><th>Último Acceso</th><th>Estado</th></tr></thead>
-          <tbody>
-            <tr><td id="table-user-email">—</td><td>—</td><td>—</td><td><span class="badge b-ok">—</span></td></tr>
-          </tbody>
-        </table>
+    <div class="grid">
+      <div class="panel c8" style="--c:var(--pink)">
+        <h2><span>Usuarios con acceso</span>
+          <span class="ac-filtros">
+            <select id="us-rol" class="input-space ac-select" aria-label="Filtrar por rol">
+              <option value="">Todos los roles</option>
+              <option value="estudiante">Estudiantes</option>
+              <option value="profesor">Docentes</option>
+              <option value="administrador">Administradores</option>
+              <option value="propietario">Propietario</option>
+            </select>
+            <input id="us-buscar" type="search" class="input-space ac-select" placeholder="Buscar correo o nombre" aria-label="Buscar usuario">
+          </span>
+        </h2>
+        <div class="tscroll">
+          <table>
+            <thead><tr><th>Usuario</th><th>Rol</th><th>Último acceso</th><th>Estado</th><th></th></tr></thead>
+            <tbody id="usuarios-tabla"><tr><td colspan="5" class="ac-vacio">Cargando…</td></tr></tbody>
+          </table>
+        </div>
+        <div class="ac-resultado" id="us-resultado" hidden></div>
+      </div>
+
+      <div class="panel c4" style="--c:var(--yellow)">
+        <h2><span>Nuevo usuario del panel</span></h2>
+        <form class="space-form ac-form" id="form-usuario">
+          <p class="note" style="margin:0 0 4px">Las cuentas de estudiantes se crean desde Inscripciones.</p>
+          <label for="nu-rol">Rol</label>
+          <select id="nu-rol" class="input-space">
+            <option value="profesor">Docente</option>
+            <option value="administrador">Administrador</option>
+          </select>
+          <label for="nu-correo">Correo</label>
+          <input id="nu-correo" type="email" class="input-space" maxlength="100" required>
+          <div id="nu-docente">
+            <label for="nu-nombre">Nombre completo</label>
+            <input id="nu-nombre" class="input-space" maxlength="120">
+            <div class="ac-dos">
+              <div><label for="nu-tipo">Documento</label>
+                <select id="nu-tipo" class="input-space"><option value="CC">CC</option><option value="CE">CE</option><option value="PPT">PPT</option><option value="OTRO">Otro</option></select></div>
+              <div><label for="nu-doc">Número</label><input id="nu-doc" class="input-space" maxlength="20"></div>
+            </div>
+            <label for="nu-esp">Especialidad (opcional)</label>
+            <input id="nu-esp" class="input-space" maxlength="80" placeholder="Ej: Matemáticas">
+            <label for="nu-tel">Teléfono (opcional)</label>
+            <input id="nu-tel" type="tel" class="input-space" maxlength="20">
+          </div>
+          <p class="ac-msg" role="status"></p>
+          <button class="btn main" type="submit">Crear usuario</button>
+        </form>
+        <div class="ac-resultado" id="nu-resultado" hidden></div>
       </div>
     </div>
   </section>
