@@ -113,7 +113,7 @@ function generarInformePDF(nombre, doc, grupo, acudiente, tel, email, estado, as
           <h1>PRE-ICMA | Reporte Docente</h1>
           <p>Seguimiento de Rendimiento y Asistencia</p>
         </div>
-        <span class="badge">ESTUDIANTE ACTIVO</span>
+        <span class="badge">${estado}</span>
       </div>
       <div class="section">
         <h2>Datos del Alumno</h2>
@@ -122,6 +122,7 @@ function generarInformePDF(nombre, doc, grupo, acudiente, tel, email, estado, as
           <div><strong>Documento:</strong> ${doc}</div>
           <div><strong>Grupo:</strong> ${grupo}</div>
           <div><strong>Asistencia:</strong> ${asistencia}</div>
+          <div><strong>Pagos:</strong> ${mora}</div>
         </div>
       </div>
       <div class="section">

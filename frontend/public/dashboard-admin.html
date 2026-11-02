@@ -206,15 +206,8 @@
           <thead>
             <tr><th>Documento</th><th>Nombre completo</th><th>Grupo / Jornada</th><th>Acudiente</th><th>Estado</th><th>Acciones</th></tr>
           </thead>
-          <tbody>
-            <tr>
-              <td>1098234123</td>
-              <td>Carlos Ramírez</td>
-              <td>Cal. A · Sábado AM</td>
-              <td>Pedro Ramírez</td>
-              <td><span class="badge b-red">En mora</span></td>
-              <td><button class="btn sm" onclick="generarInformePDF('Carlos Ramírez', '1098234123', 'Cal. A · Sábado AM', 'Pedro Ramírez', '3158901234', 'pedro.ramirez@gmail.com', 'En mora', '85%', '$ 150.000', '310 / 500')">Detalles</button></td>
-            </tr>
+          <tbody id="tbody-estudiantes">
+            <tr><td colspan="6">Cargando estudiantes…</td></tr>
           </tbody>
         </table>
       </div>

@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from auth import crear_token, usuario_actual
 from db import obtener_conexion
+from estudiantes import router as router_estudiantes
 from resumen import router as router_resumen
 from usuarios import router as router_usuarios
 
@@ -17,9 +18,7 @@ app = FastAPI()
 
 origenes = [
     "http://localhost:3000",
-    "https://mi-proyecto-preicma.vercel.app",  
-    "https://preicma.space",
-    "https://www.preicma.space",
+    "https://mi-proyecto-preicma.vercel.app",
 ]
 frontend_url = os.getenv("FRONTEND_URL")
 if frontend_url:
@@ -33,6 +32,7 @@ app.add_middleware(
 )
 
 app.include_router(router_resumen)
+app.include_router(router_estudiantes)
 app.include_router(router_usuarios)
 
 

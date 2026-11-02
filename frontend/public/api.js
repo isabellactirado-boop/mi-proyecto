@@ -210,6 +210,304 @@ async function cargarResumen() {
   }
 }
 
+/* ---------- Estudiantes ---------- */
+
+const ESTILOS_ESTUDIANTES = `
+.bx-gris{background:var(--moon,#e8e0cd);color:var(--muted,#6b6790)}
+.modal-est{position:fixed;inset:0;z-index:200;display:none;place-items:center;padding:16px;background:rgba(18,18,60,.65);overflow:auto}
+.modal-est.open{display:grid}
+.modal-est .caja{position:relative;width:100%;max-width:760px;max-height:92vh;overflow:auto;background:#fffdf8;border:3px solid var(--ink,#1a1240);border-radius:20px;padding:24px;box-shadow:8px 8px 0 var(--yellow,#ffd23f);color:var(--ink,#1a1240);font-family:'DM Sans',sans-serif}
+.modal-est h3{margin:0 0 2px;font-size:1.4rem}
+.modal-est h4{margin:18px 0 8px;font-size:.95rem;border-bottom:2px solid var(--ink,#1a1240);padding-bottom:4px}
+.modal-est .sub{margin:0 0 4px;color:var(--muted,#6b6790);font-size:.88rem}
+.modal-est .rejilla{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;font-size:.9rem}
+.modal-est .tarjeta{background:var(--cream,#f6f1e7);border:2px solid var(--ink,#1a1240);border-radius:12px;padding:10px 12px;margin-bottom:8px;font-size:.9rem}
+.modal-est table{width:100%;border-collapse:collapse;font-size:.85rem}
+.modal-est th,.modal-est td{text-align:left;padding:5px 6px;border-bottom:1px solid var(--line,#e2d9c4)}
+.modal-est .cierre{position:absolute;top:12px;right:14px;border:2px solid var(--ink,#1a1240);background:#fff;border-radius:99px;width:32px;height:32px;font-weight:700;cursor:pointer}
+.modal-est .acciones{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
+@media(max-width:560px){.modal-est .rejilla{grid-template-columns:1fr}}
+`;
+
+let ESTUDIANTES_CACHE = [];
+
+function inyectarEstilos() {
+  if (document.getElementById("estilos-estudiantes")) return;
+  const estilo = document.createElement("style");
+  estilo.id = "estilos-estudiantes";
+  estilo.textContent = ESTILOS_ESTUDIANTES;
+  document.head.appendChild(estilo);
+}
+
+function crear(etiqueta, texto, clase) {
+  const el = document.createElement(etiqueta);
+  if (texto !== undefined && texto !== null) el.textContent = texto;
+  if (clase) el.className = clase;
+  return el;
+}
+
+function vacio(valor) {
+  return valor === null || valor === undefined || valor === "" ? "—" : String(valor);
+}
+
+function fechaLarga(iso) {            // "2008-05-05" -> "5 may 2008"
+  if (!iso) return "—";
+  const p = String(iso).slice(0, 10).split("-");
+  return Number(p[2]) + " " + MESES_CORTOS[Number(p[1]) - 1].toLowerCase() + " " + p[0];
+}
+
+function grupoTexto(f) {
+  if (!f.nombre_grupo) return f.curso || "Sin grupo";
+  const dia = DIAS_CORTOS[f.dia_semana] || f.dia_semana || "";
+  return f.nombre_grupo + (dia ? " · " + dia + " " + hora12(f.hora_inicio) : "");
+}
+
+function etiquetaPago(f, puedeVerPagos) {
+  if (!f.id_inscripcion) return { texto: "Sin inscripción", clase: "badge bx-gris" };
+  if (f.estado_inscripcion !== "activa") {
+    return { texto: f.estado_inscripcion === "retirada" ? "Retirado" : "Finalizado", clase: "badge bx-gris" };
+  }
+  if (!puedeVerPagos) return { texto: "—", clase: "" };
+  if (f.estado_pago === "en_mora") return { texto: "En mora", clase: "badge b-red" };
+  return { texto: "Al día", clase: "badge b-ok" };
+}
+
+function pintarEstudiantes(datos) {
+  const cuerpo = document.getElementById("tbody-estudiantes");
+  if (!cuerpo) return;
+  cuerpo.textContent = "";
+  ESTUDIANTES_CACHE = datos.estudiantes;
+
+  if (datos.estudiantes.length === 0) {
+    const fila = crear("tr");
+    const celda = crear("td", "Todavía no hay estudiantes registrados.");
+    celda.colSpan = 6;
+    fila.appendChild(celda);
+    cuerpo.appendChild(fila);
+    return;
+  }
+
+  datos.estudiantes.forEach((f) => {
+    const fila = crear("tr");
+    fila.appendChild(crear("td", f.doc_identidad));
+    fila.appendChild(crear("td", f.nombre_completo));
+    fila.appendChild(crear("td", f.id_inscripcion ? grupoTexto(f) : "—"));
+    fila.appendChild(crear("td", vacio(f.acudiente)));
+
+    const estado = etiquetaPago(f, datos.puede_ver_pagos);
+    const celdaEstado = crear("td");
+    if (estado.clase) celdaEstado.appendChild(crear("span", estado.texto, estado.clase));
+    else celdaEstado.textContent = estado.texto;
+    fila.appendChild(celdaEstado);
+
+    const celdaAccion = crear("td");
+    const boton = crear("button", "Detalles", "btn sm");
+    boton.type = "button";
+    boton.addEventListener("click", () => abrirDetalleEstudiante(f.id_estudiante, boton));
+    celdaAccion.appendChild(boton);
+    fila.appendChild(celdaAccion);
+
+    cuerpo.appendChild(fila);
+  });
+}
+
+async function cargarEstudiantes() {
+  const cuerpo = document.getElementById("tbody-estudiantes");
+  if (!cuerpo) return;
+  try {
+    const datos = await pedirAlBackend("/estudiantes");
+    pintarEstudiantes(datos);
+  } catch (error) {
+    if (error.message === "Sesion vencida" || error.message === "Sin sesion") return;
+    cuerpo.textContent = "";
+    const fila = crear("tr");
+    const celda = crear("td", error.status === 403
+      ? "Tu cuenta no tiene permiso para ver estudiantes."
+      : "No se pudo cargar la lista. Si el servidor estaba dormido, intenta de nuevo en un minuto.");
+    celda.colSpan = 6;
+    fila.appendChild(celda);
+    cuerpo.appendChild(fila);
+    console.error("Estudiantes:", error);
+  }
+}
+
+/* ---------- Ventana de Detalles ---------- */
+
+function cerrarDetalle() {
+  const modal = document.getElementById("modal-estudiante");
+  if (modal) modal.classList.remove("open");
+}
+
+function fila2(etiqueta, valor) {
+  const d = crear("div");
+  d.appendChild(crear("strong", etiqueta + ": "));
+  d.appendChild(document.createTextNode(vacio(valor)));
+  return d;
+}
+
+function tablaSimple(encabezados, filas) {
+  const t = crear("table");
+  const cab = crear("tr");
+  encabezados.forEach((h) => cab.appendChild(crear("th", h)));
+  t.appendChild(cab);
+  filas.forEach((cols) => {
+    const f = crear("tr");
+    cols.forEach((c) => f.appendChild(crear("td", c)));
+    t.appendChild(f);
+  });
+  return t;
+}
+
+function pintarDetalle(d) {
+  let modal = document.getElementById("modal-estudiante");
+  if (!modal) {
+    modal = crear("div", null, "modal-est");
+    modal.id = "modal-estudiante";
+    modal.addEventListener("click", (e) => { if (e.target === modal) cerrarDetalle(); });
+    document.body.appendChild(modal);
+  }
+  modal.textContent = "";
+  const caja = crear("div", null, "caja");
+  caja.setAttribute("role", "dialog");
+  caja.setAttribute("aria-modal", "true");
+
+  const cierre = crear("button", "×", "cierre");
+  cierre.type = "button";
+  cierre.setAttribute("aria-label", "Cerrar");
+  cierre.addEventListener("click", cerrarDetalle);
+  caja.appendChild(cierre);
+
+  const e = d.estudiante;
+  caja.appendChild(crear("h3", e.nombre_completo));
+  caja.appendChild(crear("p", e.tipo_documento + " " + e.doc_identidad + " · matrícula " + e.estado_matricula, "sub"));
+
+  caja.appendChild(crear("h4", "Datos del estudiante"));
+  const rej = crear("div", null, "rejilla");
+  rej.appendChild(fila2("Teléfono", e.telefono_celular));
+  rej.appendChild(fila2("Correo", e.correo_electronico));
+  rej.appendChild(fila2("Nacimiento", fechaLarga(e.fecha_nacimiento)));
+  rej.appendChild(fila2("Dirección", e.direccion));
+  caja.appendChild(rej);
+
+  caja.appendChild(crear("h4", "Acudientes"));
+  if (d.acudientes.length === 0) {
+    caja.appendChild(crear("p", "Este estudiante no tiene acudiente registrado.", "sub"));
+  }
+  d.acudientes.forEach((a) => {
+    const t = crear("div", null, "tarjeta");
+    t.appendChild(crear("strong", a.nombre_completo + " "));
+    t.appendChild(crear("span", a.parentesco, "badge bx-gris"));
+    if (a.es_principal) { t.appendChild(document.createTextNode(" ")); t.appendChild(crear("span", "Principal", "badge b-warn")); }
+    const r = crear("div", null, "rejilla");
+    r.style.marginTop = "6px";
+    r.appendChild(fila2("Teléfono", a.telefono));
+    r.appendChild(fila2("Correo", a.correo_electronico));
+    t.appendChild(r);
+    caja.appendChild(t);
+  });
+
+  caja.appendChild(crear("h4", "Inscripciones"));
+  if (d.inscripciones.length === 0) {
+    caja.appendChild(crear("p", "Todavía no tiene inscripciones.", "sub"));
+  }
+  d.inscripciones.forEach((i) => {
+    const t = crear("div", null, "tarjeta");
+    const dia = DIAS_CORTOS[i.dia_semana] || i.dia_semana;
+    t.appendChild(crear("strong", i.curso + (i.nombre_grupo ? " · " + i.nombre_grupo : "") + " "));
+    t.appendChild(crear("span", i.estado, i.estado === "activa" ? "badge b-ok" : "badge bx-gris"));
+    const r = crear("div", null, "rejilla");
+    r.style.marginTop = "6px";
+    r.appendChild(fila2("Horario", i.hora_inicio ? dia + " " + hora12(i.hora_inicio) + " a " + hora12(i.hora_fin) : null));
+    r.appendChild(fila2("Docente", i.docente));
+    r.appendChild(fila2("Inscrito", fechaLarga(i.fecha_inscripcion)));
+    if (d.permisos.pagos) {
+      r.appendChild(fila2("Pago", i.modalidad_pago === "cuotas" ? i.numero_cuotas + " cuotas" : "Pago único"));
+      r.appendChild(fila2("Valor acordado", dinero(i.valor_acordado)));
+      if (i.pagos) {
+        r.appendChild(fila2("Pagado", dinero(i.pagos.total_pagado)));
+        r.appendChild(fila2("Saldo pendiente", dinero(i.pagos.saldo_pendiente)));
+        if (Number(i.pagos.valor_en_mora) > 0) {
+          r.appendChild(fila2("En mora", dinero(i.pagos.valor_en_mora) + " (" + i.pagos.cuotas_en_mora + " " + plural(Number(i.pagos.cuotas_en_mora), "cuota", "cuotas") + ")"));
+        }
+      }
+    }
+    t.appendChild(r);
+
+    if (d.permisos.asistencias && i.asistencia && Number(i.asistencia.total_clases) > 0) {
+      const a = i.asistencia;
+      t.appendChild(crear("div", "Asistencia: " + a.presentes + " presentes, " + a.ausentes + " ausentes, " +
+        a.tardes + " tardes, " + a.excusas + " excusas (" + String(a.porcentaje_asistencia).replace(".", ",") + "% presente)"))
+        .style.marginTop = "6px";
+    }
+    if (d.permisos.resultados && i.resultados.length > 0) {
+      const filas = i.resultados.map((x) => [x.simulacro || "Simulacro", fechaLarga(x.fecha_simulacro),
+        x.puntaje_global + " / 500", x.matematicas, x.lectura_critica, x.sociales_ciudadanas, x.ciencias_naturales, x.ingles]);
+      const caja2 = crear("div");
+      caja2.style.cssText = "margin-top:8px;overflow-x:auto";
+      caja2.appendChild(tablaSimple(["Simulacro", "Fecha", "Global", "Mat.", "Lect.", "Soc.", "Nat.", "Ing."], filas));
+      t.appendChild(caja2);
+    }
+    caja.appendChild(t);
+  });
+
+  const acciones = crear("div", null, "acciones");
+  const informe = crear("button", "Generar informe", "btn sm main");
+  informe.type = "button";
+  informe.addEventListener("click", () => generarInformeDesdeDetalle(d));
+  const cerrar = crear("button", "Cerrar", "btn sm");
+  cerrar.type = "button";
+  cerrar.addEventListener("click", cerrarDetalle);
+  acciones.appendChild(informe);
+  acciones.appendChild(cerrar);
+  caja.appendChild(acciones);
+
+  modal.appendChild(caja);
+  modal.classList.add("open");
+  cierre.focus();
+}
+
+async function abrirDetalleEstudiante(id, boton) {
+  if (boton) boton.disabled = true;
+  try {
+    const datos = await pedirAlBackend("/estudiantes/" + id);
+    pintarDetalle(datos);
+  } catch (error) {
+    if (error.message === "Sesion vencida" || error.message === "Sin sesion") return;
+    window.alert("No se pudo cargar el detalle del estudiante. Intenta de nuevo.");
+    console.error("Detalle:", error);
+  } finally {
+    if (boton) boton.disabled = false;
+  }
+}
+
+function escaparHtml(texto) {
+  return String(texto === null || texto === undefined ? "" : texto)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+// Usa el informe imprimible que ya existe en dashboard-admin.js
+function generarInformeDesdeDetalle(d) {
+  const e = d.estudiante;
+  const i = d.inscripciones.find((x) => x.estado === "activa") || d.inscripciones[0] || {};
+  const p = d.acudientes.find((a) => a.es_principal) || d.acudientes[0] || {};
+  const mejor = i.resultados && i.resultados.length ? i.resultados[0].puntaje_global + " / 500" : "Sin simulacros";
+  const asist = i.asistencia && Number(i.asistencia.total_clases) > 0
+    ? String(i.asistencia.porcentaje_asistencia).replace(".", ",") + "%" : "Sin clases registradas";
+  const estado = i.estado === "activa" ? "ESTUDIANTE ACTIVO" : (i.estado ? "INSCRIPCIÓN " + i.estado.toUpperCase() : "SIN INSCRIPCIÓN");
+  let pagos = "—";
+  if (d.permisos.pagos && i.pagos) {
+    pagos = Number(i.pagos.valor_en_mora) > 0 ? "En mora (" + dinero(i.pagos.valor_en_mora) + ")" : "Al día";
+  }
+  const grupo = i.nombre_grupo ? i.curso + " · " + i.nombre_grupo : (i.curso || "Sin grupo");
+  const limpio = (v) => escaparHtml(vacio(v));
+  generarInformePDF(limpio(e.nombre_completo), limpio(e.doc_identidad), limpio(grupo),
+    limpio(p.nombre_completo ? p.nombre_completo + " (" + p.parentesco + ")" : null),
+    limpio(p.telefono), limpio(p.correo_electronico), escaparHtml(estado), asist, escaparHtml(pagos), mejor);
+}
+
+document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") cerrarDetalle(); });
+
 /* ---------- quien soy y que puedo ver ---------- */
 
 async function cargarPerfil() {
@@ -232,6 +530,15 @@ async function cargarPerfil() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  inyectarEstilos();
   cargarPerfil();
   cargarResumen();
+  cargarEstudiantes();
+
+  // Al volver a la pestaña Estudiantes se refresca la lista
+  const cambiarPestana = window.switchTab;
+  window.switchTab = function (id) {
+    cambiarPestana(id);
+    if (id === "estudiantes") cargarEstudiantes();
+  };
 });
