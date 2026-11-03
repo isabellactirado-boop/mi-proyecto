@@ -108,33 +108,63 @@ function quitarAviso() {
 
 /* ---------- Resumen ---------- */
 
-function pintarBarras(ingresos) {
-  const contenedor = document.getElementById("barras-ingresos");
-  if (!contenedor) return;
-  contenedor.textContent = "";
+// Silueta de la parte iluminada de una luna de radio r con fraccion 0..1
+// (0 = luna nueva, 0,5 = cuarto, 1 = llena). La luz entra por la derecha.
+function caminoLuna(fraccion, r) {
+  const f = Math.max(0, Math.min(1, fraccion));
+  const k = (Math.abs(1 - 2 * f) * r).toFixed(2);
+  return "M" + r + " 0 A" + r + " " + r + " 0 0 1 " + r + " " + 2 * r +
+    " A" + k + " " + r + " 0 0 " + (f > 0.5 ? 1 : 0) + " " + r + " 0Z";
+}
 
+// Ingresos por mes como fases de la luna: el mejor mes es luna llena.
+function pintarLunas(ingresos) {
+  const contenedor = document.getElementById("lunas-ingresos");
+  if (!contenedor) return;
+  const fila = contenedor.querySelector(".lunas-fila");
+  const nota = contenedor.querySelector(".lunas-nota");
+  fila.textContent = "";
+
+  const NS = "http://www.w3.org/2000/svg";
+  const R = 26;
   const maximo = Math.max.apply(null, ingresos.map((i) => Number(i.total) || 0));
 
   ingresos.forEach((item, posicion) => {
     const total = Number(item.total) || 0;
-    const barra = document.createElement("div");
-    barra.className = "bar" + (posicion === ingresos.length - 1 ? " cur" : "");
+    const luna = document.createElement("div");
+    luna.className = "luna" + (posicion === ingresos.length - 1 ? " cur" : "");
+    luna.style.animationDelay = posicion * 0.08 + "s";
 
     const valor = document.createElement("em");
     valor.textContent = dineroCorto(total);
 
-    const relleno = document.createElement("i");
-    const altura = maximo > 0 ? Math.max((total / maximo) * 100, total > 0 ? 3 : 0) : 0;
-    relleno.style.height = altura + "%";
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("viewBox", "-4 -4 " + (2 * R + 8) + " " + (2 * R + 8));
+    svg.setAttribute("aria-hidden", "true");
+    const sombra = document.createElementNS(NS, "circle");
+    sombra.setAttribute("cx", R); sombra.setAttribute("cy", R); sombra.setAttribute("r", R);
+    sombra.setAttribute("class", "luna-sombra");
+    const luz = document.createElementNS(NS, "path");
+    luz.setAttribute("d", caminoLuna(maximo > 0 ? total / maximo : 0, R));
+    luz.setAttribute("class", "luna-luz");
+    svg.appendChild(sombra);
+    svg.appendChild(luz);
 
     const mes = document.createElement("span");
     mes.textContent = mesCorto(item.mes);
 
-    barra.appendChild(valor);
-    barra.appendChild(relleno);
-    barra.appendChild(mes);
-    contenedor.appendChild(barra);
+    luna.title = nombreMes(item.mes) + ": " + dinero(total);
+    luna.appendChild(valor);
+    luna.appendChild(svg);
+    luna.appendChild(mes);
+    fila.appendChild(luna);
   });
+
+  nota.textContent = maximo > 0
+    ? "Luna llena = el mejor mes (" + dineroCorto(maximo) + ")"
+    : "Todavía no hay pagos registrados";
+  contenedor.setAttribute("aria-label", "Ingresos por mes: " +
+    ingresos.map((i) => nombreMes(i.mes) + " " + dinero(Number(i.total) || 0)).join(", "));
 }
 
 function pintarResumen(d) {
@@ -191,7 +221,7 @@ function pintarResumen(d) {
     poner("mision-sin-docente-sub", detalle);
   }
 
-  pintarBarras(d.ingresos_por_mes);
+  pintarLunas(d.ingresos_por_mes);
 }
 
 async function cargarResumen() {
