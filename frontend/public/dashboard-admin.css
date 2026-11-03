@@ -87,11 +87,9 @@ main{padding:26px 34px 56px;min-width:0}
 /* KPIs (Estandarizado border-radius a 20px) */
 .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:18px;margin-bottom:24px}
 .kpi{position:relative;background:var(--cream);border:2.5px solid var(--ink);border-radius:20px;padding:16px 18px;box-shadow:5px 5px 0 var(--c,var(--yellow));min-height:118px;overflow:hidden}
-.kpi span{font-size:.8rem;color:var(--muted);font-weight:500;display:block;max-width:calc(100% - 44px)}
+.kpi span{font-size:.8rem;color:var(--muted);font-weight:500;display:block}
 .kpi strong{display:block;font-size:1.65rem;font-weight:800;margin-top:6px;letter-spacing:-.02em}
 .kpi small{font-size:.76rem;color:#4a4670;font-weight:600}
-.kpi svg{position:absolute;right:-6px;top:-6px;width:62px;height:62px;transform:rotate(14deg);transition:transform .4s}
-.kpi:hover svg{transform:rotate(34deg) scale(1.06)}
 .kpi.bad.activo strong{color:var(--bad)}
 
 
