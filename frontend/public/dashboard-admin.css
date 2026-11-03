@@ -97,8 +97,6 @@ main{padding:26px 34px 56px;min-width:0}
 .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
 .panel{background:var(--cream);border:2.5px solid var(--ink);border-radius:20px;padding:22px;min-width:0;box-shadow:5px 5px 0 var(--c,var(--violet))}
 .panel h2{font-size:1.1rem;font-weight:800;letter-spacing:-.01em;display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
-.panel h2 span::before{content:"";display:inline-block;width:15px;height:15px;margin-right:8px;vertical-align:-1px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-10 -10 20 20'%3E%3Cpath d='M0 -9Q0 0 9 0Q0 0 0 9Q0 0 -9 0Q0 0 0 -9Z' fill='%23ffd23f' stroke='%231a1240' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat}
-.panel h2 .ac-filtros::before{content:none}
 .panel h2 a{font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:700;color:var(--ink);text-underline-offset:3px}
 .panel h2 a:hover{color:var(--pink)}
 
@@ -364,7 +362,6 @@ a.btn{text-decoration:none;display:inline-block;text-align:center}
 .dk-quien small{color:var(--muted);font-size:.76rem}
 .dk-switch{display:flex;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:700;cursor:pointer}
 .dk-switch input{width:18px;height:18px;accent-color:var(--pink)}
-.panel h2 .dk-switch::before{content:none}
 .dk-res-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:24px;align-items:center;margin-bottom:18px;padding:16px;background:#fff;border:2px solid var(--ink);border-radius:16px}
 .dk-dato{color:var(--muted);font-size:.84rem;margin-top:4px}
 .dk-areas .area:last-child{margin-bottom:0}
