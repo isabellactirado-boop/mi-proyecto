@@ -122,7 +122,6 @@ function pintarLunas(ingresos) {
   const contenedor = document.getElementById("lunas-ingresos");
   if (!contenedor) return;
   const fila = contenedor.querySelector(".lunas-fila");
-  const nota = contenedor.querySelector(".lunas-nota");
   fila.textContent = "";
 
   const NS = "http://www.w3.org/2000/svg";
@@ -160,9 +159,6 @@ function pintarLunas(ingresos) {
     fila.appendChild(luna);
   });
 
-  nota.textContent = maximo > 0
-    ? "Luna llena = el mejor mes (" + dineroCorto(maximo) + ")"
-    : "Todavía no hay pagos registrados";
   contenedor.setAttribute("aria-label", "Ingresos por mes: " +
     ingresos.map((i) => nombreMes(i.mes) + " " + dinero(Number(i.total) || 0)).join(", "));
 }
