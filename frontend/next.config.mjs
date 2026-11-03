@@ -12,7 +12,8 @@ const nextConfig = {
   async redirects() {
     return [
       { source: "/", destination: "/index.html", permanent: false },
-    ];
+      // enlace corto para estudiantes (iPhone y cualquier navegador)
+      { source: "/app", destination: "/app/index.html", permanent: false },    ];
   },
 };
 

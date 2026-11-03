@@ -1,0 +1,16 @@
+{
+  "name": "PRE ICMA",
+  "short_name": "PRE ICMA",
+  "description": "App de estudiantes de PRE ICMA",
+  "lang": "es",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#140b4f",
+  "theme_color": "#140b4f",
+  "icons": [
+    { "src": "icono-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icono-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

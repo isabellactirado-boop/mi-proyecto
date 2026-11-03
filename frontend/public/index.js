@@ -331,11 +331,18 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             const datos = resultado.datos;
-            // Las cuentas de estudiante solo entran por la app movil
+            // Las cuentas de estudiante van a la app (version web, sirve en iPhone).
+            // Con contraseña temporal no se pasa la sesion: la app la pide y la cambia.
             if (datos.rol === "estudiante") {
-                ocultarCarga();
-                mostrar("Las cuentas de estudiante se usan en la app móvil.", "error");
-                boton.disabled = false;
+                if (!datos.debe_cambiar_contrasena) {
+                    try {
+                        localStorage.setItem("token", datos.token);
+                        localStorage.setItem("rol", datos.rol);
+                    } catch (e) { /* sin almacenamiento: la app pedira iniciar sesion */ }
+                }
+                $("loader-status").textContent = "¡Bienvenida! Abriendo tu app…";
+                await esperar(600);
+                window.location.href = "app/index.html";
                 return;
             }
 
