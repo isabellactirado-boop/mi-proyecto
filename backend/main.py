@@ -26,6 +26,8 @@ app = FastAPI()
 origenes = [
     "http://localhost:3000",
     "https://mi-proyecto-preicma.vercel.app",
+    # Direccion corta y gratis (en vez del dominio pago que fallo)
+    "https://preicma.vercel.app",
     # App movil (Capacitor): Android sirve la app desde https://localhost
     "https://localhost",
     "capacitor://localhost",
