@@ -83,14 +83,12 @@
         const st = document.createElement("style");
         st.id = "ji-estilos";
         st.textContent =
-            "#juego-icfes{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;" +
+            "#juego-icfes{position:fixed;inset:0;z-index:9999;" +
             "background:radial-gradient(ellipse at 50% 110%,#2a1f6e 0%,#140b4f 45%,#0b0630 100%);" +
             "animation:ji-entra .35s ease-out both;outline:none;overflow:hidden}" +
             "@keyframes ji-entra{from{opacity:0}to{opacity:1}}" +
-            ".ji-marco{position:relative;width:100%;height:100vh;height:100dvh;max-width:560px;overflow:hidden;background:#0b0630}" +
-            "@media (min-width:600px) and (min-height:520px){.ji-marco{height:calc(100vh - 32px);height:calc(100dvh - 32px);" +
-            "border:3px solid #1a1240;border-radius:24px;box-shadow:8px 8px 0 #ffd23f}}" +
-            ".ji-marco canvas{display:block;width:100%;height:100%;touch-action:none;cursor:crosshair;" +
+            ".ji-marco{position:absolute;inset:0;overflow:hidden;background:#0b0630}" +
+            ".ji-marco canvas{position:absolute;left:0;top:0;display:block;width:100%;height:100%;touch-action:none;cursor:crosshair;" +
             "-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}" +
             ".ji-botones{position:absolute;top:12px;right:12px;display:flex;gap:8px}" +
             ".ji-btn{width:36px;height:36px;border-radius:50%;border:2.5px solid #1a1240;background:#f6f1e7;color:#1a1240;" +
@@ -172,6 +170,9 @@
         btnSonido.classList.toggle("off", silencio);
 
         let W = 0, H = 0;
+        // En pantallas anchas (escritorio) el campo es mas grande: se compensa
+        // con mas asteroides y un cohete mas rapido para que se sienta igual.
+        const amplitud = () => Math.max(1, W / 520);
         let estado = "inicio";          // inicio | jugando | pausa | fin | victoria
         let antesDePausa = "jugando";
         let reloj = 0, ultimo = 0, cuadroId = 0;
@@ -211,7 +212,7 @@
 
         function crearFondo() {
             estrellas = [];
-            for (let i = 0; i < 90; i++) {
+            for (let i = 0, n = Math.round(90 * amplitud()); i < n; i++) {
                 const capaN = i % 3;    // 0 lejos, 2 cerca
                 estrellas.push({
                     x: azar(0, 1), y: azar(0, 1),
@@ -270,7 +271,7 @@
             // Algunos van directo a donde esta el cohete: quedarse quieto no sirve
             let vx = azar(-34, 34);
             if (Math.random() < 0.3 + 0.25 * nivel) {
-                vx = limitar((jugador.x - x) / ((jugador.y + r) / vy), -150, 150);
+                vx = limitar((jugador.x - x) / ((jugador.y + r) / vy), -150 * amplitud(), 150 * amplitud());
             }
             crearAsteroide(x, -r - 6, r, vx, vy);
         }
@@ -278,11 +279,11 @@
             const faltan = MATERIAS.filter((m) => atrapadas.indexOf(m.sigla) === -1);
             const lista = faltan.length && Math.random() < 0.75 ? faltan : MATERIAS;
             const m = lista[Math.floor(azar(0, lista.length))];
-            materias.push({ x: azar(30, W - 30), y: -24, r: 18, m: m, fase: azar(0, 6) });
+            materias.push({ x: limitar(jugador.x + azar(-380, 380), 30, W - 30), y: -24, r: 18, m: m, fase: azar(0, 6) });
         }
         function lanzarPoder() {
             const tipo = escudo ? "triple" : (Math.random() < 0.5 ? "escudo" : "triple");
-            poderes.push({ x: azar(30, W - 30), y: -24, r: 16, tipo: tipo, fase: azar(0, 6) });
+            poderes.push({ x: limitar(jugador.x + azar(-380, 380), 30, W - 30), y: -24, r: 16, tipo: tipo, fase: azar(0, 6) });
         }
         function chispas(x, y, color, cuantas, fuerza) {
             const n = menosMovimiento ? Math.ceil(cuantas / 3) : cuantas;
@@ -367,7 +368,7 @@
             // Movimiento del cohete
             const xAntes = jugador.x;
             if (teclas.izq || teclas.der) {
-                jugador.x += ((teclas.der ? 1 : 0) - (teclas.izq ? 1 : 0)) * 470 * dt;
+                jugador.x += ((teclas.der ? 1 : 0) - (teclas.izq ? 1 : 0)) * 470 * (1 + (amplitud() - 1) * 0.5) * dt;
                 objetivoX = null;
             } else if (objetivoX !== null) {
                 jugador.x += (objetivoX - jugador.x) * Math.min(1, dt * 16);
@@ -396,7 +397,7 @@
             tAsteroide -= dt;
             if (tAsteroide <= 0) {
                 lanzarAsteroide(nivel);
-                tAsteroide = mezcla(0.85, 0.36, nivel) * azar(0.7, 1.3);
+                tAsteroide = mezcla(0.85, 0.36, nivel) * azar(0.7, 1.3) / amplitud();
             }
             tMateria -= dt;
             if (tMateria <= 0) { lanzarMateria(); tMateria = azar(2.2, 3.6); }
