@@ -125,9 +125,13 @@ main{padding:26px 34px 56px;min-width:0}
 .todo .n.r{background:var(--red)} .todo .n.y{background:var(--yellow);color:var(--ink)} .todo .n.t{background:var(--teal);color:var(--ink)}
 .todo small{display:block;color:#555175;font-weight:500;font-size:.78rem}
 
-/* Ingresos por mes: fases de la luna (luna llena = el mejor mes) */
-.lunas{position:relative;display:flex;flex-direction:column;justify-content:center;min-height:220px;background:var(--space);border:2.5px solid var(--ink);border-radius:16px;padding:18px 12px 12px;overflow:hidden;
-  background-image:radial-gradient(1.2px 1.2px at 12% 22%,#fff8,transparent),radial-gradient(1px 1px at 38% 80%,#fff8,transparent),radial-gradient(1.4px 1.4px at 64% 14%,#fff8,transparent),radial-gradient(1px 1px at 88% 70%,#fff8,transparent),radial-gradient(1px 1px at 52% 46%,#fff5,transparent)}
+/* Ingresos por mes: fases de la luna. Toda la tarjeta es cielo, sin caja crema alrededor */
+.panel-cielo{display:flex;flex-direction:column;background-color:var(--space);border-color:#4a3aa8;color:#fff;
+  background-image:radial-gradient(1.2px 1.2px at 12% 30%,#fff8,transparent),radial-gradient(1px 1px at 38% 84%,#fff8,transparent),radial-gradient(1.4px 1.4px at 64% 18%,#fff8,transparent),radial-gradient(1px 1px at 88% 72%,#fff8,transparent),radial-gradient(1px 1px at 52% 52%,#fff5,transparent),radial-gradient(1.2px 1.2px at 22% 66%,#fff6,transparent),radial-gradient(1px 1px at 76% 40%,#fff6,transparent)}
+.panel-cielo h2{color:#fff}
+.panel-cielo h2 a{color:#c9baff}
+.panel-cielo h2 a:hover{color:var(--yellow)}
+.lunas{position:relative;flex:1;display:flex;flex-direction:column;justify-content:center;min-height:200px;padding:6px 0 4px}
 .lunas-fila{display:flex;justify-content:space-around;align-items:flex-start;gap:6px}
 .luna{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;max-width:90px;animation:sale .6s cubic-bezier(.2,.8,.2,1) both}
 .luna svg{width:100%;max-width:64px;aspect-ratio:1;overflow:visible}
