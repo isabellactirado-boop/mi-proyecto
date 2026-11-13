@@ -471,6 +471,9 @@
       if ($("in-cuenta").checked && !$("in-correo").value.trim()) {
         return mensaje(form, "Para crear la cuenta de la app escribe el correo del estudiante, o desmarca la casilla.", "error");
       }
+      if (!$("in-autoriza").checked) {
+        return mensaje(form, "Marca la casilla de autorización de datos. Sin ella no se puede guardar la inscripción.", "error");
+      }
       const boton = form.querySelector('button[type="submit"]');
       boton.disabled = true;
       mensaje(form, "Inscribiendo…");
@@ -495,6 +498,7 @@
           numero_cuotas: Number($("in-cuotas").value),
           primera_cuota: $("in-primera").value,
           crear_cuenta: $("in-cuenta").checked,
+          autoriza_datos: $("in-autoriza").checked,
         }));
         const nombre = $("in-nombre").value.trim();
         form.reset();

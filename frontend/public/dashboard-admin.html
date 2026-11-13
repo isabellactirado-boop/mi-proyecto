@@ -285,7 +285,7 @@
             <div><label for="in-correo">Correo</label><input id="in-correo" type="email" class="input-space" maxlength="100" placeholder="Para la app de estudiantes"></div>
           </div>
 
-          <p class="ac-paso">2 · Acudiente <small>Opcional. Recomendado para menores de edad.</small></p>
+          <p class="ac-paso">2 · Acudiente <small>Obligatorio si es menor de edad (es quien autoriza sus datos).</small></p>
           <div class="form-grid">
             <div><label for="ac-nombre">Nombre del acudiente</label><input id="ac-nombre" class="input-space" maxlength="120" placeholder="Ej: María Gómez"></div>
             <div><label for="ac-parentesco">Parentesco</label>
@@ -305,6 +305,8 @@
           <p class="ac-plan" id="in-plan"></p>
 
           <label class="ac-check"><input type="checkbox" id="in-cuenta" checked> Crear su cuenta para la app de estudiantes (necesita correo)</label>
+          <label class="ac-check ac-legal"><input type="checkbox" id="in-autoriza" required>
+            <span>El estudiante, o su acudiente si es menor de edad, autorizó el tratamiento de sus datos según la <a href="politica-datos.html" target="_blank" rel="noopener">política de tratamiento de datos</a>.</span></label>
           <p class="ac-msg" role="status"></p>
           <button class="btn main" type="submit">Inscribir estudiante</button>
         </form>

@@ -34,6 +34,8 @@ button{font:inherit;color:inherit}
 .login h1{color:#fff;font-size:2rem;line-height:1.08;font-weight:800;margin:8px 0 24px}
 .login h1 em{font-style:normal;color:var(--yellow)}
 .login .sub{color:var(--soft);margin:-12px 0 22px;line-height:1.45}
+.login .legal{color:var(--soft);font-size:.82rem;line-height:1.45;margin:16px 4px 0;text-align:center}
+.login .legal a{color:inherit;font-weight:700;text-underline-offset:3px}
 .card{background:var(--cream);border:2.5px solid var(--ink);border-radius:20px;padding:18px;box-shadow:5px 5px 0 var(--c,var(--violet))}
 form.card{display:flex;flex-direction:column;gap:6px}
 label{font-weight:700;font-size:.85rem;margin-top:8px}

@@ -126,6 +126,15 @@ class NuevaInscripcion(BaseModel):
     numero_cuotas: int = Field(default=1, ge=1, le=12)
     primera_cuota: date | None = None                            # vacio = hoy
     crear_cuenta: bool = False
+    # Ley 1581: quien inscribe confirma que el titular (o su acudiente si es
+    # menor) autorizo el tratamiento de datos. Sin esto no se guarda nada.
+    autoriza_datos: bool = False
+
+
+def _es_menor(nacimiento: date) -> bool:
+    hoy = _hoy()
+    edad = hoy.year - nacimiento.year - ((hoy.month, hoy.day) < (nacimiento.month, nacimiento.day))
+    return edad < 18
 
 
 def _limpio(texto: str | None) -> str | None:
@@ -140,6 +149,9 @@ def inscribir(datos: NuevaInscripcion, usuario: dict = Depends(requiere_permiso(
         raise HTTPException(status_code=400, detail="El correo del estudiante no es valido")
     if datos.crear_cuenta and not correo:
         raise HTTPException(status_code=400, detail="Para crear la cuenta de la app hace falta el correo del estudiante")
+    if not datos.autoriza_datos:
+        raise HTTPException(status_code=400, detail="Falta la autorizacion de tratamiento de datos personales")
+    menor = _es_menor(e.fecha_nacimiento)
 
     try:
         with obtener_conexion() as conexion:
@@ -181,6 +193,23 @@ def inscribir(datos: NuevaInscripcion, usuario: dict = Depends(requiere_permiso(
                         "ON CONFLICT (id_estudiante, id_acudiente) DO UPDATE SET parentesco = EXCLUDED.parentesco",
                         (id_estudiante, id_acudiente, a.parentesco.strip(), id_estudiante),
                     )
+
+                # Un menor de edad no puede autorizar solo: la da su acudiente,
+                # que debe quedar registrado (nuevo o de una inscripcion anterior).
+                if menor and not datos.acudiente:
+                    cursor.execute("SELECT 1 FROM estudiante_acudiente WHERE id_estudiante = %s LIMIT 1", (id_estudiante,))
+                    if not cursor.fetchone():
+                        raise HTTPException(
+                            status_code=400,
+                            detail="El estudiante es menor de edad: registra a su acudiente, que es quien autoriza el uso de sus datos",
+                        )
+
+                # Prueba de la autorizacion: cuando y quien la dio
+                cursor.execute(
+                    "UPDATE estudiantes SET autorizacion_datos_fecha = NOW(), autorizacion_datos_por = %s "
+                    "WHERE id_estudiante = %s",
+                    ("acudiente" if menor else "estudiante", id_estudiante),
+                )
 
                 cursor.execute(
                     "SELECT g.id_curso, c.valor_total, c.nombre_curso, g.nombre_grupo "
