@@ -248,9 +248,6 @@ tr:last-child td{border-bottom:0}
 .ac-plan:empty{display:none}
 .ac-check{display:flex!important;align-items:center;gap:8px;margin-top:14px!important;font-weight:600!important;cursor:pointer}
 .ac-check input{width:18px;height:18px;accent-color:var(--pink)}
-.ac-legal{align-items:flex-start!important;font-weight:500!important;font-size:.9rem;line-height:1.4}
-.ac-legal input{flex:none;margin-top:1px}
-.ac-legal a{color:inherit;font-weight:700;text-underline-offset:3px}
 .ac-resultado{margin-top:14px;padding:14px;border-radius:14px;background:var(--ok-bg);border:2px solid var(--ok);display:flex;flex-direction:column;gap:6px;font-size:.88rem}
 .ac-resultado small{color:var(--muted)}
 .ac-clave{display:flex;align-items:center;gap:10px}
