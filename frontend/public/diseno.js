@@ -5,6 +5,8 @@
    - Los numeros de las tarjetas cuentan hacia arriba al llegar.
    - "Pendientes de hoy": los que estan en 0 se ven apagados.
    - La tarjeta de mora se marca solo si hay cuotas en mora.
+   - En celular las tablas se ven como tarjetas: cada celda lleva el
+     titulo de su columna (data-label) y la pestaña activa queda a la vista.
    ===================================================================== */
 
 (function () {
@@ -99,7 +101,46 @@
     document.querySelectorAll(".solo-dueno").forEach((el) => { el.hidden = false; });
   }
 
+  /* ---------- celular ---------- */
+
+  // Copia el titulo de cada columna a sus celdas. El CSS de celular lo muestra
+  // encima del dato cuando la fila se convierte en tarjeta.
+  function etiquetarTablas() {
+    document.querySelectorAll("main .tscroll table").forEach((tabla) => {
+      const cuerpo = tabla.tBodies[0];
+      if (!cuerpo) return;
+      const titulos = Array.from(tabla.querySelectorAll("thead th")).map((th) => th.textContent.trim());
+      const marcar = () => {
+        Array.from(cuerpo.rows).forEach((fila) => {
+          if (fila.cells.length !== titulos.length) return;   // fila de aviso (colspan)
+          Array.from(fila.cells).forEach((celda, i) => {
+            if (titulos[i]) celda.dataset.label = titulos[i];
+          });
+        });
+      };
+      marcar();
+      new MutationObserver(marcar).observe(cuerpo, { childList: true });
+    });
+  }
+
+  // Las pestañas se deslizan de lado en celular: la elegida se centra.
+  function centrarPestana() {
+    const menu = document.querySelector(".nav");
+    if (!menu) return;
+    // Observa la clase "on" y no el clic: tambien se cambia de pestaña con los
+    // botones del saludo ("Registrar pago", "Nueva inscripción").
+    new MutationObserver(() => {
+      const enlace = menu.querySelector("a.on");
+      if (!enlace || menu.scrollWidth <= menu.clientWidth) return;
+      const caja = menu.getBoundingClientRect();
+      const pos = enlace.getBoundingClientRect();
+      menu.scrollLeft += pos.left - caja.left - (caja.width - pos.width) / 2;
+    }).observe(menu, { attributes: true, attributeFilter: ["class"], subtree: true });
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
+    etiquetarTablas();
+    centrarPestana();
     accesosDueno();
     saludar();
     observarKpis();

@@ -160,6 +160,36 @@
     .modal-card{padding:28px 20px 22px}
   }
 
+  /* ---------- celular: encabezado corto y el formulario a la vista ---------- */
+  @media (max-width:700px){
+    body{grid-template-rows:auto 1fr}
+    .side{min-height:0;padding:18px 20px 20px;justify-content:flex-start}
+    .brand{font-size:1rem}
+    .hero{margin-top:12px;max-width:calc(100% - 84px)}
+    .hero h2{font-size:1.45rem;line-height:1.08}
+    .moon,.shoot,.sp2,.sp3{display:none}
+    .sp1{top:14px;right:20px}
+    .mascot{width:64px;height:64px;right:20px;bottom:18px;border-width:3px;border-radius:16px;box-shadow:3px 3px 0 var(--yellow)}
+    .form-side{padding:26px 20px 32px;align-content:start}
+    .hint{position:static;transform:none;justify-self:center;margin-bottom:18px;font-size:.78rem;animation:none;box-shadow:none}
+    .hint.off{display:none}
+    .box h1{font-size:1.6rem}
+    .box .sub{margin-bottom:22px}
+    .btn{box-shadow:none}
+    .modal{padding:14px}
+    .modal-card{padding:22px 16px 18px;border-width:2px;border-radius:20px;box-shadow:none}
+    .modal-card h3{font-size:1.4rem}
+    .modal-card p{margin-bottom:16px}
+    .modal-orbit{display:none}
+    .roles{gap:10px}
+    .rol-card{border-width:2px;border-radius:14px;box-shadow:none;padding:12px;grid-template-columns:46px 1fr}
+    .rol-card:hover{transform:none!important;box-shadow:none}
+    .rol-card:hover .rol-ico{transform:none}
+    .rol-ico{width:46px;height:46px}
+    .rol-ico svg{width:28px;height:28px}
+    .rol-card strong{font-size:1.05rem}
+  }
+
   @media (prefers-reduced-motion:reduce){
     .side *,.box,.box > *,.hint,.btn::after,.shoot{animation:none!important}
     .hero .w{opacity:1;transform:none}

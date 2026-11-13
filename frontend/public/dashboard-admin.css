@@ -400,3 +400,154 @@ tr.dk-mio td:first-child{box-shadow:inset 4px 0 0 var(--yellow)}
   .moonbox{height:78px}.moonbox .disk{top:14px}.logout{top:34px}
 }
 @media (max-width:900px){.nav .nav-sep{display:none!important}}
+
+/* =====================================================================
+   CELULAR (hasta 700px): version tranquila del panel.
+   Misma informacion, menos adornos: sin estrellas de fondo, sin sombras
+   de colores, sin cajas dentro de cajas y con las tablas como tarjetas
+   (diseno.js le pone a cada celda el titulo de su columna).
+   No cambia nada en computador ni en tablet.
+   ===================================================================== */
+@media (max-width:700px){
+  body{background-image:none;grid-template-rows:auto 1fr}
+
+  /* barra de arriba: usuario + salir, y debajo las pestañas */
+  .side{position:sticky;top:0;z-index:20;padding:10px 14px 0;gap:0;border-bottom-width:2px}
+  .me{gap:10px}
+  .av{width:34px;height:34px;font-size:.9rem;border-width:2px;box-shadow:none}
+  .me strong{font-size:.95rem;max-width:52vw}
+  .me small{display:none}
+  .logout{font-size:.82rem;padding:8px 0 8px 8px}
+  .nav{gap:6px;width:calc(100% + 28px);margin:8px -14px 0;padding:0 14px 10px;scrollbar-width:none}
+  .nav::-webkit-scrollbar{display:none}
+  .nav a{gap:0;padding:7px 13px;border-radius:99px;font-size:.84rem;background:rgba(255,255,255,.08)}
+  .nav a svg,.nav .tag{display:none}
+
+  /* saludo */
+  main{padding:16px 14px 40px}
+  .hero{padding-top:20px;margin-bottom:16px;gap:0}
+  .hero-txt{flex:1;min-width:0}
+  .hero h1{font-size:1.4rem;line-height:1.15}
+  .hero p{font-size:.86rem;margin:4px 0 0}
+  .actions{gap:10px;margin-top:14px}
+  .actions .btn{flex:1;padding:11px 8px;font-size:.88rem;white-space:nowrap;box-shadow:none}
+
+  /* tarjetas de cifras: dos por fila, sin planeta ni sombra de color */
+  .kpis{grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+  .kpi{min-height:0;padding:11px 13px 12px;border-width:2px;border-radius:14px;box-shadow:none;border-bottom:5px solid var(--c,var(--yellow))}
+  .kpi:hover{transform:none;box-shadow:none}
+  .kpi svg{display:none}
+  .kpi span{max-width:none;font-size:.76rem}
+  .kpi strong{font-size:1.25rem;margin-top:3px}
+  .kpi small{font-size:.72rem}
+  .kpi:last-child:nth-child(odd){grid-column:1 / -1}
+
+  /* paneles */
+  .grid{gap:14px}
+  .panel{padding:14px;border-width:2px;border-radius:16px;box-shadow:none}
+  .panel h2{font-size:1rem;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+  .panel h2 span::before{content:none}
+  .panel h2 > .input-space,.panel h2 > .ac-filtros{flex:1 1 100%}
+  .ac-filtros{gap:8px}
+  .ac-filtros > .input-space{flex:1 1 100%}
+  .ac-filtros > .btn{flex:1 1 0;white-space:nowrap}
+  .ac-select{width:100%;max-width:none}
+  .note{font-size:.8rem}
+
+  /* formularios: sin la caja blanca interior; 16px evita el zoom de iPhone */
+  .space-form{padding:0;border:0;border-radius:0;background:none}
+  .input-space{font-size:16px;padding:11px 12px;background:#fff}
+  .input-space{min-width:0;max-width:100%}
+  .form-grid{grid-template-columns:minmax(0,1fr);gap:10px}
+  .ac-dos,.ed-rejilla{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .ac-dos > div,.inf-filtros > div{min-width:0}
+  .ac-dos input[type=date],.ac-dos input[type=time]{padding-left:8px;padding-right:6px}
+  .ac-form .btn{width:100%;padding:13px;box-shadow:none}
+  .btn.sm{box-shadow:none}
+  .ac-paso{margin-top:16px;padding-top:12px}
+  .ac-paso small{display:block;margin:2px 0 0}
+  .comprobante-box{padding:10px}
+
+  /* listas y barras */
+  .todo{gap:8px}
+  .todo li{padding:9px 10px;border-width:1.5px;border-radius:12px;font-size:.88rem}
+  .todo li:hover{transform:none}
+  .todo .n{min-width:32px;height:32px;font-size:.9rem}
+  .lunas{min-height:0;padding:10px 0 4px}
+  .luna em{font-size:.7rem}
+  .luna span{font-size:.74rem}
+  .area{grid-template-columns:22px 92px 1fr 28px;gap:8px}
+
+  /* tablas -> una tarjeta por fila, con el titulo de la columna encima */
+  main .tscroll{overflow:visible}
+  main .tscroll table,main .tscroll tbody{display:block}
+  main .tscroll thead{display:none}
+  main .tscroll tr{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;align-items:start;padding:11px 12px;margin-bottom:8px;background:#fff;border:1.5px solid var(--line);border-radius:12px}
+  main .tscroll tr:last-child{margin-bottom:0}
+  main .tscroll td{display:block;min-width:0;padding:0;border:0;font-size:.88rem;white-space:normal;overflow-wrap:anywhere}
+  main .tscroll td[data-label]::before{content:attr(data-label);display:block;margin-bottom:1px;font-size:.66rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+  main .tscroll td:first-child,main .tscroll td:not([data-label]){grid-column:1 / -1}
+  main .tscroll td:first-child{font-weight:700;font-size:.95rem}
+  main .tscroll td:first-child::before{display:none}
+  main .tscroll td:empty{display:none}
+  main .tscroll td[data-label="Acciones"]{grid-column:1 / -1}
+  main .tscroll td[data-label="Acciones"]::before{display:none}
+  main .tscroll td.ac-vacio,main .tscroll td[colspan]{font-weight:500;font-size:.86rem;color:var(--muted);text-align:left;padding:2px 0}
+  main .tscroll td.ac-acciones{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}
+  main .tscroll .btn.sm{padding:8px 14px;font-size:.82rem;box-shadow:none}
+  main .tscroll .ac-tema{max-width:none}
+  main .tscroll .ac-hoy{background:#fff7d6;border-color:var(--yellow)}
+  main .tscroll .ac-hoy td{background:none}
+  /* estudiantes: el nombre va de titulo y el documento debajo */
+  main #tablaEstudiantes td:nth-child(2){order:-1;grid-column:1 / -1;font-weight:700;font-size:.95rem}
+  main #tablaEstudiantes td:nth-child(2)::before{display:none}
+  main #tablaEstudiantes td[data-label]:first-child{grid-column:auto;font-weight:400;font-size:.88rem}
+  main #tablaEstudiantes td[data-label]:first-child::before{display:block}
+  /* notas del simulacro: tres casillas por fila */
+  main .tscroll .ac-res tr{grid-template-columns:repeat(3,1fr);gap:8px}
+  main .tscroll .ac-res td:nth-child(2){grid-column:1 / -1;font-size:.8rem;color:var(--muted);margin-top:-6px}
+  main .tscroll .ac-res td:nth-child(2)::before{display:none}
+  .ac-nota,.ac-global{width:100%}
+  #res-guardar{width:100%;box-shadow:none}
+
+  /* botones de cada fila: en linea, no uno debajo del otro */
+  main .tscroll td .ac-acciones{flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px;min-width:0}
+  main .tscroll tr.ed-inactivo td{opacity:1}
+  main .tscroll tr.ed-inactivo{opacity:.6}
+  main .tscroll tr.dk-mio{border-color:var(--yellow);border-width:2px}
+  main .tscroll tr.dk-mio td:first-child{box-shadow:none}
+
+  /* informes */
+  .inf-filtros{grid-template-columns:minmax(0,1fr);gap:10px}
+  .inf-filtros > *{grid-column:auto!important}
+  .inf-filtros .btn{width:100%;padding:12px;box-shadow:none}
+  .inf-resumen{grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+  .inf-dato{padding:8px 11px;border-width:1.5px;border-radius:12px;box-shadow:none}
+  .inf-dato strong{font-size:1.05rem;white-space:nowrap}
+  .inf-dato span{font-size:.72rem}
+
+  /* panel del profesor */
+  .dk-clase{padding:12px;border-width:2px;border-radius:14px;box-shadow:none;margin-bottom:10px}
+  .dk-clase.hoy{box-shadow:none;border-color:var(--pink)}
+  .dk-cuando{min-width:70px;padding:7px 8px}
+  .dk-botones .btn{flex:1;padding:10px;box-shadow:none;white-space:nowrap}
+  .dk-lista{gap:8px}
+  .dk-lista li{padding:9px 10px;border-width:1.5px;border-radius:12px}
+  .dk-res-top{padding:12px;gap:14px;border-width:1.5px;border-radius:12px}
+  .score strong{font-size:2.1rem}
+
+  /* ventanas emergentes */
+  .ed-botones .btn{flex:1;box-shadow:none}
+  .ed-toast{left:14px;right:14px;bottom:14px;text-align:center;box-shadow:none}
+  .ac-modal{padding:10px;place-items:end center}
+  .ac-caja{padding:16px;border-width:2px;border-radius:18px;box-shadow:none;max-height:92vh}
+  .ac-lista li{padding:8px 10px;border-width:1.5px}
+  .ac-estados{gap:4px}
+  body .modal-est{padding:10px}
+  body .modal-est .caja{padding:18px 14px;border-width:2px;border-radius:18px;box-shadow:none}
+  .modal-est td{white-space:normal}
+  .ac-clave{flex-wrap:wrap}
+
+  /* menos movimiento: las tarjetas no entran una por una */
+  .tab-content.active .kpi,.tab-content.active .panel{animation:none}
+}
