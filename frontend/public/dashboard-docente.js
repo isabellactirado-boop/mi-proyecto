@@ -168,7 +168,8 @@ const Docente = (function () {
       b.addEventListener("click", () => window.PreicmaAcademico.abrirAsistencia(c.id_clase));
       botones.appendChild(b);
     }
-    if (c.enlace_reunion) {
+    // solo enlaces web: nunca "javascript:" u otros que se ejecuten al dar clic
+    if (/^https?:\/\//i.test(c.enlace_reunion || "")) {
       const m = el("a", "btn sm", "Entrar a Meet");
       m.href = c.enlace_reunion; m.target = "_blank"; m.rel = "noopener";
       botones.appendChild(m);

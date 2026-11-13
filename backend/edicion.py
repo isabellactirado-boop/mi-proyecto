@@ -21,6 +21,7 @@ from pydantic import BaseModel, Field
 
 from auth import requiere_admin, requiere_permiso
 from db import obtener_conexion
+from seguridad import limpiar_enlace
 
 router = APIRouter()
 
@@ -303,6 +304,7 @@ class CambiosGrupo(BaseModel):
 def editar_grupo(id_grupo: int, datos: CambiosGrupo, usuario: dict = Depends(requiere_admin)):
     if datos.hora_fin <= datos.hora_inicio:
         raise HTTPException(status_code=400, detail="La hora de fin debe ser después de la de inicio")
+    enlace = limpiar_enlace(datos.enlace_reunion)
     try:
         with obtener_conexion() as conexion:
             with conexion.cursor() as cursor:
@@ -321,7 +323,7 @@ def editar_grupo(id_grupo: int, datos: CambiosGrupo, usuario: dict = Depends(req
                     "       capacidad_maxima = %s, id_docente = %s, enlace_reunion = %s "
                     "WHERE id_grupo = %s RETURNING id_grupo",
                     (datos.nombre_grupo.strip(), datos.dia_semana, datos.hora_inicio, datos.hora_fin,
-                     datos.capacidad_maxima, datos.id_docente, _limpio(datos.enlace_reunion), id_grupo),
+                     datos.capacidad_maxima, datos.id_docente, enlace, id_grupo),
                 )
                 if not cursor.fetchone():
                     raise HTTPException(status_code=404, detail="El grupo no existe")

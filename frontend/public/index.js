@@ -323,6 +323,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 ocultarCarga();
                 if (resultado.status === 401) {
                     mostrar("Correo o contraseña incorrectos", "error");
+                } else if (resultado.status === 429) {
+                    mostrar("Demasiados intentos. Espera unos minutos e intenta de nuevo.", "error");
                 } else {
                     mostrar("Error del servidor (" + resultado.status + ")", "error");
                 }

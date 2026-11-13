@@ -820,6 +820,7 @@ $("form-login").addEventListener("submit", async (evento) => {
   } catch (error) {
     msg.textContent = error.status === 401
       ? "Correo o contraseña incorrectos."
+      : error.status === 429 ? "Demasiados intentos. Espera unos minutos e intenta de nuevo."
       : error.status ? "Error del servidor (" + error.status + ")." : "No se pudo conectar con el servidor.";
   } finally {
     $("btn-login").disabled = false;

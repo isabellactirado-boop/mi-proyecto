@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 
 from auth import es_admin, requiere_admin, requiere_permiso
 from db import obtener_conexion
+from seguridad import limpiar_enlace
 
 router = APIRouter()
 
@@ -93,6 +94,7 @@ class NuevoGrupo(BaseModel):
 def crear_grupo(datos: NuevoGrupo, usuario: dict = Depends(requiere_admin)):
     if datos.hora_fin <= datos.hora_inicio:
         raise HTTPException(status_code=400, detail="La hora de fin debe ser despues de la de inicio")
+    enlace = limpiar_enlace(datos.enlace_reunion)
     try:
         with obtener_conexion() as conexion:
             with conexion.cursor() as cursor:
@@ -101,8 +103,7 @@ def crear_grupo(datos: NuevoGrupo, usuario: dict = Depends(requiere_admin)):
                     "                    capacidad_maxima, id_docente, plataforma, enlace_reunion) "
                     "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id_grupo",
                     (datos.id_curso, datos.nombre_grupo.strip(), datos.dia_semana, datos.hora_inicio,
-                     datos.hora_fin, datos.capacidad_maxima, datos.id_docente, datos.plataforma,
-                     (datos.enlace_reunion or "").strip() or None),
+                     datos.hora_fin, datos.capacidad_maxima, datos.id_docente, datos.plataforma, enlace),
                 )
                 return {"id_grupo": cursor.fetchone()["id_grupo"]}
     except psycopg.errors.UniqueViolation:
@@ -158,6 +159,7 @@ class NuevaClase(BaseModel):
 
 @router.post("/clases", status_code=201)
 def crear_clases(datos: NuevaClase, usuario: dict = Depends(requiere_admin)):
+    enlace = limpiar_enlace(datos.enlace_reunion)
     with obtener_conexion() as conexion:
         with conexion.cursor() as cursor:
             cursor.execute(
@@ -190,8 +192,7 @@ def crear_clases(datos: NuevaClase, usuario: dict = Depends(requiere_admin)):
                     "ON CONFLICT (id_grupo, fecha_clase, hora_inicio) DO NOTHING "
                     "RETURNING id_clase",
                     (datos.id_grupo, id_docente, fecha, inicio, fin,
-                     (datos.tema or "").strip() or None, grupo["plataforma"],
-                     (datos.enlace_reunion or "").strip() or None),
+                     (datos.tema or "").strip() or None, grupo["plataforma"], enlace),
                 )
                 fila = cursor.fetchone()
                 (creadas if fila else repetidas).append(fecha.isoformat())
@@ -207,14 +208,14 @@ class CambiosClase(BaseModel):
 @router.patch("/clases/{id_clase}")
 def editar_clase(id_clase: int, datos: CambiosClase, usuario: dict = Depends(requiere_permiso("crear_asistencias"))):
     """El tema y el enlace los puede ajustar el admin o el profesor de la clase."""
+    enlace = limpiar_enlace(datos.enlace_reunion)
     extra, params = _filtro_docente(usuario, "clases")
     with obtener_conexion() as conexion:
         with conexion.cursor() as cursor:
             cursor.execute(
                 "UPDATE clases SET tema = %s, enlace_reunion = %s "
                 "WHERE id_clase = %s" + extra + " RETURNING id_clase",
-                [(datos.tema or "").strip() or None, (datos.enlace_reunion or "").strip() or None,
-                 id_clase] + params,
+                [(datos.tema or "").strip() or None, enlace, id_clase] + params,
             )
             if not cursor.fetchone():
                 raise HTTPException(status_code=404, detail="Clase no encontrada")
@@ -414,6 +415,13 @@ def puntaje_global(r: Resultado) -> int | None:
 def guardar_resultados(
     id_simulacro: int, datos: ListaResultados, usuario: dict = Depends(requiere_permiso("crear_resultados"))
 ):
+    try:
+        return _guardar_resultados(id_simulacro, datos)
+    except psycopg.errors.ForeignKeyViolation:
+        raise HTTPException(status_code=400, detail="Hay estudiantes de la lista que no existen")
+
+
+def _guardar_resultados(id_simulacro: int, datos: ListaResultados) -> dict:
     guardados = 0
     with obtener_conexion() as conexion:
         with conexion.cursor() as cursor:

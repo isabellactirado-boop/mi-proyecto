@@ -1097,7 +1097,8 @@
       tdB.appendChild(tomar);
       if (!esAdmin) {
         // Panel del profesor: entrar a Meet y escribir el tema de la clase
-        if (c.enlace_reunion) {
+        // solo enlaces web: nunca "javascript:" u otros que se ejecuten al dar clic
+        if (/^https?:\/\//i.test(c.enlace_reunion || "")) {
           const meet = el("a", "btn sm", "Meet");
           meet.href = c.enlace_reunion;
           meet.target = "_blank";

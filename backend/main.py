@@ -2,11 +2,11 @@ import os
 
 import bcrypt
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from auth import crear_token, usuario_actual
+from auth import crear_token, requiere_admin, usuario_actual
 from db import obtener_conexion
 from estudiantes import router as router_estudiantes
 from resumen import router as router_resumen
@@ -18,6 +18,7 @@ from reportes import router as router_reportes
 from usuarios_admin import router as router_usuarios_admin
 from pagos import router as router_pagos
 from edicion import router as router_edicion
+from seguridad import anotar_exito, anotar_fallo, direccion_cliente, revisar_intentos
 
 load_dotenv()
 
@@ -66,7 +67,8 @@ def inicio():
 
 
 @app.get("/version-db")
-def version_db():
+def version_db(usuario: dict = Depends(requiere_admin)):
+    """Diagnostico de la base. Solo para administradores: no se expone al publico."""
     with obtener_conexion() as conexion:
         with conexion.cursor() as cursor:
             cursor.execute("SELECT version() AS version;")
@@ -79,9 +81,16 @@ class DatosLogin(BaseModel):
     contrasena: str
 
 
+# Hash de relleno: si el correo no existe igual se hace una comprobacion bcrypt,
+# para que la respuesta tarde lo mismo y no se pueda adivinar que correos existen.
+_HASH_RELLENO = bcrypt.hashpw(b"relleno-sin-uso", bcrypt.gensalt())
+
+
 @app.post("/login")
-def login(datos: DatosLogin):
+def login(datos: DatosLogin, request: Request):
     correo = datos.correo.strip().lower()
+    direccion = direccion_cliente(request)
+    revisar_intentos(direccion, correo)
 
     with obtener_conexion() as conexion:
         with conexion.cursor() as cursor:
@@ -93,17 +102,18 @@ def login(datos: DatosLogin):
             fila = cursor.fetchone()
 
             credenciales_ok = False
-            if fila:
-                try:
-                    credenciales_ok = bcrypt.checkpw(
-                        datos.contrasena.encode("utf-8"),
-                        fila["contrasena_hash"].encode("utf-8"),
-                    )
-                except ValueError:
-                    # el hash guardado no es un hash bcrypt valido (ej. usuarios de ejemplo)
-                    credenciales_ok = False
+            try:
+                coincide = bcrypt.checkpw(
+                    datos.contrasena.encode("utf-8"),
+                    fila["contrasena_hash"].encode("utf-8") if fila else _HASH_RELLENO,
+                )
+                credenciales_ok = bool(fila) and coincide
+            except ValueError:
+                # el hash guardado no es un hash bcrypt valido (ej. usuarios de ejemplo)
+                credenciales_ok = False
 
             if not credenciales_ok:
+                anotar_fallo(direccion, correo)
                 raise HTTPException(status_code=401, detail="Correo o contraseña incorrectos")
 
             cursor.execute(
@@ -111,6 +121,7 @@ def login(datos: DatosLogin):
                 (fila["id_usuario"],),
             )
 
+    anotar_exito(direccion, correo)
     token = crear_token(
         fila["id_usuario"], fila["nombre_usuario"], fila["rol"], fila["contrasena_hash"]
     )
