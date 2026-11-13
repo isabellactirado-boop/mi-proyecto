@@ -184,6 +184,9 @@
 
         // Partida
         let puntaje, vidas, tiempo, invulnerable, escudo, triple, sacudida;
+        // Dificultad: sube con el puntaje y tambien con el tiempo jugado,
+        // asi el tramo final hacia 500 es el mas duro (0 = facil, 1 = maximo)
+        let dificultad = 0, etapa = 1;
         let tAsteroide, tMateria, tPoder, tCometa, tDisparo, tFuegos;
         let atrapadas;                  // materias del simulacro actual
         let asteroides, balas, materias, poderes, particulas, avisos, cometas, alertas;
@@ -233,7 +236,7 @@
         }
 
         function nuevaPartida() {
-            puntaje = 0; vidas = 3; tiempo = 0;
+            puntaje = 0; vidas = 3; tiempo = 0; dificultad = 0; etapa = 1;
             invulnerable = 1.2; escudo = false; triple = 0; sacudida = 0;
             tAsteroide = 0.8; tMateria = 1.6; tPoder = azar(10, 14); tCometa = azar(5, 7); tDisparo = 0; tFuegos = 0;
             atrapadas = [];
@@ -260,17 +263,18 @@
             }
             asteroides.push({
                 x: x, y: y, r: r, vx: vx, vy: vy, giro: azar(0, 6), vGiro: azar(-1.4, 1.4),
-                vida: r > 26 ? 3 : 1, grande: r > 26, forma: forma, crateres: crateres, destello: 0
+                // Mas adelante los asteroides aguantan mas disparos
+                vida: r > 26 ? 3 + Math.round(dificultad * 3) : 1 + (dificultad > 0.55 ? 1 : 0), grande: r > 26, forma: forma, crateres: crateres, destello: 0
             });
         }
         function lanzarAsteroide(nivel) {
-            const grande = Math.random() < 0.22 + 0.2 * nivel;
+            const grande = Math.random() < 0.22 + 0.25 * nivel;
             const r = grande ? azar(30, 40) : azar(15, 23);
-            const vy = azar(90, 160) * (1 + nivel * 0.9) * (grande ? 0.7 : 1);
+            const vy = azar(90, 160) * (1 + nivel * 1.4) * (grande ? 0.7 : 1);
             const x = azar(r, W - r);
             // Algunos van directo a donde esta el cohete: quedarse quieto no sirve
             let vx = azar(-34, 34);
-            if (Math.random() < 0.3 + 0.25 * nivel) {
+            if (Math.random() < 0.3 + 0.35 * nivel) {
                 vx = limitar((jugador.x - x) / ((jugador.y + r) / vy), -150 * amplitud(), 150 * amplitud());
             }
             crearAsteroide(x, -r - 6, r, vx, vy);
@@ -299,8 +303,20 @@
         function aviso(x, y, texto, color, grande) {
             avisos.push({ x: limitar(x, 60, W - 60), y: y, texto: texto, color: color, vida: 1.1, grande: !!grande });
         }
+        // Entre mas alto el puntaje, menos vale cada cosa: los ultimos
+        // puntos cuestan mucho mas que los primeros (como en el ICFES de verdad)
+        function valor(puntos) {
+            return Math.max(1, Math.round(puntos * (1 - 0.6 * (puntaje / META))));
+        }
         function sumar(puntos) {
             puntaje = Math.min(META, puntaje + puntos);
+            const nueva = Math.min(5, Math.floor(puntaje / (META / 5)) + 1);
+            if (nueva > etapa && puntaje < META) {
+                etapa = nueva;
+                const frases = ["", "", "Más asteroides", "Asteroides más duros", "Lluvia de cometas", "¡Zona final!"];
+                aviso(W / 2, H * 0.32, "Nivel " + etapa + ": " + frases[etapa], etapa === 5 ? C.rojo : C.naranja, true);
+                sonido.poder();
+            }
         }
 
         /* ----- logica ----- */
@@ -313,7 +329,7 @@
                 crearAsteroide(a.x + 10, a.y, azar(15, 20), azar(50, 90), a.vy + 20);
             }
             if (conPuntos) {
-                const pts = a.grande ? 6 : 3;
+                const pts = valor(a.grande ? 6 : 3);
                 sumar(pts);
                 aviso(a.x, a.y, "+" + pts, C.crema);
             }
@@ -363,7 +379,9 @@
 
         function jugar(dt) {
             tiempo += dt;
-            const nivel = puntaje / META;
+            // 80 % depende del puntaje, el resto del tiempo (a los 3 min ya suma todo)
+            dificultad = limitar(0.8 * Math.pow(puntaje / META, 0.85) + 0.2 * Math.min(1, tiempo / 180), 0, 1);
+            const nivel = dificultad;
 
             // Movimiento del cohete
             const xAntes = jugador.x;
@@ -397,17 +415,23 @@
             tAsteroide -= dt;
             if (tAsteroide <= 0) {
                 lanzarAsteroide(nivel);
-                tAsteroide = mezcla(0.85, 0.36, nivel) * azar(0.7, 1.3) / amplitud();
+                tAsteroide = mezcla(0.85, 0.28, nivel) * azar(0.7, 1.3) / amplitud();
             }
+            // Las materias y los poderes salen cada vez menos
             tMateria -= dt;
-            if (tMateria <= 0) { lanzarMateria(); tMateria = azar(2.2, 3.6); }
+            if (tMateria <= 0) { lanzarMateria(); tMateria = azar(2.2, 3.6) * (1 + nivel * 0.9); }
             tPoder -= dt;
-            if (tPoder <= 0) { lanzarPoder(); tPoder = azar(12, 18); }
+            if (tPoder <= 0) { lanzarPoder(); tPoder = azar(12, 18) * (1 + nivel * 0.6); }
             // Cometa: primero avisa arriba, sobre la columna del cohete, y luego cae
             tCometa -= dt;
             if (tCometa <= 0) {
-                alertas.push({ x: jugador.x, t: 0.85 });
-                tCometa = mezcla(5, 2.3, nivel) * azar(0.8, 1.2);
+                alertas.push({ x: jugador.x, t: mezcla(0.85, 0.65, nivel) });
+                // En la zona final a veces caen dos: uno encima y otro al lado
+                if (nivel > 0.7 && Math.random() < 0.5) {
+                    const lado = jugador.x < W / 2 ? 1 : -1;
+                    alertas.push({ x: limitar(jugador.x + lado * azar(70, 130), 22, W - 22), t: 0.75 });
+                }
+                tCometa = mezcla(5, 1.6, nivel) * azar(0.8, 1.2);
             }
 
             // Balas
@@ -460,14 +484,16 @@
                 const dx = m.x - jx, dy = m.y - jy;
                 if (dx * dx + dy * dy < (m.r + 22) * (m.r + 22)) {
                     materias.splice(i, 1);
-                    sumar(10);
+                    const ptsMateria = valor(10);
+                    sumar(ptsMateria);
                     chispas(m.x, m.y, m.m.color, 12, 190);
-                    aviso(m.x, m.y - 10, "+10 " + m.m.nombre, m.m.color);
+                    aviso(m.x, m.y - 10, "+" + ptsMateria + " " + m.m.nombre, m.m.color);
                     if (atrapadas.indexOf(m.m.sigla) === -1) atrapadas.push(m.m.sigla);
                     if (atrapadas.length === MATERIAS.length) {
                         atrapadas = [];
-                        sumar(30);
-                        aviso(W / 2, H * 0.4, "¡Simulacro completo! +30", C.amarillo, true);
+                        const ptsSimulacro = valor(30);
+                        sumar(ptsSimulacro);
+                        aviso(W / 2, H * 0.4, "¡Simulacro completo! +" + ptsSimulacro, C.amarillo, true);
                         sonido.simulacro();
                     } else {
                         sonido.materia();
@@ -502,7 +528,7 @@
                 al.t -= dt;
                 if (al.t <= 0) {
                     alertas.splice(i, 1);
-                    cometas.push({ x: al.x, y: -24, r: 12, vy: mezcla(430, 560, nivel) });
+                    cometas.push({ x: al.x, y: -24, r: 12, vy: mezcla(430, 640, nivel) });
                 }
             }
             for (let i = cometas.length - 1; i >= 0; i--) {
@@ -843,6 +869,12 @@
             ctx.fillStyle = C.lila;
             ctx.font = "700 13px " + TEXTO;
             ctx.fillText("/ " + META, m + ancho + 6, 52);
+            const anchoMeta = ctx.measureText("/ " + META).width;
+            if (estado === "jugando" || estado === "pausa") {
+                ctx.fillStyle = etapa === 5 ? C.rojo : C.naranja;
+                ctx.font = "800 11px " + TEXTO;
+                ctx.fillText("NIVEL " + etapa, m + ancho + anchoMeta + 16, 52);
+            }
 
             // Barra de avance
             const by = 62, bh = 10, bw = W - m * 2;
