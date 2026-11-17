@@ -12,6 +12,7 @@ from estudiantes import router as router_estudiantes
 from resumen import router as router_resumen
 from usuarios import router as router_usuarios
 from estudiante import router as router_estudiante
+from reto import router as router_reto
 from academico import router as router_academico
 from inscripciones import router as router_inscripciones
 from reportes import router as router_reportes
@@ -52,6 +53,7 @@ app.include_router(router_resumen)
 app.include_router(router_estudiantes)
 app.include_router(router_usuarios)
 app.include_router(router_estudiante)
+app.include_router(router_reto)
 app.include_router(router_academico)
 app.include_router(router_inscripciones)
 app.include_router(router_reportes)

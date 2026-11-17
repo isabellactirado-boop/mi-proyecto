@@ -9,6 +9,8 @@ Usa el mismo backend del panel: `https://preicma.onrender.com`.
 
 1. **Base de datos:** correr `database/09_rol_estudiante.sql` en Neon,
    primero en la rama de pruebas y luego en producción.
+   Para el reto diario (pregunta del día y racha) correr también
+   `database/11_reto_diario.sql`. Las preguntas están en `backend/preguntas_diarias.py`.
 2. **Backend:** desplegar en Render **después** de la migración
    (`auth.py` ya lee la columna `usuarios.id_estudiante`).
 3. **Cuentas:** el superadmin crea la cuenta con `POST /usuarios`:

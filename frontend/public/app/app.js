@@ -4,7 +4,9 @@
    - Solo acepta cuentas con rol "estudiante".
    - Guarda el token en localStorage para no pedir login cada vez.
    - Abre con ?demo para ver la app con datos de ejemplo, sin backend.
-   El contenido de tips y preguntas esta en tips.js (PLANES).
+   - Reto diario: una pregunta por dia, con racha y camino (/estudiante/diaria).
+   El contenido de tips y preguntas esta en tips.js (PLANES); las preguntas
+   del reto diario estan en el backend (preguntas_diarias.py).
    ===================================================================== */
 
 // La app del celular no lee config.js (el APK solo lleva la carpeta app/).
@@ -15,6 +17,8 @@ const DEMO = new URLSearchParams(location.search).has("demo");
 const $ = (id) => document.getElementById(id);
 
 let datosClases = null;     // se reutiliza entre Inicio (semana) y Clases
+let datosReto = null;       // reto diario: pregunta de hoy, racha y ultimos dias
+let demoReto = null;        // ?demo: el reto de ejemplo recuerda si ya se respondio
 let relojCuenta = null;     // intervalo de la cuenta regresiva
 
 /* ---------- sesion ---------- */
@@ -28,8 +32,10 @@ function guardar(clave, valor) {
 function cerrarSesion() {
   try { ["token", "rol", "ver_como"].forEach((k) => localStorage.removeItem(k)); } catch (e) { /* nada */ }
   cerrarPerfil();
+  cerrarPregunta();
   clearInterval(relojCuenta);
   datosClases = null;
+  datosReto = null;
   mostrarPantalla("login");
 }
 
@@ -65,7 +71,7 @@ function verComo() {
 }
 
 async function pedir(ruta, opciones) {
-  if (DEMO) return datosDemo(ruta);
+  if (DEMO) return datosDemo(ruta, opciones);
 
   const elegido = verComo();
   if (esPropietario() && elegido && ruta.indexOf("/estudiante/") === 0) {
@@ -212,6 +218,8 @@ function mostrarTab(nombre) {
   window.scrollTo(0, 0);
   if (nombre === "clases") cargarClases();
   if (nombre === "resultados") cargarResultados();
+  // el reto cambia a medianoche: si la app quedo abierta de ayer, se vuelve a pedir
+  if (nombre === "reto" && (!datosReto || datosReto.fecha !== iso(new Date()))) cargarReto();
 }
 
 /* ---------- perfil (hoja que sube al tocar el avatar) ---------- */
@@ -706,6 +714,246 @@ async function cargarResultados() {
   }
 }
 
+/* ---------- Reto diario: una pregunta por dia, racha y camino ---------- */
+
+const ICONOS = {
+  llama: '<path d="M12 2c1 4 5 6 5 11a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3 0-3-1-6 1-9.5z"/>',
+  estrella: '<path d="M12 3l2.7 5.6 6.1.8-4.5 4.3 1.1 6.1L12 16.9 6.6 19.8l1.1-6.1L3.2 9.4l6.1-.8z"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  candado: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+};
+const METAS = [3, 7, 14, 30, 50, 100, 200, 365];
+const DIAS_ATRAS = 4;       // dias anteriores que muestra el camino
+const DIAS_ADELANTE = 2;    // dias siguientes (bloqueados)
+
+function icono(nombre, clase) {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+  if (clase) svg.setAttribute("class", clase);
+  svg.innerHTML = ICONOS[nombre];
+  return svg;
+}
+
+function nDias(n) {
+  return n + (n === 1 ? " día" : " días");
+}
+
+function abrirPregunta() {
+  if (!datosReto) return;
+  pintarPregunta();
+  document.body.classList.add("reto-open");
+  $("reto-sheet").setAttribute("aria-hidden", "false");
+}
+function cerrarPregunta() {
+  document.body.classList.remove("reto-open");
+  $("reto-sheet").setAttribute("aria-hidden", "true");
+}
+
+// Camino: los ultimos dias, hoy (el grande) y los que vienen, unidos por una linea curva
+function pintarCamino(d) {
+  const hechos = {};
+  d.dias.forEach((x) => { hechos[x.fecha] = x.acerto; });
+  const hoy = fecha(d.fecha);
+  const ANCHO = 320, PASO = 84, ARRIBA = 52;
+
+  const pasos = [];
+  for (let n = -DIAS_ATRAS; n <= DIAS_ADELANTE; n++) {
+    const dia = new Date(hoy); dia.setDate(hoy.getDate() + n);
+    const i = pasos.length;
+    pasos.push({ n, dia, x: ANCHO / 2 + 76 * Math.sin(i * 1.05 + 0.4), y: ARRIBA + i * PASO, acerto: hechos[iso(dia)] });
+  }
+
+  const camino = el("div", "camino");
+  camino.style.height = (ARRIBA * 2 + (pasos.length - 1) * PASO) + "px";
+
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 " + ANCHO + " " + (ARRIBA * 2 + (pasos.length - 1) * PASO));
+  svg.setAttribute("preserveAspectRatio", "none");
+  svg.setAttribute("aria-hidden", "true");
+  const linea = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  linea.setAttribute("d", pasos.map((p, i) => {
+    if (!i) return "M" + p.x.toFixed(1) + " " + p.y;
+    const a = pasos[i - 1];
+    return "C" + a.x.toFixed(1) + " " + (a.y + PASO / 2) + " " + p.x.toFixed(1) + " " + (p.y - PASO / 2) + " " + p.x.toFixed(1) + " " + p.y;
+  }).join(" "));
+  svg.appendChild(linea);
+  camino.appendChild(svg);
+
+  pasos.forEach((p, i) => {
+    const esHoy = p.n === 0;
+    const pendiente = esHoy && !d.hoy.respondida;
+    let estado, texto;
+    if (p.n > 0) { estado = "futuro"; texto = p.n === 1 ? "Mañana" : "Próximo reto"; }
+    else if (p.acerto === true) { estado = "ok"; texto = "Acertaste"; }
+    else if (p.acerto === false) { estado = "fallo"; texto = "Respondiste"; }
+    else if (pendiente) { estado = "pendiente"; texto = "Toca para responder"; }
+    else { estado = "perdido"; texto = "Sin responder"; }
+
+    const nodo = el(pendiente ? "button" : "div", "nodo " + estado + (esHoy ? " hoy" : ""));
+    if (estado === "ok") nodo.appendChild(icono("estrella"));
+    else if (estado === "fallo") nodo.appendChild(icono("check"));
+    else if (estado === "futuro") nodo.appendChild(icono("candado"));
+    else if (pendiente) nodo.textContent = "?";
+    if (pendiente) {
+      nodo.type = "button";
+      nodo.setAttribute("aria-label", "Responder la pregunta de hoy");
+      nodo.addEventListener("click", abrirPregunta);
+    }
+    nodo.style.left = (p.x / ANCHO * 100) + "%";
+    nodo.style.top = p.y + "px";
+    camino.appendChild(revelar(nodo, i));
+
+    // la etiqueta va del lado donde hay mas espacio
+    const etiqueta = el("div", "nodo-et" + (esHoy ? " es-hoy" : ""),
+      esHoy ? "Hoy" : DIAS[p.dia.getDay()] + " " + p.dia.getDate() + " " + MESES[p.dia.getMonth()]);
+    etiqueta.appendChild(el("small", null, texto));
+    const margen = (esHoy ? 38 : 29) + 12;
+    if (p.x > ANCHO / 2) {
+      etiqueta.style.right = "calc(" + (100 - p.x / ANCHO * 100) + "% + " + margen + "px)";
+      etiqueta.style.textAlign = "right";
+    } else {
+      etiqueta.style.left = "calc(" + (p.x / ANCHO * 100) + "% + " + margen + "px)";
+    }
+    etiqueta.style.top = p.y + "px";
+    camino.appendChild(etiqueta);
+  });
+  return camino;
+}
+
+function pintarReto(celebrar) {
+  const d = datosReto;
+  const hecha = d.hoy.respondida;
+
+  // acceso rapido en Inicio y punto en el menu mientras falte la de hoy
+  $("reto-punto").hidden = hecha;
+  const banner = $("reto-banner");
+  banner.hidden = false;
+  banner.classList.toggle("listo", hecha);
+  banner.querySelector(".llama").classList.toggle("fria", !hecha);
+  $("rb-titulo").textContent = d.racha ? "Racha de " + nDias(d.racha) : "Empieza tu racha";
+  $("rb-sub").textContent = hecha ? "Reto de hoy cumplido. ¡Vuelve mañana!"
+    : d.racha ? "Responde la pregunta de hoy para no perderla" : "Responde la pregunta de hoy";
+
+  const caja = $("reto");
+  caja.textContent = "";
+
+  const hero = revelar(el("div", "racha-hero"), 0);
+  hero.appendChild(icono("llama", "llama" + (hecha ? (celebrar ? " prende" : "") : " fria")));
+  const info = el("div");
+  const num = el("div", "racha-num", String(d.racha));
+  num.appendChild(el("small", null, d.racha === 1 ? "día de racha" : "días de racha"));
+  info.appendChild(num);
+  info.appendChild(el("p", null, hecha ? "¡Listo por hoy! Vuelve mañana para seguir sumando."
+    : d.racha ? "Responde la pregunta de hoy para no perder tu racha."
+      : "Responde una pregunta cada día y enciende tu racha."));
+  hero.appendChild(info);
+  caja.appendChild(hero);
+  if (celebrar) contar(num.firstChild, d.racha);
+
+  const chips = revelar(el("div", "racha-chips"), 1);
+  [[nDias(d.mejor_racha), "tu mejor racha"],
+    [d.aciertos + " de " + d.respondidas, "respuestas correctas"]].forEach(([valor, nombre]) => {
+    const chip = el("div");
+    chip.appendChild(el("b", null, valor));
+    chip.appendChild(el("span", null, nombre));
+    chips.appendChild(chip);
+  });
+  caja.appendChild(chips);
+
+  const ir = revelar(el("button", "btn reto-ir" + (hecha ? "" : " main"),
+    hecha ? "Ver la pregunta de hoy" : "Responder la pregunta de hoy"), 2);
+  ir.type = "button";
+  ir.addEventListener("click", abrirPregunta);
+  caja.appendChild(ir);
+
+  caja.appendChild(el("h2", "titulo", "Tu camino"));
+  caja.appendChild(pintarCamino(d));
+
+  const meta = METAS.find((m) => m > d.racha);
+  if (meta) {
+    const pie = el("p", "reto-meta", "Próxima meta: ");
+    pie.appendChild(el("b", null, nDias(meta) + " de racha"));
+    pie.appendChild(document.createTextNode(" · te faltan " + (meta - d.racha)));
+    caja.appendChild(pie);
+  }
+}
+
+function pintarPregunta(aviso) {
+  const d = datosReto;
+  const p = d.hoy;
+  const caja = $("reto-pregunta");
+  caja.textContent = "";
+  caja.className = "reto-q";
+  caja.appendChild(el("small", null, p.area));
+  caja.appendChild(el("h2", null, "Pregunta de hoy"));
+  caja.appendChild(el("q", null, p.enunciado));
+
+  const soloVer = esPropietario() && !DEMO;
+  const ops = el("div", "ops");
+  const botones = p.opciones.map((texto, i) => {
+    const b = el("button", "op");
+    b.type = "button";
+    b.appendChild(el("em", null, "ABCD"[i]));
+    b.appendChild(document.createTextNode(texto));
+    if (p.respondida) {
+      b.disabled = true;
+      if (i === p.correcta) b.classList.add("bien");
+      else if (i === p.elegida) b.classList.add("mal");
+    } else if (soloVer) {
+      b.disabled = true;
+    } else {
+      b.addEventListener("click", () => responderReto(i, botones));
+    }
+    ops.appendChild(b);
+    return b;
+  });
+  caja.appendChild(ops);
+
+  if (aviso) caja.appendChild(el("p", "msg", aviso));
+  if (soloVer && !p.respondida) {
+    caja.appendChild(el("p", "reto-nota", "Vista del propietario: solo el estudiante puede responder su reto."));
+  }
+  if (!p.respondida) return;
+
+  caja.appendChild(el("div", "expl", (p.acerto ? "¡Correcto! " : "Casi. ") + p.explicacion));
+  const suma = el("div", "reto-suma");
+  suma.appendChild(icono("llama", "llama"));
+  suma.appendChild(el("span", null, "Racha de " + nDias(d.racha) + ". ¡Vuelve mañana por la siguiente!"));
+  caja.appendChild(suma);
+  const seguir = el("button", "btn main", "Continuar");
+  seguir.type = "button";
+  seguir.addEventListener("click", cerrarPregunta);
+  caja.appendChild(seguir);
+}
+
+async function responderReto(opcion, botones) {
+  botones.forEach((b) => { b.disabled = true; });
+  try {
+    datosReto = await pedir("/estudiante/diaria", { method: "POST", body: JSON.stringify({ opcion }) });
+    pintarPregunta();
+    pintarReto(true);
+  } catch (error) {
+    if (error.status === 401) return manejarError(error);
+    console.error(error);
+    pintarPregunta("No se pudo guardar tu respuesta. Revisa tu internet e intenta de nuevo.");
+  }
+}
+
+async function cargarReto() {
+  try {
+    datosReto = await pedir("/estudiante/diaria");
+    pintarReto();
+  } catch (error) {
+    // El reto es un extra: si falla no se cae el resto de la app
+    console.error(error);
+    datosReto = null;
+    $("reto-banner").hidden = true;
+    $("reto-punto").hidden = true;
+    vacio($("reto"), "El reto diario no está disponible en este momento. Intenta más tarde.");
+  }
+}
+
 /* ---------- errores ---------- */
 
 function manejarError(error, texto) {
@@ -735,9 +983,13 @@ function entrarApp() {
   $("btn-otro").hidden = !esPropietario();
   if (esPropietario() && elegido) $("vista-dueno").textContent = "Vista del propietario · " + primerNombre(elegido.nombre);
   datosClases = null;
+  datosReto = null;
+  $("reto-banner").hidden = true;
+  $("reto-punto").hidden = true;
   mostrarPantalla("app");
   mostrarTab("inicio");
   cargarInicio();
+  cargarReto();
 }
 
 /* ---------- propietario: elegir a que estudiante ver ---------- */
@@ -849,12 +1101,13 @@ $("form-clave").addEventListener("submit", async (evento) => {
 });
 
 $("av").addEventListener("click", abrirPerfil);
-$("perfil-bg").addEventListener("click", cerrarPerfil);
+$("perfil-bg").addEventListener("click", () => { cerrarPerfil(); cerrarPregunta(); });
+$("reto-banner").addEventListener("click", () => mostrarTab("reto"));
 $("btn-salir").addEventListener("click", cerrarSesion);
 $("btn-otro").addEventListener("click", abrirElegir);
 $("elegir-buscar").addEventListener("input", pintarElegir);
 $("elegir-salir").addEventListener("click", cerrarSesion);
-document.addEventListener("keydown", (e) => { if (e.key === "Escape") cerrarPerfil(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") { cerrarPerfil(); cerrarPregunta(); } });
 
 document.querySelectorAll(".bottom button").forEach((b) => {
   b.addEventListener("click", () => mostrarTab(b.dataset.tab));
@@ -866,7 +1119,8 @@ const appNativa = window.Capacitor && window.Capacitor.Plugins && window.Capacit
 if (appNativa) {
   appNativa.addListener("backButton", () => {
     const tabActiva = document.querySelector(".bottom button.on");
-    if (document.body.classList.contains("perfil-open")) cerrarPerfil();
+    if (document.body.classList.contains("reto-open")) cerrarPregunta();
+    else if (document.body.classList.contains("perfil-open")) cerrarPerfil();
     else if (!$("pantalla-app").hidden && tabActiva && tabActiva.dataset.tab !== "inicio") mostrarTab("inicio");
     else if (!$("pantalla-clave").hidden) cerrarSesion();
     else appNativa.exitApp();
@@ -884,8 +1138,28 @@ if (DEMO || leer("token")) entrarApp(); else mostrarPantalla("login");
 
 /* ---------- datos de ejemplo (?demo) ---------- */
 
-function datosDemo(ruta) {
+function datosDemo(ruta, opciones) {
   const dia = (n) => { const f = new Date(); f.setDate(f.getDate() + n); return iso(f); };
+
+  if (ruta === "/estudiante/diaria") {
+    const CORRECTA = 2;
+    if (!demoReto) {
+      demoReto = { fecha: dia(0), racha: 3, mejor_racha: 5, respondidas: 12, aciertos: 9,
+        hoy: { respondida: false, area: "Matemáticas",
+          enunciado: "Un pantalón cuesta $120.000 y tiene 25 % de descuento. ¿Cuánto pagas?",
+          opciones: ["$95.000", "$100.000", "$90.000", "$30.000"] },
+        dias: [{ fecha: dia(-3), acerto: true }, { fecha: dia(-2), acerto: false }, { fecha: dia(-1), acerto: true }] };
+    }
+    if (opciones && opciones.method === "POST" && !demoReto.hoy.respondida) {
+      const elegida = JSON.parse(opciones.body).opcion;
+      const acerto = elegida === CORRECTA;
+      Object.assign(demoReto.hoy, { respondida: true, elegida, correcta: CORRECTA, acerto,
+        explicacion: "El 25 % de 120.000 es 30.000. Entonces 120.000 − 30.000 = 90.000." });
+      demoReto.dias.push({ fecha: dia(0), acerto });
+      demoReto.racha++; demoReto.respondidas++; demoReto.aciertos += acerto ? 1 : 0;
+    }
+    return Promise.resolve(JSON.parse(JSON.stringify(demoReto)));
+  }
   const ahora = new Date();
   const enUnRato = String(Math.min(22, ahora.getHours() + 2)).padStart(2, "0") + ":00:00";
   const fin = String(Math.min(23, ahora.getHours() + 4)).padStart(2, "0") + ":00:00";
