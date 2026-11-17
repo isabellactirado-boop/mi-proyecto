@@ -334,8 +334,13 @@
 
   <!-- PESTAÑA 4: PAGOS Y CUOTAS -->
   <section id="tab-pagos" class="tab-content">
+    <div class="subtabs" role="tablist" aria-label="Secciones de Pagos y cuotas">
+      <button type="button" role="tab" class="on" aria-selected="true" data-ver="cobrar">Cobrar</button>
+      <button type="button" role="tab" aria-selected="false" data-ver="historial">Últimos pagos</button>
+      <button type="button" role="tab" aria-selected="false" data-ver="informe">Informe</button>
+    </div>
     <div class="grid">
-      <div class="panel c8" style="--c:var(--red)">
+      <div class="panel c8" data-vista="cobrar" style="--c:var(--red)">
         <h2><span>Cuotas por cobrar</span><small class="ac-rango">Vencidas y próximas 15 días</small></h2>
         <div class="tscroll">
           <table>
@@ -345,7 +350,7 @@
         </div>
       </div>
 
-      <div class="panel c4" style="--c:var(--yellow)">
+      <div class="panel c4" data-vista="cobrar" style="--c:var(--yellow)">
         <h2><span>Registrar pago</span></h2>
         <form class="space-form ac-form" id="form-pago" autocomplete="off">
           <label for="pg-buscar">Estudiante</label>
@@ -379,7 +384,7 @@
         </form>
       </div>
 
-      <div class="panel c12" style="--c:var(--teal)">
+      <div class="panel c12" data-vista="historial" style="--c:var(--teal)" hidden>
         <h2><span>Últimos pagos</span>
           <input id="pg-filtro-ref" type="search" class="input-space ac-select" placeholder="Buscar por referencia" aria-label="Buscar pagos por número de referencia">
         </h2>
@@ -390,7 +395,7 @@
           </table>
         </div>
       </div>
-      <div class="panel c12" id="inf-pagos" style="--c:var(--orange)">
+      <div class="panel c12" id="inf-pagos" data-vista="informe" style="--c:var(--orange)" hidden>
         <h2><span>Informe de pagos</span>
           <span class="ac-filtros">
             <select id="ip-estado" class="input-space ac-select" aria-label="Qué inscripciones mostrar">
@@ -457,11 +462,46 @@
     </div>
   </section>
 
-  <!-- PESTAÑA 6: DOCENTES Y CLASES -->
+  <!-- PESTAÑA 6: DOCENTES Y CLASES
+       Cuatro vistas (Clases, Grupos, Cursos, Asistencia): solo se ve una a la vez.
+       Los formularios estan cerrados y se abren con el boton "+" de cada tabla.
+       diseno.js cambia de vista (data-vista) y abre los formularios (data-abre). -->
   <section id="tab-docentes" class="tab-content">
+    <div class="subtabs" role="tablist" aria-label="Secciones de Docentes y clases">
+      <button type="button" role="tab" class="on" aria-selected="true" data-ver="clases">Clases</button>
+      <button type="button" role="tab" aria-selected="false" data-ver="grupos">Grupos</button>
+      <button type="button" role="tab" aria-selected="false" data-ver="cursos">Cursos</button>
+      <button type="button" role="tab" aria-selected="false" data-ver="asistencia">Asistencia</button>
+    </div>
     <div class="grid">
-      <div class="panel c12" style="--c:var(--pink)">
-        <h2><span>Clases programadas</span><small class="ac-rango">Última semana y próximas 3</small></h2>
+      <!-- Clases -->
+      <div class="panel c12 panel-form" id="pf-clase" data-vista="clases" style="--c:var(--yellow)" hidden>
+        <h2><span>Programar clase</span><button class="btn sm" type="button" data-abre="pf-clase">Cerrar</button></h2>
+        <form class="ac-form" id="form-clase">
+          <div class="form-grid">
+            <div><label for="cl-grupo">Grupo</label>
+              <select id="cl-grupo" class="input-space" required></select></div>
+            <div><label for="cl-fecha">Fecha</label>
+              <input id="cl-fecha" type="date" class="input-space" required></div>
+            <div><label for="cl-semanas">Repetir</label>
+              <select id="cl-semanas" class="input-space">
+                <option value="1">Solo esta fecha</option>
+                <option value="4">4 semanas seguidas</option>
+                <option value="8">8 semanas seguidas</option>
+                <option value="12">12 semanas seguidas</option>
+              </select></div>
+            <div><label for="cl-tema">Tema (opcional)</label>
+              <input id="cl-tema" class="input-space" maxlength="150" placeholder="Ej: Funciones y gráficas"></div>
+            <div><label for="cl-enlace">Enlace de la reunión (opcional)</label>
+              <input id="cl-enlace" type="url" class="input-space" placeholder="Si se deja vacío, usa el del grupo"></div>
+          </div>
+          <p class="ac-msg" role="status"></p>
+          <button class="btn main" type="submit">Programar</button>
+        </form>
+      </div>
+      <div class="panel c12" data-vista="clases" style="--c:var(--pink)">
+        <h2><span>Clases programadas <small class="ac-rango">Última semana y próximas 3</small></span>
+          <button class="btn sm main" type="button" data-abre="pf-clase">+ Programar clase</button></h2>
         <div class="tscroll">
           <table>
             <thead><tr><th>Fecha</th><th>Curso · Grupo</th><th>Docente</th><th>Tema</th><th>Asistencia</th><th></th></tr></thead>
@@ -470,58 +510,38 @@
         </div>
       </div>
 
-      <div class="panel c6" style="--c:var(--yellow)">
-        <h2><span>Programar clase</span></h2>
-        <form class="space-form ac-form" id="form-clase">
-          <label for="cl-grupo">Grupo</label>
-          <select id="cl-grupo" class="input-space" required></select>
-          <label for="cl-fecha">Fecha</label>
-          <input id="cl-fecha" type="date" class="input-space" required>
-          <label for="cl-tema">Tema (opcional)</label>
-          <input id="cl-tema" class="input-space" maxlength="150" placeholder="Ej: Funciones y gráficas">
-          <label for="cl-enlace">Enlace de la reunión (opcional)</label>
-          <input id="cl-enlace" type="url" class="input-space" placeholder="Si se deja vacío, usa el del grupo">
-          <label for="cl-semanas">Repetir</label>
-          <select id="cl-semanas" class="input-space">
-            <option value="1">Solo esta fecha</option>
-            <option value="4">4 semanas seguidas</option>
-            <option value="8">8 semanas seguidas</option>
-            <option value="12">12 semanas seguidas</option>
-          </select>
-          <p class="ac-msg" role="status"></p>
-          <button class="btn main" type="submit">Programar</button>
-        </form>
-      </div>
-
-      <div class="panel c6" style="--c:var(--orange)">
-        <h2><span>Nuevo grupo</span></h2>
-        <form class="space-form ac-form" id="form-grupo">
-          <label for="gr-curso">Curso</label>
-          <select id="gr-curso" class="input-space" required></select>
-          <label for="gr-nombre">Nombre del grupo</label>
-          <input id="gr-nombre" class="input-space" maxlength="30" placeholder="Ej: Grupo 2" required>
-          <label for="gr-dia">Día</label>
-          <select id="gr-dia" class="input-space" required>
-            <option value="lunes">Lunes</option><option value="martes">Martes</option><option value="miercoles">Miércoles</option>
-            <option value="jueves">Jueves</option><option value="viernes">Viernes</option><option value="sabado">Sábado</option><option value="domingo">Domingo</option>
-          </select>
-          <div class="ac-dos">
-            <div><label for="gr-inicio">Desde</label><input id="gr-inicio" type="time" class="input-space" required></div>
-            <div><label for="gr-fin">Hasta</label><input id="gr-fin" type="time" class="input-space" required></div>
+      <!-- Grupos -->
+      <div class="panel c12 panel-form" id="pf-grupo" data-vista="grupos" style="--c:var(--orange)" hidden>
+        <h2><span>Nuevo grupo</span><button class="btn sm" type="button" data-abre="pf-grupo">Cerrar</button></h2>
+        <form class="ac-form" id="form-grupo">
+          <div class="form-grid">
+            <div><label for="gr-curso">Curso</label>
+              <select id="gr-curso" class="input-space" required></select></div>
+            <div><label for="gr-nombre">Nombre del grupo</label>
+              <input id="gr-nombre" class="input-space" maxlength="30" placeholder="Ej: Grupo 2" required></div>
+            <div><label for="gr-docente">Docente</label>
+              <select id="gr-docente" class="input-space"><option value="">Sin asignar</option></select></div>
+            <div><label for="gr-dia">Día</label>
+              <select id="gr-dia" class="input-space" required>
+                <option value="lunes">Lunes</option><option value="martes">Martes</option><option value="miercoles">Miércoles</option>
+                <option value="jueves">Jueves</option><option value="viernes">Viernes</option><option value="sabado">Sábado</option><option value="domingo">Domingo</option>
+              </select></div>
+            <div class="ac-dos">
+              <div><label for="gr-inicio">Desde</label><input id="gr-inicio" type="time" class="input-space" required></div>
+              <div><label for="gr-fin">Hasta</label><input id="gr-fin" type="time" class="input-space" required></div>
+            </div>
+            <div><label for="gr-cupo">Cupo máximo</label>
+              <input id="gr-cupo" type="number" class="input-space" min="20" max="150" value="40" required></div>
+            <div><label for="gr-enlace">Enlace fijo de Meet (opcional)</label>
+              <input id="gr-enlace" type="url" class="input-space" placeholder="https://meet.google.com/…"></div>
           </div>
-          <label for="gr-docente">Docente</label>
-          <select id="gr-docente" class="input-space"><option value="">Sin asignar</option></select>
-          <label for="gr-cupo">Cupo máximo</label>
-          <input id="gr-cupo" type="number" class="input-space" min="20" max="150" value="40" required>
-          <label for="gr-enlace">Enlace fijo de Meet (opcional)</label>
-          <input id="gr-enlace" type="url" class="input-space" placeholder="https://meet.google.com/…">
           <p class="ac-msg" role="status"></p>
           <button class="btn main" type="submit">Crear grupo</button>
         </form>
       </div>
-
-      <div class="panel c12" style="--c:var(--teal)">
-        <h2><span>Grupos</span><small class="ac-rango">Activos e inactivos</small></h2>
+      <div class="panel c12" data-vista="grupos" style="--c:var(--teal)" hidden>
+        <h2><span>Grupos <small class="ac-rango">Activos e inactivos</small></span>
+          <button class="btn sm main" type="button" data-abre="pf-grupo">+ Nuevo grupo</button></h2>
         <div class="tscroll">
           <table>
             <thead><tr><th>Curso · Grupo</th><th>Horario</th><th>Docente</th><th>Inscritos</th><th></th></tr></thead>
@@ -530,25 +550,29 @@
         </div>
       </div>
 
-      <div class="panel c4" style="--c:var(--violet)">
-        <h2><span>Nuevo curso</span></h2>
-        <form class="space-form ac-form" id="form-curso">
-          <label for="cu-nombre">Nombre del curso</label>
-          <input id="cu-nombre" class="input-space" maxlength="100" placeholder="Ej: Pre-ICFES Calendario B 2027" required>
-          <div class="ac-dos">
-            <div><label for="cu-inicio">Inicia</label><input id="cu-inicio" type="date" class="input-space" required></div>
-            <div><label for="cu-fin">Termina</label><input id="cu-fin" type="date" class="input-space" required></div>
+      <!-- Cursos -->
+      <div class="panel c12 panel-form" id="pf-curso" data-vista="cursos" style="--c:var(--yellow)" hidden>
+        <h2><span>Nuevo curso</span><button class="btn sm" type="button" data-abre="pf-curso">Cerrar</button></h2>
+        <form class="ac-form" id="form-curso">
+          <div class="form-grid">
+            <div><label for="cu-nombre">Nombre del curso</label>
+              <input id="cu-nombre" class="input-space" maxlength="100" placeholder="Ej: Pre-ICFES Calendario B 2027" required></div>
+            <div class="ac-dos">
+              <div><label for="cu-inicio">Inicia</label><input id="cu-inicio" type="date" class="input-space" required></div>
+              <div><label for="cu-fin">Termina</label><input id="cu-fin" type="date" class="input-space" required></div>
+            </div>
+            <div><label for="cu-valor">Valor total del curso</label>
+              <input id="cu-valor" type="number" min="0" step="1" class="input-space" placeholder="Ej: 600000" required></div>
+            <div><label for="cu-desc">Descripción (opcional)</label>
+              <input id="cu-desc" class="input-space" placeholder="Ej: Preparación completa, 5 áreas"></div>
           </div>
-          <label for="cu-valor">Valor total del curso</label>
-          <input id="cu-valor" type="number" min="0" step="1" class="input-space" placeholder="Ej: 600000" required>
-          <label for="cu-desc">Descripción (opcional)</label>
-          <input id="cu-desc" class="input-space" placeholder="Ej: Preparación completa, 5 áreas">
           <p class="ac-msg" role="status"></p>
           <button class="btn main" type="submit">Crear curso</button>
         </form>
       </div>
-      <div class="panel c8" style="--c:var(--violet)">
-        <h2><span>Cursos</span><small class="ac-rango">Activos e inactivos</small></h2>
+      <div class="panel c12" data-vista="cursos" style="--c:var(--violet)" hidden>
+        <h2><span>Cursos <small class="ac-rango">Activos e inactivos</small></span>
+          <button class="btn sm main" type="button" data-abre="pf-curso">+ Nuevo curso</button></h2>
         <div class="tscroll">
           <table>
             <thead><tr><th>Curso</th><th>Valor</th><th>Activos</th><th>Estado</th></tr></thead>
@@ -557,7 +581,9 @@
         </div>
         <small class="note">Cambiar el valor de un curso aplica a las inscripciones nuevas; las que ya existen conservan su valor acordado.</small>
       </div>
-      <div class="panel c12" id="inf-asis" style="--c:var(--teal)">
+
+      <!-- Asistencia -->
+      <div class="panel c12" id="inf-asis" data-vista="asistencia" hidden style="--c:var(--teal)">
         <h2><span>Informe de asistencias</span>
           <span class="ac-filtros">
             <button class="btn sm" id="ia-imprimir" type="button" disabled>Imprimir / PDF</button>

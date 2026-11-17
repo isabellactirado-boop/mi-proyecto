@@ -7,6 +7,8 @@
    - La tarjeta de mora se marca solo si hay cuotas en mora.
    - En celular las tablas se ven como tarjetas: cada celda lleva el
      titulo de su columna (data-label) y la pestaña activa queda a la vista.
+   - Sub-pestañas (Pagos, Docentes y clases) y formularios que se abren
+     con un boton, para no mostrar todo a la vez.
    ===================================================================== */
 
 (function () {
@@ -138,7 +140,42 @@
     }).observe(menu, { attributes: true, attributeFilter: ["class"], subtree: true });
   }
 
+  /* ---------- sub-pestañas y formularios plegados ---------- */
+
+  // Una pestaña con mucho contenido se parte en vistas: cada panel dice a cual
+  // pertenece (data-vista) y los botones de .subtabs eligen la que se ve.
+  // Los formularios (.panel-form) arrancan cerrados; los abre y cierra
+  // cualquier boton con data-abre="id-del-panel".
+  function subPestanas() {
+    document.querySelectorAll(".subtabs").forEach((barra) => {
+      const seccion = barra.closest(".tab-content");
+      barra.addEventListener("click", (evento) => {
+        const elegido = evento.target.closest("button[data-ver]");
+        if (!elegido) return;
+        barra.querySelectorAll("button[data-ver]").forEach((b) => {
+          b.classList.toggle("on", b === elegido);
+          b.setAttribute("aria-selected", b === elegido ? "true" : "false");
+        });
+        seccion.querySelectorAll("[data-vista]").forEach((panel) => {
+          panel.hidden = panel.dataset.vista !== elegido.dataset.ver || panel.classList.contains("panel-form");
+        });
+      });
+    });
+
+    document.addEventListener("click", (evento) => {
+      const boton = evento.target.closest("[data-abre]");
+      const panel = boton && document.getElementById(boton.dataset.abre);
+      if (!panel) return;
+      panel.hidden = !panel.hidden;
+      if (panel.hidden) return;
+      const campo = panel.querySelector("select, input");
+      if (campo) campo.focus({ preventScroll: true });
+      panel.scrollIntoView({ behavior: reducido ? "auto" : "smooth", block: "nearest" });
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
+    subPestanas();
     etiquetarTablas();
     centrarPestana();
     accesosDueno();

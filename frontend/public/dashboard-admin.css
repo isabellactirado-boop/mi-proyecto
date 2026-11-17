@@ -551,3 +551,24 @@ tr.dk-mio td:first-child{box-shadow:inset 4px 0 0 var(--yellow)}
   /* menos movimiento: las tarjetas no entran una por una */
   .tab-content.active .kpi,.tab-content.active .panel{animation:none}
 }
+
+/* ---------- sub-pestañas dentro de una pestaña (diseno.js) ----------
+   Pagos y "Docentes y clases" tienen varias vistas: solo se ve una a la vez.
+   Los formularios (.panel-form) estan cerrados hasta que se pide el suyo. */
+.subtabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.subtabs button{font:inherit;font-weight:700;font-size:.88rem;padding:8px 18px;border-radius:99px;border:2px solid rgba(255,255,255,.26);background:rgba(255,255,255,.08);color:#cfcdf0;cursor:pointer;transition:background .15s,color .15s}
+.subtabs button:hover{background:rgba(255,255,255,.16);color:#fff}
+.subtabs button.on{background:var(--yellow);border-color:var(--ink);color:var(--ink)}
+.subtabs button:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.panel h2 .ac-rango{margin-left:6px}
+.panel-form .form-grid{align-items:end}
+.panel-form .ac-dos{display:contents}   /* Desde/Hasta: cada uno ocupa su casilla */
+.panel-form label{display:block;font-weight:700;font-size:.82rem;margin-bottom:5px}
+.panel-form .input-space{background:#fff}
+.panel-form .ac-form .btn{align-self:flex-start;min-width:180px}
+@media (max-width:700px){
+  .subtabs{flex-wrap:nowrap;overflow-x:auto;gap:6px;margin:0 -14px 12px;padding:0 14px 2px;scrollbar-width:none}
+  .subtabs::-webkit-scrollbar{display:none}
+  .subtabs button{flex:none;padding:7px 14px;font-size:.84rem}
+  .panel h2 .ac-rango{display:block;margin:2px 0 0}
+}

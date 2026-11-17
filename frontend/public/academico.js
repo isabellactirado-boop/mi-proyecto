@@ -136,7 +136,7 @@
     grupos = todos.filter((g) => g.activo !== false);
 
     if (tabla) {
-      if (!todos.length) filaVacia(tabla, 5, "Aún no hay grupos. Crea el primero con el formulario.");
+      if (!todos.length) filaVacia(tabla, 5, "Aún no hay grupos. Crea el primero con «+ Nuevo grupo».");
       else {
         tabla.textContent = "";
         todos.forEach((g) => {
@@ -270,7 +270,7 @@
     if (!tabla) return;
     let cursos;
     try { cursos = await api("/cursos/todos"); } catch (e) { return filaVacia(tabla, 4, e.message); }
-    if (!cursos.length) return filaVacia(tabla, 4, "Aún no hay cursos. Crea el primero con el formulario.");
+    if (!cursos.length) return filaVacia(tabla, 4, "Aún no hay cursos. Crea el primero con «+ Nuevo curso».");
     tabla.textContent = "";
     cursos.forEach((c) => {
       const tr = el("tr", c.activo ? null : "ed-inactivo");
