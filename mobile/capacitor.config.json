@@ -6,5 +6,11 @@
   "android": {
     "backgroundColor": "#140b4f",
     "adjustMarginsForEdgeToEdge": "force"
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_reto",
+      "iconColor": "#FF8A2B"
+    }
   }
 }

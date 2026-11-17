@@ -33,6 +33,7 @@ function cerrarSesion() {
   try { ["token", "rol", "ver_como"].forEach((k) => localStorage.removeItem(k)); } catch (e) { /* nada */ }
   cerrarPerfil();
   cerrarPregunta();
+  cancelarRecordatorios();
   clearInterval(relojCuenta);
   datosClases = null;
   datosReto = null;
@@ -824,6 +825,7 @@ function pintarCamino(d) {
 function pintarReto(celebrar) {
   const d = datosReto;
   const hecha = d.hoy.respondida;
+  programarRecordatorios(d);
 
   // acceso rapido en Inicio y punto en el menu mientras falte la de hoy
   $("reto-punto").hidden = hecha;
@@ -938,6 +940,59 @@ async function responderReto(opcion, botones) {
     console.error(error);
     pintarPregunta("No se pudo guardar tu respuesta. Revisa tu internet e intenta de nuevo.");
   }
+}
+
+/* ---------- recordatorio del reto (solo dentro del APK) ----------
+   Avisos programados en el propio celular: no dependen del servidor ni de
+   internet. Cada vez que se pinta el reto se vuelven a programar los de las
+   proximas dos semanas; el de hoy se omite si ya respondio. */
+
+const avisos = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications;
+const HORA_AVISO = 18;      // 6:00 pm, hora del celular
+const DIAS_AVISO = 14;
+
+function idsAvisos() {
+  return Array.from({ length: DIAS_AVISO }, (_, n) => ({ id: n + 1 }));
+}
+
+async function programarRecordatorios(d) {
+  if (!avisos || esPropietario()) return;
+  try {
+    let permiso = await avisos.checkPermissions();
+    if (permiso.display !== "granted" && permiso.display !== "denied") permiso = await avisos.requestPermissions();
+    if (permiso.display !== "granted") return;
+
+    await avisos.createChannel({ id: "reto", name: "Reto diario",
+      description: "Recordatorio de la pregunta del día", importance: 4 });
+    await avisos.cancel({ notifications: idsAvisos() });
+
+    const ahora = new Date();
+    const lista = [];
+    for (let n = 0; n < DIAS_AVISO; n++) {
+      const cuando = new Date();
+      cuando.setDate(cuando.getDate() + n);
+      cuando.setHours(HORA_AVISO, 0, 0, 0);
+      if (cuando <= ahora || (n === 0 && d.hoy.respondida)) continue;
+      // la racha solo se conoce para el aviso mas cercano
+      const cercano = n === 0 || (n === 1 && d.hoy.respondida);
+      const conRacha = cercano && d.racha > 0;
+      lista.push({
+        id: n + 1,
+        channelId: "reto",
+        title: conRacha ? "No pierdas tu racha de " + nDias(d.racha) : "Tu pregunta de hoy te espera",
+        body: conRacha ? "Responde la pregunta de hoy antes de medianoche."
+          : "Un minuto al día para llegar listo al Saber 11.",
+        schedule: { at: cuando, allowWhileIdle: true },
+      });
+    }
+    if (lista.length) await avisos.schedule({ notifications: lista });
+  } catch (error) {
+    console.error(error);   // los avisos son un extra: la app sigue igual sin ellos
+  }
+}
+
+function cancelarRecordatorios() {
+  if (avisos) avisos.cancel({ notifications: idsAvisos() }).catch(() => {});
 }
 
 async function cargarReto() {
