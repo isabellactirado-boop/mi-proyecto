@@ -1,7 +1,7 @@
 {
-  "name": "PRE ICMA",
-  "short_name": "PRE ICMA",
-  "description": "App de estudiantes de PRE ICMA",
+  "name": "PRE-ICMA",
+  "short_name": "PRE-ICMA",
+  "description": "App de estudiantes de PRE-ICMA",
   "lang": "es",
   "start_url": "./index.html",
   "scope": "./",

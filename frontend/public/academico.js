@@ -416,7 +416,7 @@
       const copiar = el("button", "btn sm", "Copiar");
       copiar.type = "button";
       copiar.addEventListener("click", () => {
-        const texto = "App PRE ICMA\nUsuario: " + cuenta.usuario + "\nContraseña temporal: " + cuenta.contrasena_temporal;
+        const texto = "App PRE-ICMA\nUsuario: " + cuenta.usuario + "\nContraseña temporal: " + cuenta.contrasena_temporal;
         (navigator.clipboard ? navigator.clipboard.writeText(texto) : Promise.reject())
           .then(() => { copiar.textContent = "Copiado"; })
           .catch(() => { copiar.textContent = "Cópiala a mano"; });
@@ -582,7 +582,7 @@
       const tdC = el("td");
       const telefono = c.telefono_acudiente || c.telefono_estudiante;
       tdC.appendChild(el("span", null, c.acudiente || "Sin acudiente"));
-      const texto = "Hola" + (c.acudiente ? " " + c.acudiente.split(" ")[0] : "") + ", te escribimos de PRE ICMA. " +
+      const texto = "Hola" + (c.acudiente ? " " + c.acudiente.split(" ")[0] : "") + ", te escribimos de PRE-ICMA. " +
         (c.dias_mora > 0 ? "La cuota " + c.numero_cuota + " de " + c.estudiante + " está vencida" : "La cuota " + c.numero_cuota + " de " + c.estudiante + " vence el " + fechaCorta(c.fecha_vencimiento)) +
         " (" + dinero(c.pendiente) + "). ¡Gracias!";
       const wa = enlaceWhatsApp(telefono, texto);

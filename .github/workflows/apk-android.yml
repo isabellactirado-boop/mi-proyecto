@@ -1,4 +1,4 @@
-# Compila el APK de la app de estudiantes (PRE ICMA) en GitHub.
+# Compila el APK de la app de estudiantes (PRE-ICMA) en GitHub.
 # Corre solo cuando cambia la app (frontend/public/app) o la carpeta mobile,
 # y tambien a mano desde la pestaña Actions -> "APK Android" -> Run workflow.
 # El APK queda en el resumen de cada ejecucion, en "Artifacts".

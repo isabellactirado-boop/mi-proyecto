@@ -173,6 +173,8 @@
     .form-side{padding:26px 20px 32px;align-content:start}
     .hint{position:static;transform:none;justify-self:center;margin-bottom:18px;font-size:.78rem;animation:none;box-shadow:none}
     .hint.off{display:none}
+    /* en el celular el formulario se ve nitido desde el inicio */
+    .box.locked{filter:none;opacity:1}
     .box h1{font-size:1.6rem}
     .box .sub{margin-bottom:22px}
     .btn{box-shadow:none}

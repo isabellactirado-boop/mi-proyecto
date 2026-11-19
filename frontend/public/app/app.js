@@ -1,5 +1,5 @@
 /* =====================================================================
-   app.js - app movil de estudiantes PRE ICMA (Capacitor).
+   app.js - app movil de estudiantes PRE-ICMA (Capacitor).
    - Inicia sesion contra el mismo backend del panel (/login).
    - Solo acepta cuentas con rol "estudiante".
    - Guarda el token en localStorage para no pedir login cada vez.

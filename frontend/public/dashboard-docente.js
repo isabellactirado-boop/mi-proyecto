@@ -224,7 +224,7 @@ const Docente = (function () {
       li.appendChild(d);
       const tel = f.telefono_acudiente || f.telefono_estudiante;
       const wa = whatsapp(tel, "Hola" + (f.acudiente ? " " + f.acudiente.split(" ")[0] : "") +
-        ", te escribimos de PRE ICMA. " + f.estudiante + " ha faltado a sus últimas " + f.faltas_seguidas +
+        ", te escribimos de PRE-ICMA. " + f.estudiante + " ha faltado a sus últimas " + f.faltas_seguidas +
         " clases de " + f.curso + ". ¿Todo bien?");
       if (wa) li.appendChild(wa);
       ul.appendChild(li);

@@ -295,7 +295,7 @@ ${cuerpo}
         const tdS = el("td");
         tdS.appendChild(f.estado_pago === "en_mora" ? el("span", "badge b-red", "En mora") : el("span", "badge b-ok", "Al día"));
         tr.appendChild(tdS);
-        const saludo = "Hola" + (f.acudiente ? " " + f.acudiente.split(" ")[0] : "") + ", te escribimos de PRE ICMA. ";
+        const saludo = "Hola" + (f.acudiente ? " " + f.acudiente.split(" ")[0] : "") + ", te escribimos de PRE-ICMA. ";
         tr.appendChild(contacto(f, f.estado_pago === "en_mora"
           ? saludo + f.estudiante + " tiene " + dinero(f.valor_en_mora) + " en cuotas vencidas de " + f.curso + ". ¡Gracias!"
           : saludo + "Te recordamos que el saldo de " + f.estudiante + " en " + f.curso + " es " + dinero(f.saldo_pendiente) + "."));
@@ -439,7 +439,7 @@ ${cuerpo}
         tdF.appendChild(fs >= minimo ? el("span", "badge b-red", fs + " seguidas")
           : fs > 0 ? el("span", "badge b-warn", fs + (fs === 1 ? " falta" : " seguidas")) : el("span", "badge b-ok", "Bien"));
         tr.appendChild(tdF);
-        tr.appendChild(contacto(f, "Hola" + (f.acudiente ? " " + f.acudiente.split(" ")[0] : "") + ", te escribimos de PRE ICMA. " +
+        tr.appendChild(contacto(f, "Hola" + (f.acudiente ? " " + f.acudiente.split(" ")[0] : "") + ", te escribimos de PRE-ICMA. " +
           (fs >= minimo ? f.estudiante + " ha faltado a sus últimas " + fs + " clases de " + f.curso + ". ¿Todo bien?"
             : "Te compartimos que la asistencia de " + f.estudiante + " en " + f.curso + " es de " + pct(f.porcentaje_asistencia) + ".")));
         tabla.appendChild(tr);

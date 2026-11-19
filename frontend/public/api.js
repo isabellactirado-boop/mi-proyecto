@@ -320,7 +320,7 @@ function pintarEstudiantes(datos) {
 
   if (lista.length === 0) {
     const fila = crear("tr");
-    const celda = crear("td", datos.estudiantes.length ? "Ningún estudiante coincide con el filtro." : "Todavía no hay estudiantes registrados.");
+    const celda = crear("td", datos.estudiantes.length ? "Ningún estudiante coincide con el filtro." : "Todavía no hay estudiantes registrados.", "ac-vacio");
     celda.colSpan = 6;
     fila.appendChild(celda);
     cuerpo.appendChild(fila);
@@ -363,7 +363,7 @@ async function cargarEstudiantes() {
     const fila = crear("tr");
     const celda = crear("td", error.status === 403
       ? "Tu cuenta no tiene permiso para ver estudiantes."
-      : "No se pudo cargar la lista. Si el servidor estaba dormido, intenta de nuevo en un minuto.");
+      : "No se pudo cargar la lista. Si el servidor estaba dormido, intenta de nuevo en un minuto.", "ac-vacio");
     celda.colSpan = 6;
     fila.appendChild(celda);
     cuerpo.appendChild(fila);

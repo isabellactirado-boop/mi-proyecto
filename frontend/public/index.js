@@ -58,6 +58,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     /* ---------- selector de rol ---------- */
+    // En pantallas tactiles se "toca", no se hace clic
+    if (window.matchMedia("(pointer: coarse)").matches) {
+        hint.lastChild.textContent = " Toca la pantalla para elegir tu perfil";
+    }
+
     function abrirModal() {
         modal.classList.add("open");
         modal.setAttribute("aria-hidden", "false");
