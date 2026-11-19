@@ -416,7 +416,7 @@
       const copiar = el("button", "btn sm", "Copiar");
       copiar.type = "button";
       copiar.addEventListener("click", () => {
-        const texto = "App PRE-ICMA\nUsuario: " + cuenta.usuario + "\nContraseña temporal: " + cuenta.contrasena_temporal;
+        const texto = String(cuenta.contrasena_temporal);
         (navigator.clipboard ? navigator.clipboard.writeText(texto) : Promise.reject())
           .then(() => { copiar.textContent = "Copiado"; })
           .catch(() => { copiar.textContent = "Cópiala a mano"; });
